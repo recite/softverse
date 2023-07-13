@@ -7,7 +7,7 @@ Sys.setenv("DATAVERSE_SERVER" = "dataverse.harvard.edu")
 
 jop <- read_csv("jop_datasets.csv")
 
-fin_dat <- data.frame(dataset = NA, file = NA, package_list = NA)
+fin_dat <- data.frame(dataset = character(0), file = character(0), package_list = character(0))
 
 # Set the number of cores to use
 num_cores <- detectCores()
