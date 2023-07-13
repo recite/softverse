@@ -5,7 +5,7 @@ library(jsonlite)
 base_url <- "https://dataverse.harvard.edu/api"
 
 # Set the Dataverse alias or identifier
-dataverse_id <- "jop"
+dataverse_id <- "polbehavior"
 
 # Construct the API endpoint URL
 url <- paste0(base_url, "/dataverses/", dataverse_id, "/contents")
@@ -23,4 +23,4 @@ dataset_json <- fromJSON(content)
 df <- as.data.frame(dataset_json$data)
 
 # Write the data frame to a CSV file
-write.csv(df, "jop_datasets.csv", row.names = FALSE)
+write.csv(df, "polbehavior_datasets.csv", row.names = FALSE)

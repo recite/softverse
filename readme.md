@@ -8,5 +8,18 @@ see: https://gojiberries.io/2023/07/02/hard-problems-about-research-software/
 2. [Package imports in R files](scripts/02_get_imports.R)
 3. [Plot](scripts/03_plot.R)
 
-#### Top Package Imports in JoP
+#### Top R Package Imports in JoP
+
+|package_list |  n|
+|:------------|--:|
+|plyr         | 28|
+|magrittr     | 26|
+|foreign      | 21|
+|tidyverse    | 12|
+|ggplot2      | 11|
+|lmtest       |  9|
+|rstan        |  9|
+|haven        |  7|
+|stargazer    |  7|
+
 

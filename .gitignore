@@ -2,3 +2,6 @@
 .DS_Store
 data/.RData
 data/.Rhistory
+.Rproj.user
+.RData
+.Rhistory
