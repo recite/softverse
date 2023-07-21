@@ -1,0 +1,916 @@
+path_name,imports,dataverse,repo_id
+scripts/BJPolS_datasets_files/YPZFEK/R_1_main_analysis.R,"['margins', 'stargazer', 'tidyverse', 'scales', 'sandwich', 'lmtest']",BJPolS,YPZFEK
+scripts/BJPolS_datasets_files/YPZFEK/R_0_2_make_data.R,"['magrittr', 'tidyverse']",BJPolS,YPZFEK
+scripts/BJPolS_datasets_files/YPZFEK/R_2_appendix_ab.R,"['matrixStats', 'tidyverse', 'scales', 'stringr', 'Hmisc']",BJPolS,YPZFEK
+scripts/BJPolS_datasets_files/YPZFEK/R_0_1_make_measures.R,"['haven', 'scales', 'tidyverse', 'scalse']",BJPolS,YPZFEK
+scripts/BJPolS_datasets_files/YPZFEK/R_2_appendix_c.R,"['magrittr', 'broom', 'tidyverse', 'knitr']",BJPolS,YPZFEK
+scripts/BJPolS_datasets_files/YPZFEK/R_2_appendix_de.R,"['magrittr', 'doParallel', 'interflex', 'margins', 'grf', 'stargazer', 'tidyverse', 'broom', 'sandwich', 'Hmisc', 'foreach', 'lmtest']",BJPolS,YPZFEK
+scripts/BJPolS_datasets_files/SACJHE/Cyber Terrorism Study - R Code.R,['mediation'],BJPolS,SACJHE
+scripts/BJPolS_datasets_files/JZZWER/02-analysis.R,"['magrittr', 'digest', 'stargazer', 'tidyverse', 'gridExtra', 'scales', 'broom', 'interplot', 'xtable', 'grid']",BJPolS,JZZWER
+scripts/BJPolS_datasets_files/JZZWER/01-create_data.R,"['rio', 'psy', 'tidyverse']",BJPolS,JZZWER
+scripts/BJPolS_datasets_files/NEAG2L/runReplication.R,['spduration'],BJPolS,NEAG2L
+scripts/BJPolS_datasets_files/MX5NIV/Benchmarking_Response_Code.R,['https://sites.google.com/a/stonybrook.edu/mperess/research/mnlresp_0.1.0.tar.gz'],BJPolS,MX5NIV
+scripts/BJPolS_datasets_files/OSSY4B/In Search of Self Censorship - R Analysis File vBJPOLS.R,"['ggExtra', 'GGally', 'gridExtra', 'MissMech']",BJPolS,OSSY4B
+scripts/BJPolS_datasets_files/DJR0YC/analysis_all.R,"['foreign', 'lfe', 'raster', 'plyr', 'ggplot2', 'stargazer', 'countrycode', 'Hmisc', 'cshapes', 'car', 'readstata13']",BJPolS,DJR0YC
+scripts/BJPolS_datasets_files/XGRETE/ess_appendix.R,['collapse'],BJPolS,XGRETE
+scripts/BJPolS_datasets_files/5DEGYP/script.R,['compareGroups'],BJPolS,5DEGYP
+scripts/BJPolS_datasets_files/QPQUW5/Reher_BJPolS_2020.R,"['survey', 'tidyr', 'ggplot2', 'stargazer', 'dplyr', 'lmerTest', 'gmodels']",BJPolS,QPQUW5
+scripts/BJPolS_datasets_files/Y5Y6VD/01_MASTER.R,['pacman'],BJPolS,Y5Y6VD
+scripts/BJPolS_datasets_files/CMKMGF/BJPOLS - Basic Values and Candidate Emergence - R script file.R,"['sandwich', 'margins']",BJPolS,CMKMGF
+scripts/BJPolS_datasets_files/GFCNG9/imputation.R,['Amelia'],BJPolS,GFCNG9
+scripts/BJPolS_datasets_files/XERE2A/Maps.R,"['rgdal', 'sp', 'gpclib', 'lattice', 'maptools']",BJPolS,XERE2A
+scripts/BJPolS_datasets_files/XERE2A/Main_Text.R,"['multiwayvcov', 'lmtest']",BJPolS,XERE2A
+scripts/BJPolS_datasets_files/XERE2A/Appendix.R,"['lmtest', 'censReg', 'betareg', 'MASS', 'car', 'multiwayvcov', 'coin']",BJPolS,XERE2A
+scripts/BJPolS_datasets_files/D2REB3/aspiration_apprehension_replication.R,"['glm.predict', 'pacman']",BJPolS,D2REB3
+scripts/BJPolS_datasets_files/DNPEI8/Figure5.R,['tidyverse'],BJPolS,DNPEI8
+"scripts/BJPolS_datasets_files/YJIZBJ/Real, but Limited.R","['readxl', 'ggplot2', 'dplyr', 'robumeta', 'descr', 'compute.es', 'meta', 'metafor', 'grid']",BJPolS,YJIZBJ
+scripts/BJPolS_datasets_files/8FK7PC/Hartman_Newman_TWO-WAVE_2010-2012_Replication.R,['pacman'],BJPolS,8FK7PC
+scripts/BJPolS_datasets_files/8FK7PC/Hartman_Newman_THREE-WAVE_2010-2014_Replication.R,['pacman'],BJPolS,8FK7PC
+scripts/BJPolS_datasets_files/BSDKUR/Replication Code.R,['visreg'],BJPolS,BSDKUR
+scripts/BJPolS_datasets_files/MUYFH1/AsunkaEtAtl_replication.R,['dplyr'],BJPolS,MUYFH1
+scripts/BJPolS_datasets_files/UWMHET/Rprofile.R,"['forcats', 'haven', 'magrittr', 'tidyverse', 'assertthat', 'stringr', 'rprojroot']",BJPolS,UWMHET
+scripts/BJPolS_datasets_files/WRVUOT/Code Balance checks.R,['X'],BJPolS,WRVUOT
+scripts/BJPolS_datasets_files/WRVUOT/Code Replication.R,['X'],BJPolS,WRVUOT
+scripts/BJPolS_datasets_files/CVQ0V9/script_map_attacks.R,"['maps', 'mapproj', 'ggmap']",BJPolS,CVQ0V9
+scripts/BJPolS_datasets_files/ANPEZI/bhatti_rep_file_1.R,['ri'],BJPolS,ANPEZI
+scripts/BJPolS_datasets_files/NN9KZT/conjoint.R,['cjoint'],BJPolS,NN9KZT
+scripts/BJPolS_datasets_files/AUX9W1/rsr_ehsi_3appendixAnalysis.R,"['car', 'ggplot2', 'dplyr']",BJPolS,AUX9W1
+scripts/BJPolS_datasets_files/RLXYCJ/5_replication_map.R,"['haven', 'raster', 'plyr', 'readxl', 'GADMTools', 'states', 'dplyr']",BJPolS,RLXYCJ
+scripts/BJPolS_datasets_files/RLXYCJ/4_replication_appendixD.R,"['haven', 'raster', 'plyr', 'readxl', 'GADMTools', 'states', 'dplyr']",BJPolS,RLXYCJ
+scripts/BJPolS_datasets_files/MRBUP1/Exp3 - survey sweden - data analysis.R,['Zelig'],BJPolS,MRBUP1
+scripts/BJPolS_datasets_files/MRBUP1/Exp2 - survey US - analysis.R,['Zelig'],BJPolS,MRBUP1
+scripts/BJPolS_datasets_files/MRBUP1/Exp4 - system justification - data analysis.R,['Zelig'],BJPolS,MRBUP1
+scripts/BJPolS_datasets_files/GYSEGP/paper-packages.R,['pacman'],BJPolS,GYSEGP
+scripts/BJPolS_datasets_files/4SRS4X/05_create_figures-1.R,"['ggplot2', 'GGally']",BJPolS,4SRS4X
+scripts/BJPolS_datasets_files/GNGJQR/Imputation_script.R,"['parallel', 'Zelig', 'visreg']",BJPolS,GNGJQR
+scripts/BJPolS_datasets_files/EUAIFA/Code_Main_Text.R,['package name'],BJPolS,EUAIFA
+scripts/BJPolS_datasets_files/EUAIFA/Code_SI.R,['package name'],BJPolS,EUAIFA
+scripts/BJPolS_datasets_files/ENAZAA/Matanock_Lichtenheld_Matching.R,"['Matching', 'rgenoud']",BJPolS,ENAZAA
+scripts/BJPolS_datasets_files/YBT8WZ/ameliaimputedresults.R,['ggplot2'],BJPolS,YBT8WZ
+scripts/BJPolS_datasets_files/NIBSUD/figure 7.R,"['mgcv', 'foreign']",BJPolS,NIBSUD
+scripts/BJPolS_datasets_files/NIBSUD/figure 3 and 4.R,['foreign'],BJPolS,NIBSUD
+scripts/BJPolS_datasets_files/JYCAKM/substantiveBackground.R,['AER'],BJPolS,JYCAKM
+scripts/BJPolS_datasets_files/K1TVXL/Homola_WomenMenResponsiveness_Appendix.R,"['foreign', 'stargazer', 'sandwich']",BJPolS,K1TVXL
+scripts/BJPolS_datasets_files/K1TVXL/Homola_WomenMenResponsiveness_Figures.R,"['foreign', 'mgcv', 'plyr', 'ggplot2', 'gridExtra', 'np', 'sandwich', 'cowplot', 'grid']",BJPolS,K1TVXL
+scripts/BJPolS_datasets_files/K1TVXL/Homola_WomenMenResponsiveness_Analysis.R,"['psych', 'foreign', 'stargazer', 'sandwich']",BJPolS,K1TVXL
+scripts/BJPolS_datasets_files/SXLSXE/15.MLM_marginaleffects.R,"['ggplot2', 'stargazer', 'dplyr', 'MuMIn', 'gridExtra', 'MASS', 'ggrepel']",BJPolS,SXLSXE
+scripts/BJPolS_datasets_files/SXLSXE/13.Table_10_fe_alternate_inc_dif.R,"['plm', 'dplyr', 'pcse', 'lmtest']",BJPolS,SXLSXE
+scripts/BJPolS_datasets_files/SXLSXE/10.sum_stat.R,"['ggcorrplot', 'dplyr']",BJPolS,SXLSXE
+scripts/BJPolS_datasets_files/SXLSXE/12.CSES_only.R,"['pcse', 'plm', 'nlme', 'dplyr', 'lmtest']",BJPolS,SXLSXE
+scripts/BJPolS_datasets_files/SXLSXE/05.Figure_1_2.R,"['ggplot2', 'dplyr', 'ggrepel']",BJPolS,SXLSXE
+scripts/BJPolS_datasets_files/SXLSXE/20.mlm_single_int.R,"['lme4', 'interplot']",BJPolS,SXLSXE
+scripts/BJPolS_datasets_files/EGARNT/flowstock_replication.R,"['readxl', 'directlabels', 'tidyverse']",BJPolS,EGARNT
+scripts/BJPolS_datasets_files/A48JP7/Replication.R,"['oglmx', 'lmtest']",BJPolS,A48JP7
+scripts/BJPolS_datasets_files/A9GYNP/Thal Elites BJPS Replication Code.R,"['Rmisc', 'ggplot2']",BJPolS,A9GYNP
+scripts/BJPolS_datasets_files/GNIJVE/00-func.R,"['text2vec', 'quanteda', 'readtext', 'tidytext', 'tidyverse', 'rsample', 'gridExtra', 'widyr', 'caret', 'here', 'stringr', 'xtable', 'conText']",BJPolS,GNIJVE
+scripts/BJPolS_datasets_files/EJWXAO/Main_Effects_OL2.R,"['stargazer', 'Hmisc']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/MainEffects_NoControls.R,"['stargazer', 'Hmisc']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/MainEffects_Controls.R,"['stargazer', 'Hmisc']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/Time_Tests_No_Controls.R,"['stargazer', 'Hmisc']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/Brexit_on_Mediators.R,"['stargazer', 'Hmisc']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/Ttest_4scale.R,"['stargazer', 'Hmisc']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/Balance150919.R,['weights'],BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/Multiple_Mediation.R,['mediation'],BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/Descriptives.R,"['stargazer', 'Hmisc']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/Appendix_Fig10.R,"['stargazer', 'Hmisc']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/MtoY.R,"['stargazer', 'Hmisc', 'coefplot']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/EJWXAO/Time_Tests_Controls.R,"['stargazer', 'Hmisc']",BJPolS,EJWXAO
+scripts/BJPolS_datasets_files/811M8C/Replication_Models.R,"['statnet', 'stargazer']",BJPolS,811M8C
+scripts/BJPolS_datasets_files/T1LA6E/functions.R,['ANOVAreplication'],BJPolS,T1LA6E
+scripts/BJPolS_datasets_files/BGHLAX/004_eudissent.R,['SDMTools'],BJPolS,BGHLAX
+scripts/BJPolS_datasets_files/35M5CV/lodger-analysis-cleaning.R,['rio'],BJPolS,35M5CV
+scripts/BJPolS_datasets_files/35M5CV/bbc-analysis-cleaning.R,['rio'],BJPolS,35M5CV
+scripts/BJPolS_datasets_files/GPGWKJ/Code_Fig2_5_RR_BJPOLS_2022.R,"['ggplot2', 'ggpubr']",BJPolS,GPGWKJ
+scripts/BJPolS_datasets_files/OTEWG2/nuanced_accountability_indivreplication.R,"['foreign', 'MatchIt', 'VGAM', 'effects', 'ggplot2', 'stargazer', 'Matching', 'sandwich', 'Zelig', 'texreg', 'ebal', 'xtable', 'car', 'rms', 'lmtest']",BJPolS,OTEWG2
+scripts/the_review_datasets_files/GS838F/distance_qhapaqnan.R,['pacman'],the_review,GS838F
+scripts/the_review_datasets_files/GS838F/cenagro_variables.R,['pacman'],the_review,GS838F
+scripts/the_review_datasets_files/GS838F/eaa_code.R,['pacman'],the_review,GS838F
+scripts/the_review_datasets_files/VRH8ND/analysis2.R,"['readr', 'Jmisc', 'fastDummies', 'splitstackshape', 'psych', 'ggplot2', 'dplyr', 'translateR', 'qwraps2', 'stringr', 'cowplot', 'multiwayvcov', 'papeR']",the_review,VRH8ND
+scripts/the_review_datasets_files/VRH8ND/analysis1.R,"['mapview', 'readr', 'sf', 'splitstackshape', 'ggplot2', 'translateR', 'ggmap', 'stringr', 'cowplot']",the_review,VRH8ND
+scripts/the_review_datasets_files/VRH8ND/analysis3.R,"['readr', 'Jmisc', 'fastDummies', 'splitstackshape', 'psych', 'ggplot2', 'dplyr', 'translateR', 'qwraps2', 'stringr', 'cowplot', 'multiwayvcov']",the_review,VRH8ND
+scripts/the_review_datasets_files/VRH8ND/analysis4.R,"['ggpubr', 'ggsignif', 'data.table', 'stargazer', 'gridExtra', 'papeR', 'pysch']",the_review,VRH8ND
+scripts/the_review_datasets_files/VRH8ND/analysis5.R,['cowplot'],the_review,VRH8ND
+scripts/the_review_datasets_files/SJI4IA/1.ValueParticipation.R,['boot'],the_review,SJI4IA
+scripts/the_review_datasets_files/SJI4IA/2.SocialIncentivesSurvey.R,"['pwr', 'jtools', 'boot']",the_review,SJI4IA
+scripts/the_review_datasets_files/RHPSZD/APSR_women_highcourts_jan_27_2021.R,"['qualCI', 'MatchIt', 'optmatch', 'RItools', 'stargazer', 'dplyr', 'cem']",the_review,RHPSZD
+scripts/the_review_datasets_files/NOMC0H/replication_cleaning_CTM.R,"['stm', 'devtools', 'quanteda', 'readtext', 'koRpus', 'quanteda.corpora', 'stringi', 'MASS']",the_review,NOMC0H
+scripts/the_review_datasets_files/L6WBON/Long_Replication.R,"['pacman', 'devtools']",the_review,L6WBON
+scripts/the_review_datasets_files/L6WBON/Main_Replication.R,"['pacman', 'devtools']",the_review,L6WBON
+scripts/the_review_datasets_files/T1TELH/package-version-control.R,['versions'],the_review,T1TELH
+scripts/the_review_datasets_files/QDTLYV/8-histogram.R,"['data.table', 'scales', 'ggplot2', 'tidyverse']",the_review,QDTLYV
+scripts/the_review_datasets_files/QDTLYV/7-plot_media.R,"['magrittr', 'plyr', 'readxl', 'ggplot2', 'gdata']",the_review,QDTLYV
+scripts/the_review_datasets_files/QDTLYV/4-trends.R,"['plyr', 'data.table', 'ggplot2', 'stringr', 'gdata']",the_review,QDTLYV
+scripts/the_review_datasets_files/QDTLYV/5-predictive_margins.R,"['gdata', 'ggplot2', 'tidyverse', 'foreign']",the_review,QDTLYV
+scripts/the_review_datasets_files/QDTLYV/6-barplot_topics.R,"['data.table', 'ggplot2', 'plyr']",the_review,QDTLYV
+scripts/the_review_datasets_files/AIKUDN/prepare_ParlSpeech_data.R,"['readxl', 'foreign', 'mamlr']",the_review,AIKUDN
+scripts/the_review_datasets_files/AIKUDN/prepare_ToN_data.R,"['readxl', 'foreign', 'mamlr']",the_review,AIKUDN
+scripts/the_review_datasets_files/MPTSQR/Figure_3.R,"['viridis', 'lubridate', 'ggplot2', 'tidyverse', 'here']",the_review,MPTSQR
+scripts/the_review_datasets_files/MPTSQR/Figure_2.R,"['sf', 'ggplot2', 'tidyverse', 'here']",the_review,MPTSQR
+scripts/the_review_datasets_files/MPTSQR/Robustness_tests.R,"['marginaleffects', 'sf', 'viridis', 'zoo', 'lubridate', 'ggplot2', 'stargazer', 'tidyverse', 'brglm2', 'sandwich', 'here', 'lmtest']",the_review,MPTSQR
+scripts/the_review_datasets_files/MPTSQR/Main_analysis.R,"['sf', 'viridis', 'zoo', 'lubridate', 'ggplot2', 'stargazer', 'tidyverse', 'brglm2', 'sandwich', 'here', 'kableExtra', 'lmtest']",the_review,MPTSQR
+scripts/the_review_datasets_files/MPTSQR/Figure_1.R,"['viridis', 'zoo', 'lubridate', 'ggplot2', 'tidyverse', 'here']",the_review,MPTSQR
+scripts/the_review_datasets_files/KPS1KY/APSR_Analysis_RScript.R,"['purrr', 'foreign', 'readstata13', 'GGally', 'tidyr', 'ggplot2', 'dplyr', 'reshape2', 'broom', 'cocor', 'dotwhisker', 'lavaan']",the_review,KPS1KY
+scripts/the_review_datasets_files/KPS1KY/R_simulation_appendix_S8.R,['plot3D'],the_review,KPS1KY
+scripts/the_review_datasets_files/3RWCPB/VZ_source_code.R,['pacman'],the_review,3RWCPB
+scripts/the_review_datasets_files/3RWCPB/Main_Text_Replication_VZ.R,['pacman'],the_review,3RWCPB
+scripts/the_review_datasets_files/3RWCPB/Appendix_Replication_VZ.R,['pacman'],the_review,3RWCPB
+scripts/the_review_datasets_files/GL2WN8/Thal APSR Replication Code.R,"['Rmisc', 'foreign', 'psych', 'ggplot2', 'texreg', 'Hmisc']",the_review,GL2WN8
+scripts/the_review_datasets_files/0Y8IKW/DataCleaning.R,['robustHD'],the_review,0Y8IKW
+scripts/the_review_datasets_files/EOIIEV/clean_distances.R,['pacman'],the_review,EOIIEV
+scripts/the_review_datasets_files/UECUBY/Figure02.R,['xfun'],the_review,UECUBY
+scripts/the_review_datasets_files/UECUBY/AppendixTable01.R,['xfun'],the_review,UECUBY
+scripts/the_review_datasets_files/UECUBY/Table01.R,['xfun'],the_review,UECUBY
+scripts/the_review_datasets_files/GHZFJM/3_main.R,['pacman'],the_review,GHZFJM
+scripts/the_review_datasets_files/GHZFJM/4_appendix.R,['pacman'],the_review,GHZFJM
+scripts/the_review_datasets_files/GHZFJM/2_prediction_validation.R,['pacman'],the_review,GHZFJM
+scripts/the_review_datasets_files/SG55BJ/Replication_code.R,['dplyr'],the_review,SG55BJ
+scripts/the_review_datasets_files/F2OX6O/Figure4.R,['grDevices'],the_review,F2OX6O
+scripts/the_review_datasets_files/F2OX6O/Figure3.R,['grDevices'],the_review,F2OX6O
+scripts/the_review_datasets_files/8I6NOT/analysis_s1_s4.R,['pacman'],the_review,8I6NOT
+scripts/the_review_datasets_files/8I6NOT/analysis_s5.R,['pacman'],the_review,8I6NOT
+scripts/the_review_datasets_files/8I6NOT/analysis_s1_s8_appendix.R,['pacman'],the_review,8I6NOT
+scripts/the_review_datasets_files/F8JXHR/summarize_2008_downballot.R,['openxlsx'],the_review,F8JXHR
+scripts/the_review_datasets_files/F8JXHR/2_process_elections.R,['openxlsx'],the_review,F8JXHR
+scripts/the_review_datasets_files/F8JXHR/run_ads_code.R,['openxlsx'],the_review,F8JXHR
+scripts/the_review_datasets_files/JPHHJV/icount.R,"['scales', 'ggthemes']",the_review,JPHHJV
+scripts/the_review_datasets_files/JPHHJV/join-count.R,"['raster', 'spdep']",the_review,JPHHJV
+scripts/the_review_datasets_files/JPHHJV/TimeSeries.R,['ggplot2'],the_review,JPHHJV
+scripts/the_review_datasets_files/WIJ0PS/Matchingalgorithm2022.R,"['foreign', 'MatchIt', 'optmatch', 'designmatch', 'fields', 'readstata13']",the_review,WIJ0PS
+scripts/the_review_datasets_files/W8HUKY/03_gko_main_analysis_robustness.R,['ri'],the_review,W8HUKY
+scripts/the_review_datasets_files/W8HUKY/06_gko_afrobarometer_analysis.R,"['minqa', 'nloptr']",the_review,W8HUKY
+scripts/the_review_datasets_files/XAUF3H/analysisData.R,"['pacman', 'checkpoint']",the_review,XAUF3H
+scripts/the_review_datasets_files/XAUF3H/exp_dcpo.R,['DCPO'],the_review,XAUF3H
+scripts/the_review_datasets_files/KGVBNC/install_R_packages_for_replication.R,"['rjags', 'gplots', 'R2jags', 'coda']",the_review,KGVBNC
+scripts/the_review_datasets_files/WQ1R5X/ReplicationCode.R,['gridExtra'],the_review,WQ1R5X
+scripts/the_review_datasets_files/RDIJQC/topic_model.R,"['stm', 'SnowballC']",the_review,RDIJQC
+scripts/the_review_datasets_files/C1SWYV/Wang APSR R Script.R,"['GGally', 'maps', 'geosphere', 'network']",the_review,C1SWYV
+scripts/the_review_datasets_files/KAHHWQ/figure1_rep_r.R,['readxl'],the_review,KAHHWQ
+scripts/the_review_datasets_files/EAHO3I/Presidential Investments_Fig1 and Fig2 Replication.R,['tidyverse'],the_review,EAHO3I
+scripts/the_review_datasets_files/EAHO3I/Presidential Investments_Nominations Analysis.R,"['survminer', 'magrittr', 'haven', 'sjPlot', 'readxl', 'stargazer', 'tidyverse', 'survival', 'AER', 'mediation', 'sandwich', 'stringr']",the_review,EAHO3I
+scripts/the_review_datasets_files/RAMHWP/balance_functionGOTV.R,"['magrittr', 'foreign', 'dplyr', 'broom', 'stringr', 'knitr']",the_review,RAMHWP
+scripts/the_review_datasets_files/RAMHWP/balance_function.R,"['magrittr', 'foreign', 'dplyr', 'broom', 'stringr', 'knitr']",the_review,RAMHWP
+scripts/the_review_datasets_files/P3XVFO/7_online_appendix.R,['pacman'],the_review,P3XVFO
+scripts/the_review_datasets_files/P3XVFO/4_rewb_for_meta.R,['pacman'],the_review,P3XVFO
+scripts/the_review_datasets_files/P3XVFO/5_meta-analysis.R,['pacman'],the_review,P3XVFO
+scripts/the_review_datasets_files/P3XVFO/2_loglevel-analysis.R,['pacman'],the_review,P3XVFO
+scripts/the_review_datasets_files/27192/GHS.replicate_NEWBLOCKS.R,"['foreign', 'epicalc', 'reporttools', 'ggplot2', 'stargazer', 'locfit', 'MASS', 'xtable', 'gplots', 'systemfit']",the_review,27192
+scripts/the_review_datasets_files/HAU0EX/simulator.R,"['pscl', 'emIRT']",the_review,HAU0EX
+scripts/the_review_datasets_files/HAU0EX/estimate-big-fastX.R,"['doRNG', 'plyr', 'doMC', 'foreach', 'doMPI', 'emIRT']",the_review,HAU0EX
+scripts/the_review_datasets_files/HAU0EX/estimate-anymiscmethod-all.R,"['pscl', 'oc', 'doMPI', 'wnominate', 'doMC', 'foreach', 'doRNG', 'emIRT']",the_review,HAU0EX
+scripts/the_review_datasets_files/HAU0EX/estimate-big-wnominate.R,"['plyr', 'wnominate', 'doMC', 'FastEst', 'foreach', 'doRNG']",the_review,HAU0EX
+scripts/the_review_datasets_files/HAU0EX/bootstrap-vi.R,"['pscl', 'doMPI', 'plyr', 'doMC', 'foreach', 'doRNG', 'emIRT']",the_review,HAU0EX
+scripts/the_review_datasets_files/HAU0EX/estimator.R,"['pscl', 'oc', 'wnominate', 'emIRT']",the_review,HAU0EX
+scripts/the_review_datasets_files/6AAGM9/PolarizedPluralismReplication.R,['doBy'],the_review,6AAGM9
+scripts/the_review_datasets_files/EPDD6F/make_append_reduced_form_tables_and_figs.R,"['plm', 'png']",the_review,EPDD6F
+scripts/the_review_datasets_files/EPDD6F/figure_3.R,['png'],the_review,EPDD6F
+scripts/the_review_datasets_files/EPDD6F/table_A2_A3_fig_A1.R,['stargazer'],the_review,EPDD6F
+scripts/the_review_datasets_files/EPDD6F/make_figs_table3.R,"['plm', 'png']",the_review,EPDD6F
+scripts/the_review_datasets_files/5GP5SI/2.replication_maintext_figure2_5.R,"['effectsize', 'estimatr', 'ltm', 'RItools', 'ggplot2', 'ggthemes', 'tidyverse', 'stargazer', 'modelsummary', 'MASS', 'texreg', 'xtable']",the_review,5GP5SI
+scripts/the_review_datasets_files/5GP5SI/3.replication_appendix_figures_tables.R,"['effectsize', 'estimatr', 'ltm', 'RItools', 'ggplot2', 'ggthemes', 'tidyverse', 'stargazer', 'modelsummary', 'MASS', 'texreg', 'xtable']",the_review,5GP5SI
+scripts/the_review_datasets_files/5GP5SI/1.replication_maintext_figure1.R,"['ggplot2', 'ggthemes', 'tidyverse', 'countrycode', 'ggrepel']",the_review,5GP5SI
+scripts/the_review_datasets_files/5GP5SI/4.replication_DV_appendix_tables.R,"['effectsize', 'estimatr', 'ltm', 'RItools', 'ggplot2', 'ggthemes', 'tidyverse', 'stargazer', 'modelsummary', 'MASS', 'texreg', 'xtable']",the_review,5GP5SI
+scripts/the_review_datasets_files/J0GBTX/Allbus_main.R,"['psych', 'stargazer', 'foreign', 'sp']",the_review,J0GBTX
+scripts/the_review_datasets_files/J0GBTX/Allbus_appendix.R,"['gtools', 'foreign', 'psych', 'stargazer', 'sp', 'CBPS', 'coefplot', 'Zelig', 'interplot', 'lme4']",the_review,J0GBTX
+scripts/the_review_datasets_files/FUFDYH/17_st_amelia_multipleimputations.R,"['haven', 'Amelia']",the_review,FUFDYH
+scripts/the_review_datasets_files/FUFDYH/30_cty_amelia_multipleimputations.R,"['haven', 'Amelia']",the_review,FUFDYH
+scripts/the_review_datasets_files/FUFDYH/110_drop_maximally_influential.R,"['haven', 'devtools', 'zaminfluence', 'Amelia', 'sandwich', 'Zelig']",the_review,FUFDYH
+scripts/the_review_datasets_files/AHQRVR/replication_code.R,"['stargazer', 'tidyverse']",the_review,AHQRVR
+scripts/the_review_datasets_files/4DUB7X/study1.R,"['lfe', 'data.table', 'psych', 'stargazer', 'xtable', 'hdm']",the_review,4DUB7X
+scripts/the_review_datasets_files/4DUB7X/study2.R,"['lfe', 'data.table', 'psych', 'stargazer', 'xtable', 'hdm']",the_review,4DUB7X
+scripts/the_review_datasets_files/QR73H6/ReplicationCellPhones.R,['cem'],the_review,QR73H6
+scripts/the_review_datasets_files/GYX7GC/Hansen_V2.R,"['rworldmap', 'rgdal', 'gfcanalysis', 'water']",the_review,GYX7GC
+scripts/the_review_datasets_files/VCE7KN/apsr-figures-contact-breakdown.R,"['rvest', 'rgdal', 'rmapshaper', 'GADMTools', 'ggpubr']",the_review,VCE7KN
+scripts/the_review_datasets_files/03CDTK/singh_thornton_APSR_replication.R,"['ordinal', 'lme4', 'readstata13']",the_review,03CDTK
+scripts/the_review_datasets_files/ESR7YG/le_cjo_appendix_analyses.R,"['magrittr', 'cregg', 'devtools', 'expss', 'tidyr', 'viridis', 'foreign', 'ggplot2', 'dplyr', 'stats', 'stringr', 'cowplot', 'kableExtra', 'knitr']",the_review,ESR7YG
+scripts/the_review_datasets_files/ESR7YG/figa1_maps.R,"['rgdal', 'tidyr', 'dplyr', 'tmap', 'stringr', 'readstata13']",the_review,ESR7YG
+scripts/the_review_datasets_files/ESR7YG/le_cjo_main_analyses.R,"['magrittr', 'cregg', 'foreign', 'expss', 'ggplot2', 'dplyr', 'stringr', 'cowplot']",the_review,ESR7YG
+scripts/the_review_datasets_files/WQEQPN/_ReplicationMasterFile.R,"['parallel', 'doParallel', 'foreach', 'doRNG']",the_review,WQEQPN
+scripts/the_review_datasets_files/WZI945/GSS_data_cleaning.R,['pacman'],the_review,WZI945
+scripts/the_review_datasets_files/WZI945/liss_create_data.R,['pacman'],the_review,WZI945
+scripts/the_review_datasets_files/WZI945/Replication_file.R,['pacman'],the_review,WZI945
+scripts/the_review_datasets_files/XI7ENB/idealpoints-fig1-code.R,"['pscl', 'emIRT']",the_review,XI7ENB
+scripts/the_review_datasets_files/KWPEKK/figureS6.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'reshape2', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS12tableS5.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS7tableS3.R,"['rmeta', 'ggplot2', 'dplyr', 'reshape2', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS4.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figure2.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/tableS2.R,['xtable'],the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS1.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'reshape2', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS10.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'reshape2']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/table3.R,"['rmeta', 'ggplot2', 'dplyr', 'reshape2', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/tableS1.R,"['dplyr', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS2S3.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS8S9.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'reshape2']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS14S15S16.R,"['ggplot2', 'devtools', 'dplyr']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS13tableS6.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS5.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figure1.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/table2.R,"['rdrobust', 'dplyr', 'xtable', 'rmeta']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/table1.R,"['ggplot2', 'dplyr', 'xtable', 'rmeta']",the_review,KWPEKK
+scripts/the_review_datasets_files/KWPEKK/figureS11tableS4.R,"['rmeta', 'ggplot2', 'rdrobust', 'dplyr', 'xtable']",the_review,KWPEKK
+scripts/the_review_datasets_files/ITKNX5/replication_Badrinathan_APSR.R,['pacman'],the_review,ITKNX5
+scripts/the_review_datasets_files/RK5GOH/grd-helper-functions.R,"['rdrobust', 'dplyr']",the_review,RK5GOH
+scripts/the_review_datasets_files/NFZLI3/analysis_for_replication.R,"['foreign', 'interplot']",the_review,NFZLI3
+scripts/polbehavior_datasets_files/BVQU65/04 FigA1 plot.R,"['foreign', 'ggplot2', 'dplyr', 'gridExtra', 'xlsx']",polbehavior,BVQU65
+scripts/polbehavior_datasets_files/BVQU65/03 Fig2 plot.R,"['foreign', 'ggplot2', 'dplyr', 'gridExtra', 'xlsx']",polbehavior,BVQU65
+scripts/polbehavior_datasets_files/TRR0DK/tte_TablesGraphs.R,"['multcomp', 'stargazer', 'tidyverse']",polbehavior,TRR0DK
+scripts/polbehavior_datasets_files/AJYEDA/main.R,"['stargazer', 'xtable', 'MuMIn', 'ggplot2']",polbehavior,AJYEDA
+scripts/polbehavior_datasets_files/QL0KJN/Table F8.R,['InteractionPoweR'],polbehavior,QL0KJN
+scripts/polbehavior_datasets_files/59F366/matching_logit_cvsanctions.R,"['MatchIt', 'RcppArmadillo', 'optmatch']",polbehavior,59F366
+scripts/polbehavior_datasets_files/59F366/matching_logit_cv.R,"['MatchIt', 'RcppArmadillo', 'optmatch']",polbehavior,59F366
+scripts/polbehavior_datasets_files/59F366/matching_clogit_cvsanctions.R,"['MatchIt', 'RcppArmadillo', 'optmatch']",polbehavior,59F366
+scripts/polbehavior_datasets_files/59F366/matching_clogit_cv.R,"['MatchIt', 'RcppArmadillo', 'optmatch']",polbehavior,59F366
+scripts/polbehavior_datasets_files/QMVU0Z/opioids_identity_analysis.R,"['pwr', 'BiocManager']",polbehavior,QMVU0Z
+scripts/polbehavior_datasets_files/TA4DUW/wood_pb2022_study2_conjoint_analysis.R,"['cregg', 'plyr', 'data.table', 'ggplot2', 'reshape2', 'cjoint']",polbehavior,TA4DUW
+scripts/polbehavior_datasets_files/TA4DUW/wood_pb2022_study2_issue_selection.R,"['car', 'foreign']",polbehavior,TA4DUW
+scripts/polbehavior_datasets_files/TA4DUW/wood_pb2022_study1.R,"['car', 'ggplot2', 'grDevices', 'ri2']",polbehavior,TA4DUW
+scripts/polbehavior_datasets_files/UBQYXT/process_figs_final.R,['devtools'],polbehavior,UBQYXT
+scripts/polbehavior_datasets_files/WSUHI3/yougov_replication.R,"['devtools', 'tidyverse']",polbehavior,WSUHI3
+scripts/polbehavior_datasets_files/WSUHI3/compare_samples_replication.R,['tidyverse'],polbehavior,WSUHI3
+scripts/polbehavior_datasets_files/WSUHI3/mturk_replication.R,"['devtools', 'tidyverse']",polbehavior,WSUHI3
+scripts/polbehavior_datasets_files/R57MJ4/01_Load_Survey_Experiment.R,"['readr', 'ggplot2', 'tidyr', 'dplyr']",polbehavior,R57MJ4
+scripts/polbehavior_datasets_files/R57MJ4/02_Balance_Check.R,"['gtsummary', 'tidyr', 'dplyr']",polbehavior,R57MJ4
+scripts/polbehavior_datasets_files/R57MJ4/05_Hypothesis2.R,"['tidyr', 'ggplot2', 'dplyr', 'coefplot', 'interplot', 'ggpubr']",polbehavior,R57MJ4
+scripts/polbehavior_datasets_files/R57MJ4/A1_TV_Coverage_STM.R,"['stm', 'tidyr', 'ggplot2', 'dplyr', 'vegan', 'stringr', 'Hmisc']",polbehavior,R57MJ4
+scripts/polbehavior_datasets_files/R57MJ4/A2_World_Value_Survey.R,"['readr', 'ggplot2', 'tidyr', 'dplyr']",polbehavior,R57MJ4
+scripts/polbehavior_datasets_files/R57MJ4/S1_Evaluation_of_Cabinet.R,"['ggpubr', 'interplot', 'coefplot']",polbehavior,R57MJ4
+scripts/polbehavior_datasets_files/R57MJ4/A3_Manipulation_Check.R,"['ggplot2', 'tidyr', 'dplyr', 'coefplot']",polbehavior,R57MJ4
+scripts/polbehavior_datasets_files/R57MJ4/04_Hypothesis1_2.R,"['tidyr', 'ggplot2', 'dplyr', 'coefplot', 'interplot', 'simpleboot', 'ggpubr']",polbehavior,R57MJ4
+scripts/polbehavior_datasets_files/R57MJ4/03_Hypothesis1_1.R,"['tidyr', 'ggplot2', 'dplyr', 'coefplot', 'interplot', 'ggpubr']",polbehavior,R57MJ4
+scripts/polbehavior_datasets_files/U23L09/Pigeonholing Partisans Replication Script_Appendix.R,['RCurl'],polbehavior,U23L09
+scripts/polbehavior_datasets_files/U23L09/Pigeonholing Partisans Replication Script.R,['RCurl'],polbehavior,U23L09
+scripts/polbehavior_datasets_files/SWORPS/appendix_share_switched.R,['readstata13'],polbehavior,SWORPS
+scripts/polbehavior_datasets_files/FRGHVR/attribute_affinity_replication.R,"['tidyr', 'foreign', 'lfe', 'psych', 'ggplot2', 'ggthemes', 'dplyr', 'stargazer', 'AER', 'xtable', 'stringr', 'car', 'multiwayvcov', 'lmtest']",polbehavior,FRGHVR
+scripts/polbehavior_datasets_files/FRGHVR/attribute_affinity_replication_appendix.R,"['tidyr', 'foreign', 'lfe', 'psych', 'ggplot2', 'ggthemes', 'dplyr', 'stargazer', 'AER', 'stringr', 'car', 'multiwayvcov', 'lmtest']",polbehavior,FRGHVR
+scripts/polbehavior_datasets_files/28HGPY/repcode.socialpatriotism.R,"['ggplot2', 'mgcv']",polbehavior,28HGPY
+scripts/polbehavior_datasets_files/GZRCCJ/4b. Virtues Mediation Sensitivity.R,['mediation'],polbehavior,GZRCCJ
+scripts/polbehavior_datasets_files/EXVUEA/replication_figures.R,['boot'],polbehavior,EXVUEA
+scripts/polbehavior_datasets_files/CT5K2E/fig1_fig2.R,"['haven', 'tidyverse', 'reshape', 'ggplot2']",polbehavior,CT5K2E
+scripts/polbehavior_datasets_files/O1RCGV/003_conjoint_plots.R,['ggplot2'],polbehavior,O1RCGV
+scripts/polbehavior_datasets_files/UKOSTN/healthframing-topicmodels-10062017_final.R,"['XML', 'topicmodels']",polbehavior,UKOSTN
+scripts/polbehavior_datasets_files/KVTPVX/Interactions AMCEs ALL SURVEYS.R,['devtools'],polbehavior,KVTPVX
+scripts/polbehavior_datasets_files/F9RDNK/partisan_stability_VSG_six-wave_data_analysis_July 2021_Final.R,"['psych', 'ivreg']",polbehavior,F9RDNK
+scripts/polbehavior_datasets_files/F9RDNK/partisan_stability_TAPS_24-wave_data_analysis_July 2021_Final.R,"['haven', 'foreign', 'psych', 'lubridate', 'Hmisc', 'stringr', 'ivreg']",polbehavior,F9RDNK
+scripts/polbehavior_datasets_files/F9RDNK/partisan_stability_ISCAP_nine-wave_data_analysis_May 2021_Final.R,"['psych', 'ivreg']",polbehavior,F9RDNK
+scripts/polbehavior_datasets_files/NW4LIO/deRooij&Green_POBE2016_replication.R,"['foreign', 'readstata13']",polbehavior,NW4LIO
+scripts/polbehavior_datasets_files/XWLQ6P/cces_figures.R,['foreign'],polbehavior,XWLQ6P
+scripts/world-politics_datasets_files/JXOB6N/pol_replication.R,"['rddtools', 'MatchIt', 'ggplot2', 'gridExtra', 'BDSA', 'rgenoud']",world-politics,JXOB6N
+scripts/world-politics_datasets_files/IEM6DL/main_results_replication_2021.R,['remotes'],world-politics,IEM6DL
+scripts/world-politics_datasets_files/PRRXMM/ipums.R,['pacman'],world-politics,PRRXMM
+scripts/world-politics_datasets_files/PRRXMM/analysis.R,['pacman'],world-politics,PRRXMM
+scripts/world-politics_datasets_files/M0PKZE/ppd_replication_02_weimar_germany.R,"['foreign', 'ggplot2', 'AER', 'egg', 'geosphere', 'multiwayvcov', 'lmtest']",world-politics,M0PKZE
+scripts/world-politics_datasets_files/M0PKZE/ppd_replication_01_imperial_germany.R,"['ggplot2', 'AER', 'egg', 'geosphere', 'multiwayvcov', 'readstata13', 'lmtest']",world-politics,M0PKZE
+scripts/world-politics_datasets_files/M0PKZE/ppd_replication_03_pre_ref_germany.R,['geosphere'],world-politics,M0PKZE
+scripts/world-politics_datasets_files/M0PKZE/ppd_replication_04_19th_c_prussia.R,"['AER', 'geosphere']",world-politics,M0PKZE
+scripts/world-politics_datasets_files/KOVT5Y/WP_replication.R,['pacman'],world-politics,KOVT5Y
+scripts/world-politics_datasets_files/IVKRZY/3_descriptives.R,['pacman'],world-politics,IVKRZY
+scripts/world-politics_datasets_files/FRPRDP/20190624 replication code.R,"['stargazer', 'dplyr']",world-politics,FRPRDP
+scripts/ajps_datasets_files/H13U6G/Figure 1 R Script.R,['ggplot2'],ajps,H13U6G
+scripts/ajps_datasets_files/79RI4R/Extract_bibliographic_information.R,['rvest'],ajps,79RI4R
+scripts/ajps_datasets_files/U6EC8N/Analysis_R.R,['plyr'],ajps,U6EC8N
+scripts/ajps_datasets_files/0MOPI4/LPAExpanded_Robustnesscheck.R,"['scatterplot3d', 'ggplot2', 'MASS', 'poLCA']",ajps,0MOPI4
+scripts/ajps_datasets_files/0MOPI4/BertsouCaramaniCode2.R,"['scatterplot3d', 'ggplot2', 'MASS', 'poLCA']",ajps,0MOPI4
+scripts/ajps_datasets_files/LBAV1Q/00_Packages.R,"['lmtest', 'Rmisc', 'Rcpp', 'optmatch', 'plyr', 'data.table', 'ggplot2', 'stargazer', 'gridExtra', 'scales', 'tibble', 'sandwich', 'xtable', 'Hmisc', 'MASS', 'kableExtra', 'ICC', 'knitr']",ajps,LBAV1Q
+scripts/ajps_datasets_files/0UTWWV/PA_study1_0.R,"['haven', 'multcomp', 'psych', 'plyr', 'ggplot2', 'stargazer', 'gridExtra', 'mediation', 'xtable', 'ggstance']",ajps,0UTWWV
+scripts/ajps_datasets_files/0UTWWV/PA_study2_0.R,"['multcomp', 'psych', 'ggplot2', 'stargazer', 'gridExtra', 'mediation', 'xtable', 'ggstance']",ajps,0UTWWV
+scripts/ajps_datasets_files/EZSJ1S/AJPS_Replication_Code.R,"['foreign', 'stargazer', 'multiwayvcov', 'dummies', 'lmtest']",ajps,EZSJ1S
+scripts/ajps_datasets_files/EZSJ1S/AJPS_Replication_Code_Appendix.R,"['sfsmisc', 'foreign', 'multiwayvcov', 'plyr', 'stargazer', 'doMC', 'shape', 'pBrackets', 'dummies', 'lmtest']",ajps,EZSJ1S
+scripts/ajps_datasets_files/KL36TP/p2_word_embedding.R,['devtools'],ajps,KL36TP
+scripts/ajps_datasets_files/KL36TP/p0_speeches_UK.R,['devtools'],ajps,KL36TP
+scripts/ajps_datasets_files/KL36TP/p1_preparing_corpus_UK.R,['devtools'],ajps,KL36TP
+scripts/ajps_datasets_files/KL36TP/p0_speeches_US.R,['devtools'],ajps,KL36TP
+scripts/ajps_datasets_files/KL36TP/p1_preparing_corpus_US.R,['devtools'],ajps,KL36TP
+scripts/ajps_datasets_files/OWVXUD/wood_grose_replication_code_final_2021.R,"['sf', 'estimatr', 'plyr', 'effects', 'ggplot2', 'stargazer', 'dplyr', 'modelsummary', 'gridExtra', 'AER', 'MASS', 'ggmap', 'sandwich', 'stringr', 'grid', 'readstata13']",ajps,OWVXUD
+scripts/ajps_datasets_files/G8F3SN/RD_Output_Final.R,"['foreign', 'rdrobust', 'tidyverse', 'dplyr', 'rdd']",ajps,G8F3SN
+scripts/ajps_datasets_files/NC06GQ/SM 02 - Total Number of Rights.R,['foreign'],ajps,NC06GQ
+scripts/ajps_datasets_files/NC06GQ/SM 05 - Matching Results.R,"['MatchIt', 'optmatch', 'maps', 'mapdata', 'countrycode', 'cshapes', 'RcppArmadillo']",ajps,NC06GQ
+scripts/ajps_datasets_files/NC06GQ/Creating Matched Datasets.R,"['MatchIt', 'RcppArmadillo', 'optmatch']",ajps,NC06GQ
+scripts/ajps_datasets_files/NC06GQ/Main Results - Figure 2.R,['foreign'],ajps,NC06GQ
+scripts/ajps_datasets_files/NC06GQ/Main Results - Table 1.R,"['MatchIt', 'RcppArmadillo', 'optmatch']",ajps,NC06GQ
+scripts/ajps_datasets_files/NC06GQ/SM 13 - Testing Smaller Sample Sizes.R,"['MatchIt', 'optmatch', 'sandwich', 'ZeligChoice', 'ordinal', 'RcppArmadillo']",ajps,NC06GQ
+scripts/ajps_datasets_files/NC06GQ/SM 01 - Six Political Rights.R,"['MatchIt', 'optmatch', 'maps', 'mapdata', 'countrycode', 'cshapes', 'RcppArmadillo']",ajps,NC06GQ
+scripts/ajps_datasets_files/RK66RN/0_packages.R,"['githubinstall', 'devtools', 'fmsb', 'nnet', 'margins', 'matrixStats', 'glm.predict', 'ggplot2', 'tidyverse', 'scales', 'xtable', 'texreg', 'mclust', 'ggrepel', 'rio', 'ggpubr']",ajps,RK66RN
+scripts/ajps_datasets_files/ESRIBE/Appendix F.R,"['FindIt', 'doParallel', 'nnet', 'foreign', 'multiwayvcov', 'Amelia', 'binomlogit', 'aod', 'ggplot2', 'list', 'MASS', 'mvtnorm', 'GEEmediate', 'mlogit', 'gmodels']",ajps,ESRIBE
+scripts/ajps_datasets_files/ESRIBE/Conjoint analysis.R,"['FindIt', 'doParallel', 'nnet', 'foreign', 'multiwayvcov', 'Amelia', 'binomlogit', 'aod', 'ggplot2', 'list', 'MASS', 'mvtnorm', 'GEEmediate', 'mlogit', 'gmodels']",ajps,ESRIBE
+scripts/ajps_datasets_files/ESRIBE/Appendix E.R,"['FindIt', 'doParallel', 'nnet', 'foreign', 'multiwayvcov', 'Amelia', 'binomlogit', 'aod', 'ggplot2', 'list', 'MASS', 'mvtnorm', 'GEEmediate', 'mlogit', 'gmodels']",ajps,ESRIBE
+scripts/ajps_datasets_files/T0R1GE/MASTER.R,['pacman'],ajps,T0R1GE
+scripts/ajps_datasets_files/T0R1GE/all_analyses.R,['pacman'],ajps,T0R1GE
+scripts/ajps_datasets_files/Y10EQV/00_package_install.R,['devtools'],ajps,Y10EQV
+scripts/ajps_datasets_files/RJKIUP/study2_analysis.R,"['cregg', 'haven', 'dplyr', 'ggplot2']",ajps,RJKIUP
+scripts/ajps_datasets_files/RJKIUP/study1_analysis.R,"['ltm', 'car', 'cjoint']",ajps,RJKIUP
+scripts/ajps_datasets_files/RJKIUP/study3_analysis.R,"['car', 'ggplot2', 'gridExtra', 'coefplot']",ajps,RJKIUP
+scripts/ajps_datasets_files/8XT86F/plot_my_gof.R,['dplyr'],ajps,8XT86F
+scripts/ajps_datasets_files/O059HN/h1h2_loop_weighted.R,['devtools'],ajps,O059HN
+scripts/ajps_datasets_files/O059HN/Master_script_ALL_RESULTS.R,['foreign'],ajps,O059HN
+scripts/ajps_datasets_files/AV8PLT/Table_1-2.R,"['tidyr', 'plyr', 'ggplot2', 'stargazer', 'dplyr', 'multiwayvcov', 'lmtest']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Table6_script.R,"['tidyr', 'plyr', 'ggplot2', 'stargazer', 'dplyr', 'multiwayvcov', 'lmtest']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Figure5_script.R,"['tidyr', 'plyr', 'ggplot2', 'stargazer', 'dplyr', 'multiwayvcov', 'lmtest']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Figure_A5_script.R,"['tidyr', 'plyr', 'ggplot2', 'dplyr', 'multiwayvcov', 'lmtest']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Network-sample-calculations_script.R,"['tidyr', 'tictoc', 'plyr', 'ggplot2', 'dplyr', 'igraph', 'geosphere']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Table3_script.R,"['plyr', 'dplyr', 'stringr']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Table5_script.R,"['tidyr', 'tictoc', 'plyr', 'ggplot2', 'dplyr', 'igraph', 'geosphere']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Figure4_script.R,"['tidyr', 'plyr', 'ggplot2', 'stargazer', 'dplyr', 'multiwayvcov', 'lmtest']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Balance-tables_histograms_script.R,"['tidyr', 'plyr', 'ggplot2', 'stargazer', 'dplyr', 'multiwayvcov', 'lmtest']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Figure3_4-28-20.R,"['plyr', 'dplyr', 'reshape2', 'ggrepel', 'RColorBrewer']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Figure6_script.R,"['tidyr', 'plyr', 'ggplot2', 'stargazer', 'dplyr', 'multiwayvcov', 'lmtest']",ajps,AV8PLT
+scripts/ajps_datasets_files/AV8PLT/Table4_script.R,"['tidyr', 'plyr', 'ggplot2', 'stargazer', 'dplyr', 'multiwayvcov', 'lmtest']",ajps,AV8PLT
+scripts/ajps_datasets_files/HS9HW3/replication_appendix.R,['ipumsr'],ajps,HS9HW3
+scripts/ajps_datasets_files/HUZGPJ/SWF-NPC-implmentation.R,['NPC'],ajps,HUZGPJ
+scripts/ajps_datasets_files/DHMCRC/analysis_ces.R,['dplyr'],ajps,DHMCRC
+scripts/ajps_datasets_files/DHMCRC/analysis_lucid.R,"['ggplot2', 'reshape2', 'dplyr', 'estimatr']",ajps,DHMCRC
+scripts/ajps_datasets_files/DHMCRC/reanalysis_study2_DiasLelkes2021.R,['dplyr'],ajps,DHMCRC
+scripts/ajps_datasets_files/DHMCRC/analysis_anes.R,"['dplyr', 'estimatr']",ajps,DHMCRC
+scripts/ajps_datasets_files/DHMCRC/reanalysis_study5_DiasLelkes2021.R,"['estimatr', 'dplyr', 'mediation', 'rio', 'lme4']",ajps,DHMCRC
+scripts/ajps_datasets_files/DHMCRC/reanalysis_OrrHuber2020.R,"['ggplot2', 'dplyr', 'estimatr']",ajps,DHMCRC
+scripts/ajps_datasets_files/UDUJEI/Table A1.R,['ZeligMultilevel'],ajps,UDUJEI
+scripts/ajps_datasets_files/7ZVSYO/12-supporting-information-E.R,"['rio', 'dplyr', 'xtable']",ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/02-figure3.R,"['tidyr', 'ggplot2', 'dplyr', 'rio', 'grid']",ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/11-figure9-supporting-information-D.R,"['tidyr', 'foreign', 'dplyr', 'xtable', 'rio', 'readstata13']",ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/06-figure7.R,"['rio', 'ggplot2', 'tidyr', 'dplyr']",ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/03-models.R,"['tidyr', 'ggplot2', 'dplyr', 'broom', 'xtable', 'rio']",ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/04-figure5.R,"['rio', 'ggplot2', 'tidyr', 'dplyr']",ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/07-supporting-info-A.R,['dplyr'],ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/08-supporting-info-C.R,"['rio', 'ggplot2', 'dplyr']",ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/05-figure6.R,"['rio', 'ggplot2', 'tidyr', 'dplyr']",ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/09-supporting-info-C-02.R,['dplyr'],ajps,7ZVSYO
+scripts/ajps_datasets_files/7ZVSYO/10-table4-supporting-information-D.R,"['rio', 'tidyr', 'dplyr', 'xtable']",ajps,7ZVSYO
+scripts/ajps_datasets_files/YE8VC9/4_credit_flows.R,"['data.table', 'ggplot2', 'gridExtra']",ajps,YE8VC9
+scripts/ajps_datasets_files/YE8VC9/3_sipp.R,"['msm', 'data.table', 'plm', 'ggplot2', 'stargazer', 'BBmisc', 'sjPlot', 'reshape2', 'plyr', 'sandwich', 'MASS', 'lmtest']",ajps,YE8VC9
+scripts/ajps_datasets_files/YE8VC9/2_lits.R,"['data.table', 'sjPlot', 'ggplot2', 'stargazer', 'BBmisc', 'glmmTMB', 'reshape2', 'lemon', 'sandwich', 'MASS', 'ggrepel', 'lme4', 'lmtest']",ajps,YE8VC9
+scripts/ajps_datasets_files/YE8VC9/1_credit_permissiveness.R,"['data.table', 'effects', 'ggplot2', 'stargazer', 'plm', 'psych', 'reshape2', 'BBmisc', 'sandwich', 'MASS', 'stringr', 'ggrepel', 'lmtest']",ajps,YE8VC9
+scripts/ajps_datasets_files/DR0YF2/anes.R,"['plyr', 'ggplot2', 'foreign', 'dplyr']",ajps,DR0YF2
+scripts/ajps_datasets_files/DR0YF2/bounds_compute.R,"['fastDummies', 'foreign', 'ggplot2', 'dplyr', 'boot', 'readstata13']",ajps,DR0YF2
+scripts/ajps_datasets_files/J7RTIW/ajps_replication_tied_aid1.R,"['interflex', 'ggplot2', 'stargazer', 'sandwich', 'countrycode', 'xtable', 'mice', 'emmeans', 'ivreg', 'lmtest']",ajps,J7RTIW
+scripts/ajps_datasets_files/OJA7YS/Appendix F - Multiple Comparisons.R,['xtable'],ajps,OJA7YS
+scripts/ajps_datasets_files/IVILML/politymap.R,"['rgdal', 'ggplot2', 'tidyverse', 'dplyr', 'gridExtra', 'broom', 'stringr', 'grid', 'RColorBrewer']",ajps,IVILML
+scripts/ajps_datasets_files/IVILML/ruralinsmap.R,"['rgdal', 'ggplot2', 'tidyverse', 'dplyr', 'gridExtra', 'broom', 'stringr', 'grid', 'RColorBrewer']",ajps,IVILML
+scripts/ajps_datasets_files/IBILHS/coeftest.cluster.R,['sandwich'],ajps,IBILHS
+scripts/ajps_datasets_files/ZWKCPA/ajps_berman_replication_supplemental.R,"['magrittr', 'pscl', 'lattice', 'Amelia', 'ggplot2', 'stargazer', 'dplyr', 'tidyverse', 'VIM', 'caret', 'Hmisc', 'mice', 'car', 'reshape', 'RColorBrewer', 'ROCR', 'lmtest']",ajps,ZWKCPA
+scripts/ajps_datasets_files/ZWKCPA/ajps_berman_replication_maintext.R,"['magrittr', 'pscl', 'ggplot2', 'stargazer', 'dplyr', 'tidyverse', 'gridExtra', 'Hmisc', 'car', 'reshape', 'RColorBrewer', 'lmtest']",ajps,ZWKCPA
+scripts/ajps_datasets_files/9QUMY3/master_merge.R,"['Amelia', 'lubridate', 'stringi', 'plm', 'dplyr', 'countrycode', 'utf8', 'readstata13']",ajps,9QUMY3
+scripts/ajps_datasets_files/UMP7YP/R_RunPaper.R,"['tidyr', 'foreign', 'lfe', 'data.table', 'plm', 'ggplot2', 'rdrobust', 'dplyr', 'gridExtra', 'multiwayvcov', 'lmtest']",ajps,UMP7YP
+scripts/ajps_datasets_files/UMP7YP/R_Maps.R,"['data.table', 'sf', 'ggplot2', 'gridExtra']",ajps,UMP7YP
+scripts/ajps_datasets_files/UMP7YP/R_RunAppendix.R,"['tidyr', 'foreign', 'lfe', 'data.table', 'plm', 'ggplot2', 'rdrobust', 'gridExtra', 'rdd', 'multiwayvcov', 'lmtest']",ajps,UMP7YP
+scripts/ajps_datasets_files/UMP7YP/R_Creation.R,"['data.table', 'dplyr']",ajps,UMP7YP
+scripts/ajps_datasets_files/MQRHUZ/courting_informal_workers.R,['pacman'],ajps,MQRHUZ
+scripts/ajps_datasets_files/193ZDD/BeazerWooAJPS.appendix.tableA12.column2.R,"['BRugs', 'R2WinBUGS']",ajps,193ZDD
+scripts/ajps_datasets_files/193ZDD/BeazerWooAJPS.appendix.tableA9-A10.R,"['stargazer', 'lme4']",ajps,193ZDD
+scripts/ajps_datasets_files/193ZDD/BeazerWooAJPS.article.table1.R,"['stargazer', 'lme4']",ajps,193ZDD
+scripts/ajps_datasets_files/193ZDD/BeazerWooAJPS.appendix.tableA11.column2.R,"['BRugs', 'R2WinBUGS']",ajps,193ZDD
+scripts/ajps_datasets_files/193ZDD/BeazerWooAJPS.appendix.tableA11.column1.R,"['BRugs', 'R2WinBUGS']",ajps,193ZDD
+scripts/ajps_datasets_files/193ZDD/BeazerWooAJPS.article.table2.column2.R,"['BRugs', 'R2WinBUGS']",ajps,193ZDD
+scripts/ajps_datasets_files/193ZDD/BeazerWooAJPS.article.table2.column1.R,"['BRugs', 'R2WinBUGS']",ajps,193ZDD
+scripts/ajps_datasets_files/193ZDD/BeazerWooAJPS.appendix.tableA11.column3.R,"['BRugs', 'R2WinBUGS']",ajps,193ZDD
+scripts/ajps_datasets_files/S3HACJ/functions_ind.R,['sandwich'],ajps,S3HACJ
+scripts/ajps_datasets_files/6YNZTE/daeyat_analysis.R,"['stm', 'twitteR', 'stringr', 'tm', 'Hmisc', 'NLP', 'Matrix', 'arabicStemR']",ajps,6YNZTE
+scripts/ajps_datasets_files/GT8NDD/Merge Code.R,['haven'],ajps,GT8NDD
+scripts/ajps_datasets_files/OJUCRU/WEE_commands_AJPS.R,"['cregg', 'ggpubr']",ajps,OJUCRU
+scripts/ajps_datasets_files/QXJDJ5/merge_context_placebo.R,"['plm', 'readstata13']",ajps,QXJDJ5
+scripts/ajps_datasets_files/QXJDJ5/number_in_texts.R,"['stargazer', 'list', 'MASS', 'sandwich', 'pBrackets', 'readstata13', 'lmtest']",ajps,QXJDJ5
+scripts/ajps_datasets_files/QXJDJ5/merge_context.R,['readstata13'],ajps,QXJDJ5
+scripts/ajps_datasets_files/QXJDJ5/SurveyAnalysis_Main.R,"['stargazer', 'list', 'MASS', 'sandwich', 'pBrackets', 'readstata13', 'lmtest']",ajps,QXJDJ5
+scripts/ajps_datasets_files/QXJDJ5/ContextAnalysis_Appendix.R,"['stargazer', 'MASS', 'sandwich', 'readstata13', 'lmtest']",ajps,QXJDJ5
+scripts/ajps_datasets_files/QXJDJ5/ContextAnalysis_Main.R,"['MASS', 'sandwich', 'readstata13', 'lmtest']",ajps,QXJDJ5
+scripts/ajps_datasets_files/QXJDJ5/SurveyAnalysis_Appendix.R,"['foreign', 'stargazer', 'list', 'MASS', 'sandwich', 'readstata13', 'lmtest']",ajps,QXJDJ5
+scripts/ajps_datasets_files/W1YJZQ/Figure_2_providerssubscribers.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/Table2.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/Figure_3_comscoreproviders.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/Table1.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/tablese3e4.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/tablec1.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/FigA1.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/Figure_1_map.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/TableD1D2D3.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/Figure_4_nes.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/W1YJZQ/ROW Validation Checks.R,['pacman'],ajps,W1YJZQ
+scripts/ajps_datasets_files/P5TAFD/Dofile-analyses.R,"['parallel', 'multiwayvcov', 'MASS', 'lmtest']",ajps,P5TAFD
+scripts/ajps_datasets_files/P5TAFD/Dofile-dataset-construction-2.R,"['doBy', 'foreign']",ajps,P5TAFD
+scripts/ajps_datasets_files/K7OCDX/SPSS2Stata.R,['foreign'],ajps,K7OCDX
+scripts/ajps_datasets_files/K7OCDX/AJPSKosmidisRtMRFigures.R,"['ggplot2', 'readstata13']",ajps,K7OCDX
+scripts/ajps_datasets_files/LD6NL8/Terrorism_Replication_2.R,"['FindIt', 'nnet', 'xtable']",ajps,LD6NL8
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim5k.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Figure2Sim.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim3k.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim1kLoadModules.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim4k.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim4kLoadModules.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim2kLoadModules.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim5kLoadModules.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim2k.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim1k.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Table2Sim3kLoadModules.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/ZBRTJH/Figure2SimLoadModules.R,"['RSQLite', 'parallel', 'Rmpi', 'portableParallelSeeds', 'dplyr', 'dbplyr', 'rockchalk', 'DBI']",ajps,ZBRTJH
+scripts/ajps_datasets_files/XGXEN6/rep_analyses.R,"['haven', 'fastDummies', 'foreign', 'estimatr', 'RItools', 'ggplot2', 'stargazer', 'tidyverse', 'reshape2', 'scales', 'xtable', 'texreg', 'ggpubr']",ajps,XGXEN6
+scripts/ajps_datasets_files/WJINZP/AJPS_Latura_Weeks_Replication_Code.R,"['MatchIt', 'clubSandwich', 'aod', 'ggplot2', 'stargazer', 'dplyr', 'reshape2', 'multiwayvcov', 'lmtest']",ajps,WJINZP
+scripts/ajps_datasets_files/HIQ4BV/figures.R,"['foreign', 'plyr', 'ggplot2', 'reshape2', 'Hmisc', 'grid']",ajps,HIQ4BV
+scripts/ajps_datasets_files/KGIBK5/Prediction5AJPS.R,['R2jags'],ajps,KGIBK5
+scripts/ajps_datasets_files/KGIBK5/Prediction1AJPS.R,['R2jags'],ajps,KGIBK5
+scripts/ajps_datasets_files/FXI5ZO/Code02_analysis.R,"['tidyr', 'lfe', 'plyr', 'plm', 'ggplot2', 'readxl', 'dplyr', 'survival', 'wesanderson', 'xtable', 'car', 'clusterSEs', 'Matrix', 'readstata13']",ajps,FXI5ZO
+scripts/ajps_datasets_files/FXI5ZO/Code01_data_preparation.R,"['plyr', 'readxl', 'dplyr', 'car', 'readstata13']",ajps,FXI5ZO
+scripts/ajps_datasets_files/2E2M9Z/dcp_plots_repl.R,"['plyr', 'ggplot2', 'gridExtra']",ajps,2E2M9Z
+scripts/ajps_datasets_files/PGCVDP/committees_graphs.R,"['foreign', 'dplyr', 'readstata13']",ajps,PGCVDP
+scripts/ajps_datasets_files/ZLHYSZ/clanalysis_replication_vNov16.R,['PACKAGE NAME HERE'],ajps,ZLHYSZ
+scripts/ajps_datasets_files/KXDRXB/plot.R,"['ggplot2', 'readstata13']",ajps,KXDRXB
+scripts/ajps_datasets_files/ZFLG25/Manuscript_Table1_10Jun2016.R,"['nnet', 'foreign', 'readstata13', 'plyr', 'aod', 'ri', 'stargazer', 'descr', 'AER', 'tables', 'xtable', 'randomizr']",ajps,ZFLG25
+scripts/ajps_datasets_files/ZFLG25/Supporting_Information_Tables_A1_A2_A3.R,"['nnet', 'foreign', 'plyr', 'aod', 'ri', 'stargazer', 'descr', 'AER', 'xtable', 'randomizr', 'readstata13']",ajps,ZFLG25
+scripts/ajps_datasets_files/ZFLG25/Supporting_Information_Balance_Attrition.R,"['nnet', 'foreign', 'readstata13', 'plyr', 'aod', 'ri', 'descr', 'AER', 'randomizr']",ajps,ZFLG25
+scripts/ajps_datasets_files/TZVDUQ/01_model.R,['tidyverse'],ajps,TZVDUQ
+scripts/ajps_datasets_files/WMPXIW/ITA-survey-welfare_AJPS.R,"['cregg', 'FindIt', 'foreign', 'sjPlot', 'ggplot2', 'stargazer', 'arm', 'ggthemes', 'mediation', 'ggeffects']",ajps,WMPXIW
+scripts/ajps_datasets_files/WMPXIW/FRA-survey-welfare_AJPS.R,"['cregg', 'FindIt', 'foreign', 'sjPlot', 'ggplot2', 'stargazer', 'arm', 'ggthemes', 'mediation', 'ggeffects']",ajps,WMPXIW
+scripts/ajps_datasets_files/WMPXIW/UK-survey-welfare_AJPS.R,"['cregg', 'FindIt', 'foreign', 'sjPlot', 'ggplot2', 'stargazer', 'arm', 'ggthemes', 'mediation', 'ggeffects']",ajps,WMPXIW
+scripts/ajps_datasets_files/WMPXIW/US-survey-welfare_AJPS.R,"['cregg', 'FindIt', 'foreign', 'sjPlot', 'ggplot2', 'stargazer', 'arm', 'ggthemes', 'mediation', 'ggeffects']",ajps,WMPXIW
+scripts/ajps_datasets_files/DL8SZL/DataAnalysis_GenderExp.R,"['packagename', 'devtools', 'stringr']",ajps,DL8SZL
+scripts/ajps_datasets_files/DL8SZL/Figure_A3.R,"['survey', 'haven', 'ggplot2', 'tidyverse', 'RColorBrewer']",ajps,DL8SZL
+scripts/ajps_datasets_files/MVDWCS/Trump_Replication.R,"['tidytext', 'textdata', 'xtable', 'car', 'texteffect']",ajps,MVDWCS
+scripts/ajps_datasets_files/PWRN9K/IchinoNathan_AJPS_primaries_analysis.R,['beanplot'],ajps,PWRN9K
+scripts/ajps_datasets_files/PWRN9K/IchinoNathan_AJPS_primariesSI_analysis.R,"['Matching', 'beanplot']",ajps,PWRN9K
+scripts/ajps_datasets_files/6KPFOK/Replication_prep_study1_speeches_nz.R,['pacman'],ajps,6KPFOK
+scripts/ajps_datasets_files/6KPFOK/Replication_main_study3.R,['texreg'],ajps,6KPFOK
+scripts/ajps_datasets_files/6KPFOK/Replication_prep_study2.R,['plyr'],ajps,6KPFOK
+scripts/ajps_datasets_files/6KPFOK/Replication_prep_study1_speeches_au.R,['pacman'],ajps,6KPFOK
+scripts/ajps_datasets_files/I0VEMG/aaa MrP and MrsP_US.R,"['blme', 'survey', 'foreign', 'arm', 'texreg']",ajps,I0VEMG
+scripts/ajps_datasets_files/I0VEMG/aaa MrP and MrsP_US_wUncert.R,"['arm', 'foreign', 'lme4']",ajps,I0VEMG
+scripts/ajps_datasets_files/UMIBSL/replicate4_figures.R,"['plyr', 'mlogit', 'foreign']",ajps,UMIBSL
+scripts/ajps_datasets_files/UMIBSL/replicate3_table3c5.R,['foreign'],ajps,UMIBSL
+scripts/ajps_datasets_files/CL0RU2/Replication Script.R,"['extrafont', 'msm', 'foreign', 'ggplot2', 'dplyr', 'sandwich', 'lmtest']",ajps,CL0RU2
+scripts/ajps_datasets_files/9IKGYY/narcissism_analysis.R,"['devtools', 'psych', 'ggplot2', 'stargazer', 'dplyr', 'patchwork', 'reshape2', 'MASS', 'Zelig', 'ZeligChoice', 'polycor', 'stringr', 'rstan', 'texreg', 'dummies', 'rstanarm', 'lavaan', 'semTools']",ajps,9IKGYY
+scripts/ajps_datasets_files/VJUOOV/Labor_White_Racial_Politics_Code.R,"['zoo', 'nlme', 'arm', 'LCFdata', 'DataCombine', 'reshape2', 'LMERConvenienceFunctions', 'Hmisc', 'car', 'lme4']",ajps,VJUOOV
+scripts/ajps_datasets_files/SDUGCC/Stokes_AJPS_Replication.R,['reshape2'],ajps,SDUGCC
+scripts/ajps_datasets_files/RFECVH/analysis_study4_anes.R,"['ggplot2', 'dplyr', 'xtable', 'readstata13', 'questionr']",ajps,RFECVH
+scripts/ajps_datasets_files/RFECVH/ANES_cleaning.R,"['dplyr', 'readstata13']",ajps,RFECVH
+scripts/ajps_datasets_files/RFECVH/analysis_study123.R,"['commarobust', 'ggplot2', 'stargazer', 'dplyr', 'grid']",ajps,RFECVH
+scripts/ajps_datasets_files/KDUMRM/Replication.R,['pacman'],ajps,KDUMRM
+scripts/ajps_datasets_files/26544/glynn_sen_daughters_replication_code.R,['ZeligChoice'],ajps,26544
+scripts/ajps_datasets_files/KFSNWU/Helms_AJPS_ReplicationCode.R,"['sf', 'tidyverse', 'fixest']",ajps,KFSNWU
+scripts/ajps_datasets_files/KFSNWU/Helms_AJPS_DataCreationCode.R,"['haven', 'fastDummies', 'readxl', 'tidyverse', 'readstata13']",ajps,KFSNWU
+scripts/ajps_datasets_files/XKC4R4/econ-vote-analysis-replication-code.R,"['foreign', 'stargazer', 'arm', 'mediation', 'xtable', 'lme4']",ajps,XKC4R4
+scripts/ajps_datasets_files/PBQRGQ/replication_partycompetence_v2.R,"['cjoint', 'ggpubr']",ajps,PBQRGQ
+scripts/ajps_datasets_files/VT4KJA/ivsensianalysis.R,"['foreign', 'readstata13']",ajps,VT4KJA
+scripts/ajps_datasets_files/SEHMGR/SecondExperimentAnalyses.R,['Matching'],ajps,SEHMGR
+scripts/ajps_datasets_files/SEHMGR/FirstExperimentAnalyses.R,"['nnet', 'foreign', 'beepr', 'Matching', 'sandwich', 'Hmisc']",ajps,SEHMGR
+scripts/ajps_datasets_files/23818/krup.R,"['plm', 'arm']",ajps,23818
+scripts/ajps_datasets_files/23818/control.R,"['arm', 'sandwich']",ajps,23818
+scripts/ajps_datasets_files/XBNJD9/Table2.R,"['magic', 'data.table', 'stringr', 'Matrix', 'pracma']",ajps,XBNJD9
+scripts/ajps_datasets_files/XBNJD9/compStat2.R,"['doParallel', 'magic', 'data.table', 'Matrix', 'abind', 'pracma']",ajps,XBNJD9
+scripts/ajps_datasets_files/2XP8YF/analysis.R,"['ergm', 'sna', 'latticeExtra', 'gee', 'sandwich', 'texreg', 'network', 'latentnet', 'lme4', 'btergm', 'lmtest']",ajps,2XP8YF
+scripts/ajps_datasets_files/QNG2V0/figureC2.R,"['ggplot2', 'farver', 'gridExtra']",ajps,QNG2V0
+scripts/ajps_datasets_files/QNG2V0/figure5.R,"['ggplot2', 'farver', 'gridExtra']",ajps,QNG2V0
+scripts/ajps_datasets_files/QNG2V0/gerrymanderTables1_2.R,['xtable'],ajps,QNG2V0
+scripts/ajps_datasets_files/QNG2V0/figureC1.R,"['ggplot2', 'farver', 'gridExtra']",ajps,QNG2V0
+scripts/ajps_datasets_files/Q8CSU8/Figure1.R,"['ordinal', 'readstata13']",ajps,Q8CSU8
+scripts/ajps_datasets_files/RYNSDG/equivalence_replication_file.R,['gridExtra'],ajps,RYNSDG
+scripts/ajps_datasets_files/VOO3TD/Harding_Nwokolo_Nigeria_MediaTextAnalysis.R,"['devtools', 'BiocManager']",ajps,VOO3TD
+scripts/ajps_datasets_files/FA8FVF/install_packages.R,"['devtools', 'raster', 'ggplot2', 'tidyverse', 'gridExtra', 'ggalt', 'metafolio', 'xtable', 'gdata', 'grid']",ajps,FA8FVF
+scripts/ajps_datasets_files/FA8FVF/predict_districts.R,['compactness'],ajps,FA8FVF
+scripts/ajps_datasets_files/AWSQTW/Figure2.R,['foreign'],ajps,AWSQTW
+scripts/ajps_datasets_files/AWSQTW/brazil-RD-analysis.R,"['rdrobust', 'readstata13', 'Hmisc']",ajps,AWSQTW
+scripts/ajps_datasets_files/AWSQTW/Figure1.R,['foreign'],ajps,AWSQTW
+scripts/ajps_datasets_files/Q5PRNX/Schnakenberg_Turner_dataprep.R,"['foreign', 'Hmisc']",ajps,Q5PRNX
+scripts/ajps_datasets_files/Q5PRNX/Schnakenberg_Turner_Replication.R,"['foreign', 'Hmisc']",ajps,Q5PRNX
+scripts/ajps_datasets_files/YFPQJH/Figures.R,"['foreign', 'psych', 'latticeExtra', 'stats', 'car', 'Matrix', 'lattice']",ajps,YFPQJH
+scripts/ajps_datasets_files/Y8KIUK/tjb_pm_rcode.R,"['devtools', 'readstata13']",ajps,Y8KIUK
+scripts/ajps_datasets_files/Y8KIUK/tjb_pm_rcode_unrestricted.R,"['devtools', 'readstata13']",ajps,Y8KIUK
+scripts/ajps_datasets_files/KKQFKA/Figure2.R,"['sp', 'maptools']",ajps,KKQFKA
+scripts/ajps_datasets_files/M2QGOZ/figure 3.R,['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/M2QGOZ/Figures 5-6.R,['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/M2QGOZ/Figure D1.R,['pacman'],ajps,M2QGOZ
+"scripts/ajps_datasets_files/M2QGOZ/Figure 7, F1, B1.R",['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/M2QGOZ/Figure A1.R,['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/M2QGOZ/Figures 1-2.R,['pacman'],ajps,M2QGOZ
+"scripts/ajps_datasets_files/M2QGOZ/Figures 8-11, h1-2, J1-6.R",['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/M2QGOZ/Figure 4.R,['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/M2QGOZ/generate_border_tiles.R,['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/M2QGOZ/Figure E1.R,['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/M2QGOZ/Figure C1.R,['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/M2QGOZ/Table E1.R,['pacman'],ajps,M2QGOZ
+scripts/ajps_datasets_files/VULKLW/Figure2Code.R,"['plotrix', 'foreign', 'readxl', 'ggplot2', 'tidyverse', 'shape']",ajps,VULKLW
+scripts/ajps_datasets_files/WPVSMH/panel_data_cleaning_code.R,"['forcats', 'haven', 'tidyverse']",ajps,WPVSMH
+scripts/ajps_datasets_files/WPVSMH/norms_vs_action_replication.R,"['cowplot', 'survey', 'huxtable']",ajps,WPVSMH
+scripts/ajps_datasets_files/WPVSMH/estimation_functions.R,"['tidyverse', 'foreach']",ajps,WPVSMH
+scripts/ajps_datasets_files/WPVSMH/data_cleaning_functions.R,"['janitor', 'haven']",ajps,WPVSMH
+scripts/ajps_datasets_files/ZVC9W5/simulateData.R,['extraDistr'],ajps,ZVC9W5
+scripts/ajps_datasets_files/ZVC9W5/0_root.R,"['future', 'doParallel', 'extraDistr', 'ggplot2', 'gridExtra', 'abind', 'foreach', 'readstata13']",ajps,ZVC9W5
+scripts/ajps_datasets_files/TTPEOE/01_postcode_level_analysis.R,"['foreign', 'lfe', 'data.table', 'ggplot2', 'stargazer', 'dplyr', 'readxl', 'reshape2', 'lmtest']",ajps,TTPEOE
+scripts/ajps_datasets_files/TTPEOE/02_pcon_level_analysis.R,"['foreign', 'lfe', 'data.table', 'ggplot2', 'stargazer', 'dplyr', 'reshape2', 'lmtest']",ajps,TTPEOE
+scripts/ajps_datasets_files/TTPEOE/06_bes_analysis_mechanisms.R,"['cobalt', 'foreign', 'data.table', 'ggplot2', 'stargazer', 'dplyr', 'BBmisc', 'reshape2', 'ebal']",ajps,TTPEOE
+scripts/ajps_datasets_files/TTPEOE/03_balance_tables.R,"['foreign', 'data.table', 'ggplot2', 'stargazer', 'dplyr', 'reshape2', 'Matching', 'lmtest']",ajps,TTPEOE
+scripts/ajps_datasets_files/TTPEOE/04_maps.R,"['rgdal', 'foreign', 'viridis', 'data.table', 'ggplot2', 'reshape2', 'broom']",ajps,TTPEOE
+scripts/ajps_datasets_files/TTPEOE/05_bes_analysis_main.R,"['cobalt', 'foreign', 'data.table', 'ggplot2', 'stargazer', 'dplyr', 'reshape2', 'MASS', 'ebal']",ajps,TTPEOE
+scripts/ajps_datasets_files/TTPEOE/07_bes_analysis_emotions.R,"['foreign', 'data.table', 'ggplot2', 'stargazer', 'dplyr', 'reshape2', 'MASS', 'ggeffects']",ajps,TTPEOE
+scripts/ajps_datasets_files/ORRRTW/01_create_analysis_datasets.R,['tidyverse'],ajps,ORRRTW
+scripts/ajps_datasets_files/0MXT0H/all_analysis.R,"['interflex', 'ggplot2', 'stargazer', 'dplyr', 'gridExtra', 'AER', 'scales', 'stringr', 'multiwayvcov', 'lmtest']",ajps,0MXT0H
+scripts/ajps_datasets_files/F2RDCJ/Maps.R,"['geos', 'sf', 'haven', 'rgdal', 'raster', 'rmapshaper', 'tmaptools', 'ggplot2', 'tidyverse', 'dplyr', 'sp', 'leaflet', 'terra', 'tmap', 'rnaturalearth']",ajps,F2RDCJ
+scripts/ajps_datasets_files/B8TWK2/Kramon-etal_convert_afrobarometer.R,['foreign'],ajps,B8TWK2
+scripts/ajps_datasets_files/9SF3TI/07_Best_Models_Results_TABLE_2.R,"['BradleyTerry2', 'apsrtable']",ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/06_additional_vars_for_new_texts.R,"['spacyr', 'sophistication']",ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/03_generate_sentence_covariates.R,['sophistication'],ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/01a_generate_CF_input_921916.R,['sophistication'],ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/01b_generate_CF_input_952737.R,['sophistication'],ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/09_SOTU_paragraphs_generate.R,"['spacyr', 'sophistication']",ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/10_Generate_Figures_1-3.R,"['sophistication', 'BradleyTerry2', 'ggplot2']",ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/11_supplemental_analysis.R,"['ggplot2', 'BradleyTerry2', 'randomForest', 'quanteda']",ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/05_RandomForest_variable_selection.R,"['randomForest', 'sophistication', 'BradleyTerry2', 'quanteda']",ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/01c_generate_CF_input_999866.R,['sophistication'],ajps,9SF3TI
+scripts/ajps_datasets_files/9SF3TI/08_generate_TABLE_3.R,['sophistication'],ajps,9SF3TI
+scripts/ajps_datasets_files/29911/endorse-comp-iters.R,"['arm', 'coda', 'endorse']",ajps,29911
+scripts/ajps_datasets_files/29911/validate-replication-code.R,"['rr', 'calibrate', 'arm', 'stargazer', 'coda', 'list', 'MASS', 'xtable', 'car', 'lme4', 'endorse']",ajps,29911
+scripts/ajps_datasets_files/RRV0JZ/01_bo_irt_model.R,"['haven', 'dplyr', 'rlang', 'rstan', 'countrycode']",ajps,RRV0JZ
+scripts/ajps_datasets_files/RRV0JZ/03_regression_analysis.R,"['prais', 'haven', 'dplyr', 'ggplot2']",ajps,RRV0JZ
+scripts/ajps_datasets_files/RRV0JZ/02_regression_data_gen.R,"['haven', 'WDI', 'zoo', 'tidyverse', 'countrycode', 'stringr', 'reshape']",ajps,RRV0JZ
+scripts/ajps_datasets_files/RRV0JZ/04_generate_plots.R,"['sf', 'haven', 'foreign', 'ggplot2', 'dplyr', 'countrycode', 'stringr', 'tmap', 'RColorBrewer']",ajps,RRV0JZ
+scripts/ajps_datasets_files/BPON3K/fig_12_historical_trend.R,['data.table'],ajps,BPON3K
+scripts/ajps_datasets_files/BPON3K/fig_2_fig_4_party_switching.R,['package'],ajps,BPON3K
+scripts/ajps_datasets_files/7EWDRF/src_funcs.R,['snow'],ajps,7EWDRF
+scripts/ajps_datasets_files/DQTIR4/R_Appendix.R,"['foreign', 'lfe', 'data.table', 'ggplot2', 'rdrobust', 'dplyr', 'gridExtra', 'rddensity', 'stringr', 'readstata13']",ajps,DQTIR4
+scripts/ajps_datasets_files/DQTIR4/R_Paper.R,"['foreign', 'lfe', 'data.table', 'ggplot2', 'rdrobust', 'dplyr', 'gridExtra', 'grid', 'readstata13']",ajps,DQTIR4
+scripts/ajps_datasets_files/DQTIR4/R_Creation.R,"['data.table', 'bit64', 'dplyr', 'stringr']",ajps,DQTIR4
+scripts/ajps_datasets_files/RIXENU/Appendix_R_learning_effects_of_new_firm_analysis.R,"['lfe', 'stargazer', 'tidyverse', 'doBy', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_K_baseline_results_with province_city_industry_fixed_effects.R,"['stargazer', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_H_distribution_of_firms_across_ownership_and_size.R,"['ggplot2', 'ggpubr', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Main_figure1_xgboost.R,"['readr', 'devtools', 'data.table', 'ggplot2', 'dplyr', 'ggforce', 'caret', 'stringr', 'Matrix', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_T_robustness_checks_for_ceiling_effects.R,"['stargazer', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_O_tenure_cycles_controlling_for_subsidy.R,"['stargazer', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_D1_summary statistics.R,"['stargazer', 'tidyverse', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Main_figure3_first_year_across_different_sizes_of_fie.R,"['cowplot', 'ggplot2', 'stargazer', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_G_effective_tax_rates_across_year_and_ownership.R,['readstata13'],ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Main_figure4_ownership_and_tech.R,"['lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Main_figure2_ownership_and_size.R,"['lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_F_rate_of_tax_cuts_across_industries_mayors_and_cities.R,['readstata13'],ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_N1_political_connections.R,"['lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_P_tenure_cycles_of_party_secretaries.R,"['stargazer', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_L_baseline_results_with_differentiated_last_year.R,"['stargazer', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_Q_tenure_cycles_excluding_firms_that_changed_ownership.R,"['stargazer', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_J_substantial_interpretation_of_baseline_results.R,"['stargazer', 'doBy', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_S_extended_period_analysis.R,"['stargazer', 'dplyr', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Main_table1_baseline_results.R,"['lfe', 'stargazer', 'MASS', 'doBy', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_N2_political_connections.R,"['stargazer', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_M_year_in_office_models.R,"['stargazer', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/RIXENU/Appendix_I_tax_incentives_and_city_development.R,"['stargazer', 'lfe', 'readstata13']",ajps,RIXENU
+scripts/ajps_datasets_files/IIYGGX/heteroskedastic IRT Nresps simulations (WINDOWS).R,['rjags'],ajps,IIYGGX
+scripts/ajps_datasets_files/IIYGGX/heteroskedastic IRT Nresps simulations.R,"['rjags', 'doMC']",ajps,IIYGGX
+scripts/ajps_datasets_files/EF7R0Z/Aggregate_Nat_L1_L2.R,['tidyverse'],ajps,EF7R0Z
+scripts/ajps_datasets_files/Z5BTCQ/main_analysis.R,"['foreign', 'car', 'MatchIt', 'plyr', 'plm', 'psych', 'stargazer', 'reshape2', 'sandwich', 'xtable', 'rio', 'pBrackets', 'lme4', 'grDevices', 'lmtest']",ajps,Z5BTCQ
+scripts/ajps_datasets_files/Z5BTCQ/build_data.R,"['foreign', 'car', 'plyr', 'plm', 'psych', 'stargazer', 'reshape2', 'xtable', 'rio', 'lme4', 'grDevices', 'lmtest']",ajps,Z5BTCQ
+scripts/ajps_datasets_files/Z5BTCQ/SI_analysis.R,"['foreign', 'car', 'MatchIt', 'plyr', 'plm', 'psych', 'stargazer', 'reshape2', 'irr', 'sandwich', 'xtable', 'rio', 'memisc', 'lme4', 'grDevices', 'pBrackets', 'lmtest']",ajps,Z5BTCQ
+scripts/ajps_datasets_files/MB2UKU/analysis_afd_voting_precinct_level_ri.R,['ri2'],ajps,MB2UKU
+scripts/ajps_datasets_files/MB2UKU/analysis_biw_voting_precinct_level_ri.R,['ri2'],ajps,MB2UKU
+scripts/ajps_datasets_files/MB2UKU/analysis_warning_signs_ri.R,['ri2'],ajps,MB2UKU
+scripts/ajps_datasets_files/MB2UKU/analysis_survey_ri.R,['ri2'],ajps,MB2UKU
+scripts/ajps_datasets_files/9D1L1V/FigureI2.R,['ggplot2'],ajps,9D1L1V
+scripts/ajps_datasets_files/9D1L1V/FigureH3.R,['ggplot2'],ajps,9D1L1V
+scripts/ajps_datasets_files/9D1L1V/Figure3.R,['ggplot2'],ajps,9D1L1V
+scripts/ajps_datasets_files/EGXUBU/voting_analysis.R,"['MatchIt', 'lfe', 'estimatr', 'data.table', 'RItools', 'ggplot2', 'stargazer', 'tidyverse', 'readxl', 'xtable', 'texreg', 'xlsx', 'lmtest', 'multiwayvcov', 'dummies', 'readstata13', 'naniar']",ajps,EGXUBU
+scripts/ajps_datasets_files/EGXUBU/public_opinion_analysis.R,"['lfe', 'estimatr', 'ggplot2', 'stargazer', 'tidyverse', 'readxl', 'xtable', 'texreg', 'xlsx', 'lmtest', 'multiwayvcov', 'readstata13', 'naniar']",ajps,EGXUBU
+scripts/ajps_datasets_files/EGXUBU/create_israel_map.R,['ggplot2'],ajps,EGXUBU
+scripts/ajps_datasets_files/EGXUBU/mobilization_analysis.R,"['lubridate', 'ggplot2', 'sandwich', 'Zelig', 'panelView', 'bucky', 'xtable', 'texreg', 'multiwayvcov', 'readstata13', 'lmtest', 'lfe', 'estimatr', 'readxl', 'stargazer', 'tidyverse', 'scales', 'xlsx', 'zoo', 'MASS', 'naniar']",ajps,EGXUBU
+scripts/ajps_datasets_files/TKLSNE/COVID_AJPS.R,"['survival', 'Matrix']",ajps,TKLSNE
+scripts/ajps_datasets_files/9OOLQ7/voter_buying_replication_file.R,['reshape2'],ajps,9OOLQ7
+scripts/ajps_datasets_files/27672/McCrary Density.R,"['zoo', 'pastecs', 'apsrtable', 'gridExtra']",ajps,27672
+scripts/ajps_datasets_files/2THQJN/longleaf_plot.R,"['ggplot2', 'dplyr', 'coda']",ajps,2THQJN
+scripts/ajps_datasets_files/2THQJN/replication.R,"['hdpGLM', 'stargazer', 'tidyverse', 'coda', 'sp', 'ggmap', 'ivreg']",ajps,2THQJN
+scripts/ajps_datasets_files/2THQJN/longleaf_traceplots.R,"['bayesplot', 'coda']",ajps,2THQJN
+scripts/ajps_datasets_files/2THQJN/robust_plot.R,['coda'],ajps,2THQJN
+scripts/ajps_datasets_files/2THQJN/plot_nohet.R,['coda'],ajps,2THQJN
+scripts/ajps_datasets_files/EZNXW1/replication_code.R,['devtools'],ajps,EZNXW1
+scripts/ajps_datasets_files/MYM5OB/section5.2_preprocess.R,['preText'],ajps,MYM5OB
+scripts/ajps_datasets_files/MYM5OB/section5.1_preprocess.R,['preText'],ajps,MYM5OB
+scripts/ajps_datasets_files/MYM5OB/section5.3_preprocess.R,['preText'],ajps,MYM5OB
+scripts/ajps_datasets_files/UTRXT7/Ravanilla_Haim_Hicken_BSNRC_R_Replication.R,"['devtools', 'data.table', 'easyGgplot2', 'ggplot2', 'igraph', 'RColorBrewer']",ajps,UTRXT7
+scripts/ajps_datasets_files/TBMFDA/lame_duck_analysis.R,"['ggplot2', 'stargazer', 'lfe']",ajps,TBMFDA
+scripts/ajps_datasets_files/TBMFDA/AssignmentsAnalysis.R,"['stargazer', 'dplyr', 'lfe']",ajps,TBMFDA
+scripts/ajps_datasets_files/TBMFDA/RecipSurveyAnalysis.R,"['stargazer', 'dplyr']",ajps,TBMFDA
+scripts/ajps_datasets_files/PLLBQJ/RScript_Figure1.R,"['gtools', 'plotrix']",ajps,PLLBQJ
+scripts/ajps_datasets_files/PLLBQJ/RScript_SupplementalFigure.R,['foreign'],ajps,PLLBQJ
+scripts/jop_datasets_files/AK10AT/Corruption&ForeignInvestment.R,"['foreign', 'graphics', 'plyr', 'arm', 'readstata13']",jop,AK10AT
+scripts/jop_datasets_files/VOF11U/conjoint_analysis.R,['apsrtable'],jop,VOF11U
+scripts/jop_datasets_files/1GLFE1/5_replicate_figures.R,['RColorBrewer'],jop,1GLFE1
+scripts/jop_datasets_files/N71MOK/Figures.R,"['foreign', 'latticeExtra', 'stats', 'car', 'lattice']",jop,N71MOK
+scripts/jop_datasets_files/TVI1AR/0-init.R,"[', pkg, ']",jop,TVI1AR
+scripts/jop_datasets_files/DQCFUN/replication_code_appendix.R,"['pscl', 'Amelia']",jop,DQCFUN
+scripts/jop_datasets_files/C1SICS/Code Replication Lucardi JOP 2018.R,['X'],jop,C1SICS
+scripts/jop_datasets_files/3RNFFH/Full Analysis Replication File.R,"['glmnet', 'foreign', 'splitstackshape', 'lubridate', 'dplyr', 'randomForest', 'neuralnet', 'caret', 'e1071', 'stringr', 'reptree']",jop,3RNFFH
+scripts/jop_datasets_files/7UBRAC/BeazerReuterJOPplots.R,['XXXX'],jop,7UBRAC
+scripts/jop_datasets_files/W0FWBT/PanelMatch.R,['PanelMatch'],jop,W0FWBT
+scripts/jop_datasets_files/KGHEU4/script for figure 4.R,"['ggplot2', 'arm', 'foreign']",jop,KGHEU4
+scripts/jop_datasets_files/V8U06V/ReplicationScript_JulieAnneWeaver_ElectoralDisconnection_MainText.R,['cjoint'],jop,V8U06V
+scripts/jop_datasets_files/V8U06V/ReplicationScript_JulieAnneWeaver_ElectoralDisconnection_Appendix.R,['cjoint'],jop,V8U06V
+scripts/jop_datasets_files/VWWAHK/functions.R,['ANOVAreplication'],jop,VWWAHK
+scripts/jop_datasets_files/06ITCK/Haim et al JOP Replication - Analysis Code 2.R,"['data.table', 'ggplot2', 'igraph', 'gridExtra', 'RColorBrewer', 'ggpubr', 'readstata13']",jop,06ITCK
+scripts/jop_datasets_files/OFK4L6/Implicit Attitudes Towards an Authoritarian Regime v JOP R1 Submission - R Analysis File.R,"['foreign', 'plyr', 'ggplot2', 'arm', 'list', 'Zelig', 'Hmisc', 'gplots', 'doBy', 'RColorBrewer', 'ebal']",jop,OFK4L6
+scripts/jop_datasets_files/U768QN/PlaceBased_create_data.R,['pacman'],jop,U768QN
+scripts/jop_datasets_files/T9WESH/contraband_models.R,['doBy'],jop,T9WESH
+scripts/jop_datasets_files/CNQKTH/CWC_code.R,"['margins', 'stargazer', 'tidyverse', 'sandwich', 'lmtest']",jop,CNQKTH
+scripts/jop_datasets_files/WJXCT8/MASTER.R,['checkpoint'],jop,WJXCT8
+scripts/jop_datasets_files/SMZD06/aggregate_outcomes.R,"['panelView', 'devtools', 'ggplot2', 'stargazer', 'tidyverse', 'fect', 'bacondecomp', 'multiwayvcov', 'lmtest']",jop,SMZD06
+scripts/jop_datasets_files/SMZD06/pretrends_spatial.R,"['ggplot2', 'tidyverse']",jop,SMZD06
+scripts/jop_datasets_files/SMZD06/pretrends.R,['ggplot2'],jop,SMZD06
+scripts/jop_datasets_files/SMZD06/spatial_outcomes.R,"['multiwayvcov', 'ggplot2', 'stargazer', 'tidyverse', 'HMisc', 'Hmisc', 'clusterSEs', 'lmtest']",jop,SMZD06
+scripts/jop_datasets_files/S6ZMEN/appendix_figures.R,"['stm', 'ggplot2', 'stargazer', 'quanteda']",jop,S6ZMEN
+scripts/jop_datasets_files/S6ZMEN/race_democrats_analysis.R,"['cobalt', 'survey', 'ggplot2', 'stargazer', 'arm', 'MASS', 'WeightIt', 'jtools', 'sensemakr', 'ebal']",jop,S6ZMEN
+scripts/jop_datasets_files/S6ZMEN/race_democrats_analysis_substantive.R,"['cobalt', 'survey', 'ggplot2', 'stargazer', 'arm', 'MASS', 'WeightIt', 'jtools', 'sensemakr', 'ebal']",jop,S6ZMEN
+scripts/jop_datasets_files/S6ZMEN/male_democrats_analysis_substantive.R,"['cobalt', 'survey', 'ggplot2', 'stargazer', 'arm', 'MASS', 'WeightIt', 'jtools', 'sensemakr', 'ebal']",jop,S6ZMEN
+scripts/jop_datasets_files/S6ZMEN/veterans_republicans_analysis.R,"['cobalt', 'survey', 'ggplot2', 'stargazer', 'arm', 'MASS', 'WeightIt', 'jtools', 'sensemakr', 'ebal']",jop,S6ZMEN
+scripts/jop_datasets_files/S6ZMEN/veterans_democrat_analysis.R,"['cobalt', 'survey', 'ggplot2', 'stargazer', 'arm', 'MASS', 'WeightIt', 'jtools', 'sensemakr', 'ebal']",jop,S6ZMEN
+scripts/jop_datasets_files/S6ZMEN/male_democrats_analysis.R,"['cobalt', 'survey', 'ggplot2', 'stargazer', 'arm', 'MASS', 'WeightIt', 'jtools', 'sensemakr', 'ebal']",jop,S6ZMEN
+scripts/jop_datasets_files/3EONKV/01_clean&stack.R,"['plyr', 'readxl', 'openxlsx', 'rio', 'car', 'lattice']",jop,3EONKV
+scripts/jop_datasets_files/3EONKV/02_analysis.R,"['cregg', 'margins', 'plyr', 'ggthemes', 'dplyr', 'rio', 'cjoint']",jop,3EONKV
+scripts/jop_datasets_files/3EONKV/03_appendix.R,"['cregg', 'plyr', 'ggplot2', 'ggthemes', 'dplyr', 'stargazer', 'openxlsx', 'cowplot', 'rio', 'cjoint']",jop,3EONKV
+scripts/jop_datasets_files/QVLR1C/Sensitivity.R,['snow'],jop,QVLR1C
+scripts/jop_datasets_files/RMHOHL/map.R,"['rworldmap', 'RColorBrewer']",jop,RMHOHL
+scripts/jop_datasets_files/RO1YK7/CPS_TurnoutCalculator.R,"['plyr', 'dplyr', 'srvyr']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_A1.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_A9.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_A6.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_3.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_A8.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_2.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_A5.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_A10.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_A2.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_A4.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_A7.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/RO1YK7/Figure_1.R,"['scales', 'ggplot2', 'ggrepel']",jop,RO1YK7
+scripts/jop_datasets_files/LBMRFX/8_abs_cfa.R,"['psych', 'foreign', 'lavaan', 'Amelia']",jop,LBMRFX
+scripts/jop_datasets_files/LBMRFX/1_toyexample.R,"['plotrix', 'mvtnorm']",jop,LBMRFX
+scripts/jop_datasets_files/LBMRFX/3_pca.R,['psych'],jop,LBMRFX
+scripts/jop_datasets_files/LBMRFX/4_cfa_search.R,['lavaan'],jop,LBMRFX
+scripts/jop_datasets_files/LBMRFX/7_cfa_prov.R,"['plyr', 'foreign']",jop,LBMRFX
+scripts/jop_datasets_files/LBMRFX/5_cfa.R,"['ggplot2', 'semPlot', 'GGally', 'lavaan']",jop,LBMRFX
+scripts/jop_datasets_files/LBMRFX/2_stats.R,"['foreign', 'plyr', 'xtable', 'Hmisc', 'maptools']",jop,LBMRFX
+scripts/jop_datasets_files/YILXB4/rct_code.R,"['estimatr', 'huxtable', 'tidyverse', 'texreg', 'cowplot', 'kableExtra']",jop,YILXB4
+scripts/jop_datasets_files/YILXB4/panel_data_cleaning_code.R,"['forcats', 'haven', 'tidyverse']",jop,YILXB4
+scripts/jop_datasets_files/YILXB4/data_cleaning_functions.R,"['janitor', 'haven']",jop,YILXB4
+scripts/jop_datasets_files/MZIKCS/stmJoPReplication.R,"['texreg', 'rms']",jop,MZIKCS
+scripts/jop_datasets_files/9RTI0V/CongIRT-3.R,"['stringr', 'foreign', 'matrixStats', 'MCMCpack']",jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/tableX-imputeghk.R,['mice'],jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/prelimRobust.R,"['AER', 'stringr']",jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/imputeCovs.R,['mice'],jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/CongIRT-4.R,"['stringr', 'foreign', 'matrixStats', 'MCMCpack']",jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/tableIX-unbridged.R,['stringr'],jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/CongIRT-2.R,"['stringr', 'foreign', 'matrixStats', 'MCMCpack']",jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/CongIRT-1.R,"['stringr', 'foreign', 'matrixStats', 'MCMCpack']",jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/table3_iv_fstats.R,['stringr'],jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/figure1.R,['matrixStats'],jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/coeftest.cluster.R,['sandwich'],jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/tableVII.R,['xtable'],jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/figureI-plots.R,['xtable'],jop,9RTI0V
+scripts/jop_datasets_files/9RTI0V/prelimMain.R,['AER'],jop,9RTI0V
+scripts/jop_datasets_files/VFBVRG/AP16-3-DIF.R,['beepr'],jop,VFBVRG
+scripts/jop_datasets_files/VFBVRG/AP12-3-DIF.R,['beepr'],jop,VFBVRG
+scripts/jop_datasets_files/14RSGX/Appendix_PanelReg_Plotting.R,"['doBy', 'ggplot2', 'foreign']",jop,14RSGX
+scripts/jop_datasets_files/9TCK0G/Political Discontent in China is Associated with Isolating Personality Traits - R Analysis File v JOP Replication File.R,"['ggplot2', 'reshape2', 'tibble', 'foreign', 'ggradar', 'plyr', 'texreg', 'readstata13', 'Amelia', 'miceadds', 'tidyverse', 'scales', 'broom', 'qdap', 'mice', 'ggstance', 'rvest', 'psych', 'gridExtra']",jop,9TCK0G
+scripts/jop_datasets_files/1HNIFT/credibility_jop_replication_publicopinion.R,"['haven', 'tidyverse']",jop,1HNIFT
+scripts/jop_datasets_files/ZIYOQ3/UK - Estimation Code.R,"['plyr', 'foreign', 'mcmcplots', 'R2WinBUGS']",jop,ZIYOQ3
+scripts/jop_datasets_files/ZIYOQ3/hungary - agg - estimation.R,"['plyr', 'foreign', 'mcmcplots', 'R2WinBUGS']",jop,ZIYOQ3
+scripts/jop_datasets_files/ZIYOQ3/Hungary - Estimation Code.R,"['foreign', 'mcmcplots', 'R2WinBUGS']",jop,ZIYOQ3
+scripts/jop_datasets_files/XTIHGR/Code.R,['foreign'],jop,XTIHGR
+scripts/jop_datasets_files/TRIEF2/main.R,['dotwhisker'],jop,TRIEF2
+scripts/jop_datasets_files/NDPXND/Analysis.R,"['readstata13', 'estimatr', 'ri', 'dplyr', 'texreg', 'randomizr', 'lmtest']",jop,NDPXND
+scripts/jop_datasets_files/NDPXND/9_graph_helpers.R,['ggplot2'],jop,NDPXND
+scripts/jop_datasets_files/NDPXND/1_recoding.R,['tidyverse'],jop,NDPXND
+scripts/jop_datasets_files/NDPXND/Appendix.R,"['readstata13', 'estimatr', 'plyr', 'ri', 'dplyr', 'descr', 'texreg', 'randomizr', 'lmtest']",jop,NDPXND
+scripts/jop_datasets_files/SUKHMB/3_appendix.R,"['lubridate', 'ggplot2', 'ggthemes', 'dplyr', 'reshape2', 'AER', 'sandwich', 'dotwhisker', 'tidyr', 'foreign', 'sp', 'lmtest', 'stargazer', 'broom', 'data.table', 'rdd', 'ggmap', 'stringr', 'car', 'robustbase']",jop,SUKHMB
+scripts/jop_datasets_files/SUKHMB/2_main_analysis.R,"['lubridate', 'ggplot2', 'ggthemes', 'dplyr', 'reshape2', 'AER', 'sandwich', 'dotwhisker', 'tidyr', 'foreign', 'sp', 'ggpubr', 'lmtest', 'stargazer', 'broom', 'data.table', 'rdd', 'ggmap', 'stringr', 'car', 'robustbase']",jop,SUKHMB
+scripts/jop_datasets_files/SUKHMB/1_downloading_data.R,"['sf', 'rgdal', 'dplyr', 'sp', 'varhandle', 'ggmap', 'geosphere', 'vkR']",jop,SUKHMB
+scripts/jop_datasets_files/Q0CNZA/1.run_all_files.R,"['haven', 'tidyr', 'foreign', 'lfe', 'ggplot2', 'stargazer', 'dplyr', 'Matching', 'xtable', 'stringr', 'Hmisc', 'rowr', 'multiwayvcov']",jop,Q0CNZA
+scripts/jop_datasets_files/Q0CNZA/7.multi_panel_table_function.R,"['rowr', 'dplyr', 'xtable', 'Hmisc']",jop,Q0CNZA
+scripts/jop_datasets_files/Q0CNZA/6.primary_analysis.R,['dplyr'],jop,Q0CNZA
+scripts/jop_datasets_files/SMLV5D/GenMatching_RRR.R,"['foreign', 'lfe', 'parallel', 'Matching', 'sandwich', 'snow', 'multiwayvcov', 'rgenoud', 'lmtest']",jop,SMLV5D
+scripts/jop_datasets_files/UTJGTF/analysis.R,"['ergm', 'inline', 'Rcpp', 'sna', 'ggplot2', 'reshape2', 'MASS', 'texreg', 'xergm', 'network', 'lme4']",jop,UTJGTF
+scripts/jop_datasets_files/C4CLNR/Kumar_JOP_Replication Code.R,"['readr', 'mapproj', 'plotrix', 'questionr', 'matrixStats', 'tidyr', 'stargazer', 'aods3', 'coefplot', 'googleway', 'ggmap', 'cowplot', 'lmtest', 'lattice', 'gmapsdistance']",jop,C4CLNR
+scripts/jop_datasets_files/7PCO1L/table_A2_figure_A2.R,"['randtests', 'foreign', 'spgs']",jop,7PCO1L
+scripts/jop_datasets_files/7PCO1L/build_data.R,"['devtools', 'foreign', 'plm', 'tseries', 'stargazer', 'spgs', 'AER', 'ivpack', 'randtests', 'lme4', 'readstata13']",jop,7PCO1L
+scripts/jop_datasets_files/SBVR8T/SpainCode.R,"['grid', 'MatchIt', 'estimatr', 'plyr', 'ggplot2', 'stargazer', 'dplyr', 'readxl', 'gridExtra', 'reshape2', 'lemon', 'glue']",jop,SBVR8T
+scripts/jop_datasets_files/LAVHXW/Ethnic Bias in Criminal Sentencing - Replication File v2.R,"['cobalt', 'ggplot2', 'dplyr', 'sandwich', 'geojsonio', 'grid', 'readr', 'viridis', 'ids', 'plyr', 'lme4', 'lmtest', 'lfe', 'readxl', 'tidyverse', 'broom', 'qdap', 'splines', 'rvest', 'RCurl', 'psych', 'MASS']",jop,LAVHXW
+scripts/jop_datasets_files/OMABN4/appendix_r.R,"['multcomp', 'estimatr', 'plyr', 'stargazer', 'dplyr', 'xtable', 'readstata13']",jop,OMABN4
+scripts/jop_datasets_files/OMABN4/main.R,"['multcomp', 'estimatr', 'plyr', 'ggplot2', 'dplyr', 'readstata13']",jop,OMABN4
+scripts/jop_datasets_files/OMABN4/map.R,"['sf', 'Rcpp', 'rgdal', 'plyr', 'data.table', 'ggplot2', 'ggsn', 'ggrepel', 'grid', 'readstata13']",jop,OMABN4
+scripts/jop_datasets_files/ATSYM6/Analysis_Final.R,"['devtools', 'sensemakr']",jop,ATSYM6
+scripts/jop_datasets_files/AUHSMD/replication_R.R,['readtext'],jop,AUHSMD
+scripts/jop_datasets_files/3ADWK8/RepressedPols_DatasetDev_JOP.R,['extrafontdb'],jop,3ADWK8
+scripts/jop_datasets_files/SYNP73/analysis_final.R,"['haven', 'mgcv', 'margins', 'estimatr', 'lfe', 'sjPlot', 'plm', 'foreign', 'tidyverse', 'statar', 'texreg', 'ggpubr', 'lmtest']",jop,SYNP73
+scripts/jop_datasets_files/1BZJOW/replication_turnout-03102022.R,"['NRejections', 'stargazer', 'tidyverse', 'mvtnorm', 'MASS', 'texreg', 'UnlikelyTools', 'pander', 'pBrackets']",jop,1BZJOW
+scripts/jop_datasets_files/VWXJCZ/init.R,"['packrat', 'devtools']",jop,VWXJCZ
+scripts/jop_datasets_files/PRAQI2/Run_Me.R,"['rgdal', 'ggplot2', 'stargazer', 'AER', 'rio', 'sensemakr', 'lmtest']",jop,PRAQI2
+scripts/jop_datasets_files/BXBJFW/ReplicationCodeJOP.R,['boot'],jop,BXBJFW
+scripts/jop_datasets_files/FEWFTX/fathers_post09.R,"['AER', 'date', 'dplyr', 'rio']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/figuresi2.R,"['ggplot2', 'dplyr', 'rmeta']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/twin_mechanism.R,"['AER', 'date', 'dplyr', 'rio']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_an_twin_old_20_mom.R,"['AER', 'date', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/figuresi3.R,"['ggplot2', 'dplyr', 'rmeta']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_an_twin_dad_het_by_age.R,"['AER', 'date', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_an_twin_dad.R,"['AER', 'date', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/tablesi2.R,"['ggplot2', 'dplyr', 'xtable']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_an_twin_old_20_dad.R,"['AER', 'date', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/figuresi4.R,"['ggplot2', 'dplyr', 'xtable']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_an_twin_mom_het_by_age.R,"['AER', 'date', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_cr_old_20.R,"['date', 'foreign', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_an_twin_mom.R,"['AER', 'date', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/tablesi3.R,"['ggplot2', 'dplyr', 'xtable']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_cr_samesex.R,"['date', 'foreign', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_cr.R,"['date', 'foreign', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_an_firsttwo_mom.R,"['AER', 'date', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_an_twin_placebo.R,"['AER', 'date', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/figuresi1.R,"['ggplot2', 'dplyr', 'xtable']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/mothers_post09.R,"['AER', 'date', 'dplyr', 'rio']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/tablesi1.R,"['ggplot2', 'dplyr', 'xtable']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/table2.R,['xtable'],jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/figuresi5.R,"['ggplot2', 'dplyr', 'xtable']",jop,FEWFTX
+scripts/jop_datasets_files/FEWFTX/data_an_firsttwo_dad.R,"['AER', 'date', 'dplyr']",jop,FEWFTX
+scripts/jop_datasets_files/29205/CCOA regs and graphs 2014.R,"['blme', 'matrixStats', 'foreign', 'arm', 'car']",jop,29205
+scripts/jop_datasets_files/XV27OQ/4_Online_Appendix_D.R,"['cobalt', 'MatchIt', 'cem']",jop,XV27OQ
+scripts/jop_datasets_files/X3LITS/Krasno et al Recusal Replication Code (7.27.2020).R,"['weights', 'ri', 'foreign', 'xtable']",jop,X3LITS
+scripts/jop_datasets_files/BLVJJH/multiracial_jop_final2020.R,"['extrafont', 'purrr', 'nnet', 'ggplot2', 'dplyr', 'caret', 'e1071', 'Zelig', 'ggridges', 'tidyr', 'foreign', 'ZeligChoice', 'texreg', 'xtable', 'broom', 'scales', 'questionr', 'reporttools', 'MASS', 'stringr', 'car']",jop,BLVJJH
+scripts/jop_datasets_files/JNFMNQ/JOP_tables 1 and 2.R,['ppcor'],jop,JNFMNQ
+scripts/jop_datasets_files/NOMRHB/Brazil-analyze-Endorsement-Replication.R,['ANOVAreplication'],jop,NOMRHB
+scripts/jop_datasets_files/PEHPBY/Assurances_JOP_Analysis.R,['stargazer'],jop,PEHPBY
+scripts/jop_datasets_files/MSTR3F/plot.R,['gplots'],jop,MSTR3F
+scripts/jop_datasets_files/N6LIMH/analysis.R,['pacman'],jop,N6LIMH
+scripts/jop_datasets_files/N6LIMH/tables_figures.R,['pacman'],jop,N6LIMH
+scripts/jop_datasets_files/TNFDDX/BPV_museums_maintext.R,"['plyr', 'sandwich', 'RColorBrewer', 'lmtest']",jop,TNFDDX
+scripts/jop_datasets_files/TNFDDX/BPV_museums_appendix.R,"['plyr', 'sandwich', 'RColorBrewer', 'lmtest']",jop,TNFDDX
+scripts/jop_datasets_files/TXEFZI/CarlsonTelephoneJOPReplicationCode-1.R,['irr'],jop,TXEFZI
+scripts/jop_datasets_files/NVMD6X/Appendix in text calcs.R,['ivpack'],jop,NVMD6X
+scripts/jop_datasets_files/JAOQSD/WooConradJOP18 Appendix Table2to11.R,['Hmisc'],jop,JAOQSD
+scripts/jop_datasets_files/D5WS0Y/exp1_results.R,['grid'],jop,D5WS0Y
+scripts/jop_datasets_files/D5WS0Y/exp2_results.R,['grid'],jop,D5WS0Y
+scripts/jop_datasets_files/GDZTK8/a.termlimits_polarization_central_analysis.R,"['tidyr', 'foreign', 'lfe', 'data.table', 'stringi', 'stargazer', 'dplyr', 'ggplot2', 'DataCombine', 'Matching', 'stringr', 'multiwayvcov', 'readstata13', 'lmtest']",jop,GDZTK8
+scripts/jop_datasets_files/A3M7PY/FigureA2.R,['[packagename]'],jop,A3M7PY
+scripts/jop_datasets_files/OYIAYK/tableA7toA12.R,"['survey', 'tableone', 'tidyr', 'foreign', 'readstata13', 'plyr', 'dplyr', 'lavaan.survey', 'xtable', 'lavaan', 'semTools']",jop,OYIAYK
+scripts/jop_datasets_files/OYIAYK/figureA1.R,"['psych', 'survey', 'foreign']",jop,OYIAYK
+scripts/jop_datasets_files/OYIAYK/figure3.R,"['survey', 'foreign']",jop,OYIAYK
+scripts/jop_datasets_files/OYIAYK/table3.R,['devtools'],jop,OYIAYK
+scripts/jop_datasets_files/OYIAYK/tableA5.R,"['haven', 'foreign', 'psych', 'xtable', 'Hmisc', 'car']",jop,OYIAYK
+scripts/jop_datasets_files/OYIAYK/table4.R,"['haven', 'tidyr', 'foreign', 'plyr', 'dplyr', 'tibble', 'car', 'readstata13']",jop,OYIAYK
+scripts/jop_datasets_files/OYIAYK/table2.R,"['haven', 'foreign', 'psych', 'xtable', 'car']",jop,OYIAYK
+scripts/jop_datasets_files/OYIAYK/tableA1A2A3 and figureA2.R,"['stargazer', 'xtable', 'margins']",jop,OYIAYK
+scripts/jop_datasets_files/FEP8O2/repcode.R,['grid'],jop,FEP8O2
+scripts/jop_datasets_files/IFZXQX/make figure 1.R,['readstata13'],jop,IFZXQX
+scripts/jop_datasets_files/W5GQNZ/Table_G1.R,['data.table'],jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_J1.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M4.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M7.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M6.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Figure_H1.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_P1.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_H3.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_Q2.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_L1.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_1.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_N1.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_O2.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_O1.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_O3.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M3.R,"['data.table', 'gtools', 'dplyr']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_O4.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_H1.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Figure_3.R,"['data.table', 'dplyr', 'gridExtra', 'AER', 'ivpack', 'dotwhisker']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M1_row2.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_K1.R,"['GJRM', 'data.table', 'stargazer', 'dplyr', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_H2.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Intext_calculations.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Figure_H2.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_S1.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_R1.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Figure_2.R,"['data.table', 'dplyr', 'gridExtra', 'AER', 'ivpack', 'dotwhisker']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M1_row3.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_I1.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Figure_4.R,"['data.table', 'dplyr', 'gridExtra', 'AER', 'ivpack', 'dotwhisker']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M5.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M2.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M1_row1.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_Q1.R,"['data.table', 'stargazer', 'dplyr', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M1_row4.R,"['data.table', 'AER', 'dplyr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Figure_1.R,"['data.table', 'dplyr', 'gridExtra', 'AER', 'ivpack', 'dotwhisker']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_M1_row5.R,"['doParallel', 'data.table', 'parallel', 'AER', 'stringr', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/W5GQNZ/Table_I2.R,"['data.table', 'AER', 'ivpack']",jop,W5GQNZ
+scripts/jop_datasets_files/AEZKWE/jop_replication.R,"['ggplot2', 'calibrate', 'interplot']",jop,AEZKWE
+scripts/jop_datasets_files/JTKVX2/JOPcansunar.R,['pacman'],jop,JTKVX2
+scripts/jop_datasets_files/WXTUIL/issp2009.R,"['readr', 'githubinstall', 'mgcv', 'gapminder', 'sjPlot', 'maps', 'readxl', 'dplyr', 'sjmisc', 'sandwich', 'ggmap', 'multiwayvcov', 'dummies', 'readstata13', 'lmtest']",jop,WXTUIL
+scripts/jop_datasets_files/6IRAEM/Figure F1.R,['tidyverse'],jop,6IRAEM
+scripts/jop_datasets_files/6IRAEM/Table A1.R,['stargazer'],jop,6IRAEM
+scripts/jop_datasets_files/6IRAEM/Figure 1.R,"['tidyverse', 'ggpubr']",jop,6IRAEM
+scripts/jop_datasets_files/YGSKJT/R_Article.R,"['foreign', 'remotes', 'data.table', 'ggplot2', 'rdrobust', 'dplyr', 'gridExtra', 'AER', 'sandwich', 'stringr', 'dummies', 'lmtest']",jop,YGSKJT
+scripts/jop_datasets_files/YGSKJT/R_Appendix.R,"['data.table', 'ggplot2', 'rdrobust', 'dplyr', 'gridExtra', 'AER', 'sandwich', 'stringr', 'dummies', 'lmtest']",jop,YGSKJT
+scripts/jop_datasets_files/4QRUPR/Additional_Robustness.R,"['survey', 'ggplot2', 'weights', 'descr']",jop,4QRUPR
+scripts/jop_datasets_files/ZUE1BI/replication_mediation_showme.R,"['mediation', 'haven', 'readstata13']",jop,ZUE1BI
+scripts/jop_datasets_files/HUYOHI/01_Preprocess.R,"['dplyr', 'estimatr']",jop,HUYOHI
+scripts/jop_datasets_files/AE5BPK/ReplicationCodeGraphs.R,['readstata13'],jop,AE5BPK
+scripts/pan_datasets_files/92GMLB/TwoWrongs_illustration_11_1_2016.R,"['matrixStats', 'zoo', 'data.table', 'lubridate', 'sp', 'dplyr', 'countrycode', 'cshapes', 'geosphere', 'reshape', 'dummies', 'pracma', 'maptools']",pan,92GMLB
+scripts/pan_datasets_files/92GMLB/Figure1_correlated_misclass.R,"['ggplot2', 'mvtnorm']",pan,92GMLB
+scripts/pan_datasets_files/VWURHG/MakeFigures.R,['ggplot2'],pan,VWURHG
+scripts/pan_datasets_files/HRLHA4/harbersingram20161228_basic.R,"['GeoXp', 'ggplot2', 'RColorBrewer', 'xts', 'prettyR', 'rgdal', 'plyr', 'parallel', 'latticeExtra', 'sp', 'texreg', 'cowplot', 'GWmodel', 'rgeos', 'RgoogleMaps', 'graphicsQC', 'plm', 'classInt', 'scales', 'weights', 'sphet', 'INLA', 'spacetime', 'maps', 'gridExtra', 'spdep', 'car', 'maptools', 'spgwr']",pan,HRLHA4
+scripts/pan_datasets_files/52UGJT/run_paper_data_analysis_figures.R,['astsa'],pan,52UGJT
+scripts/pan_datasets_files/52UGJT/run_paper_simulations.R,"['plyr', 'extrafont', 'xtable', 'reshape2']",pan,52UGJT
+scripts/pan_datasets_files/D6HU1J/headers.R,"['RSQLite', 'foreign', 'plyr', 'exactRankTests', 'Matching', 'sandwich', 'xtable', 'stringr', 'snow']",pan,D6HU1J
+scripts/pan_datasets_files/D6HU1J/amplifyObserved.R,['plyr'],pan,D6HU1J
+scripts/pan_datasets_files/D6HU1J/amplifyUnobserved.R,['plyr'],pan,D6HU1J
+scripts/pan_datasets_files/EEP5MT/install_packages.R,"['extrafont', 'foreign', 'plyr', 'data.table', 'ggplot2', 'dplyr', 'SDMTools', 'reshape2', 'gridExtra', 'scales', 'sandwich', 'xtable', 'ebal', 'cowplot', 'lmtest']",pan,EEP5MT
+scripts/pan_datasets_files/EEP5MT/function-createdemograph.R,"['ggplot2', 'grid', 'SDMTools']",pan,EEP5MT
+scripts/pan_datasets_files/WIRN6R/mc-1.R,"['checkpoint', 'oc', 'xtable']",pan,WIRN6R
+scripts/pan_datasets_files/HZYFRI/direct_primary.R,"['KRLS', 'foreign', 'lfe', 'plyr', 'ggplot2', 'BART', 'inters', 'RColorBrewer', 'lmtest']",pan,HZYFRI
+scripts/pan_datasets_files/HZYFRI/remittances.R,"['KRLS', 'haven', 'lfe', 'ggplot2', 'BART', 'inters', 'RColorBrewer', 'lmtest']",pan,HZYFRI
+scripts/pan_datasets_files/HZYFRI/00_setup_packages.R,"['KRLS', 'BART']",pan,HZYFRI
+scripts/pan_datasets_files/K0OYQF/polarization.R,['ggplot2'],pan,K0OYQF
+scripts/pan_datasets_files/HVY5GR/peterson_analysis_design.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/simulation_model_1.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/peterson_analysis_model.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/ono_analysis_design.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/ono_figure_appendix.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/simulation_design.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/ono_analysis_model.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/simulation_model_2.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/simulation_model_3.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/ono_figure.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/peterson_figure.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/HVY5GR/ono_analysis_model_appendix.R,['factorEx'],pan,HVY5GR
+scripts/pan_datasets_files/STH14F/h111.R,"['pscl', 'Ternary', 'wnominate', 'RcppTN', 'RcppArmadillo', 'RColorBrewer']",pan,STH14F
+scripts/pan_datasets_files/STH14F/all.R,['RColorBrewer'],pan,STH14F
+scripts/pan_datasets_files/3IWTGB/Figure4.R,"['ggplot2', 'foreign', 'gridExtra']",pan,3IWTGB
+scripts/pan_datasets_files/3IWTGB/Figure2.R,"['ggplot2', 'foreign', 'gridExtra']",pan,3IWTGB
+scripts/pan_datasets_files/3IWTGB/Figure1b.R,"['ggplot2', 'foreign', 'gridExtra']",pan,3IWTGB
+scripts/pan_datasets_files/3IWTGB/Figure3.R,"['ggplot2', 'foreign', 'gridExtra']",pan,3IWTGB
+scripts/pan_datasets_files/3IWTGB/FigureS8.R,"['tidyr', 'foreign', 'lfe', 'ggplot2', 'ri', 'gridExtra', 'broom', 'lmtest']",pan,3IWTGB
+scripts/pan_datasets_files/3IWTGB/FigureS7.R,"['ggplot2', 'foreign', 'gridExtra']",pan,3IWTGB
+scripts/pan_datasets_files/3IWTGB/FigureS4.R,"['ggplot2', 'foreign', 'gridExtra']",pan,3IWTGB
+scripts/pan_datasets_files/3IWTGB/FiguresS5andS6.R,"['ggplot2', 'foreign', 'gridExtra']",pan,3IWTGB
+scripts/pan_datasets_files/3IWTGB/FigureS3.R,"['ggplot2', 'foreign', 'gridExtra']",pan,3IWTGB
+scripts/pan_datasets_files/3IWTGB/FigureS1.R,"['ggplot2', 'foreign', 'gridExtra']",pan,3IWTGB
+scripts/pan_datasets_files/QE27H9/replication_script.R,"['lattice', 'QCA']",pan,QE27H9
+scripts/pan_datasets_files/22861/Main model R code.R,['R2jags'],pan,22861
+scripts/pan_datasets_files/SWZUUE/insample_senate.R,['emIRT'],pan,SWZUUE
+scripts/pan_datasets_files/SWZUUE/CV_senate.R,['emIRT'],pan,SWZUUE
+scripts/pan_datasets_files/SWZUUE/CV_NPAT_full.R,['emIRT'],pan,SWZUUE
+scripts/pan_datasets_files/SWZUUE/insample_ANES.R,['emIRT'],pan,SWZUUE
+scripts/pan_datasets_files/SWZUUE/overfitting_senate.R,['emIRT'],pan,SWZUUE
+scripts/pan_datasets_files/SWZUUE/overfitting_ANES_binary.R,['emIRT'],pan,SWZUUE
+scripts/pan_datasets_files/SWZUUE/CV_senate_cces_rollcalls.R,['emIRT'],pan,SWZUUE
+scripts/pan_datasets_files/27100/Replication Code for Krogslund et al (2014).R,"['multicore', 'plyr', 'ggplot2', 'reshape2', 'QCA']",pan,27100
+scripts/pan_datasets_files/HCSQBD/07_nes_out.R,"['tidyr', 'hIRT', 'ltm', 'ggplot2', 'dplyr', 'pryr', 'splines']",pan,HCSQBD
+scripts/pan_datasets_files/HCSQBD/06_nes_pca.R,"['hIRT', 'ltm', 'ggplot2', 'dplyr', 'statmod', 'pryr', 'splines', 'rms']",pan,HCSQBD
+scripts/pan_datasets_files/HCSQBD/05_nes_models.R,"['hIRT', 'ltm', 'ggplot2', 'dplyr', 'pryr', 'splines', 'rms']",pan,HCSQBD
+scripts/pan_datasets_files/LUGBL1/ButlerHomola_Excludability_Analysis.R,"['stargazer', 'foreign']",pan,LUGBL1
+scripts/pan_datasets_files/LUGBL1/ButlerHomola_Excludability_Appendix.R,"['ggplot2', 'stargazer', 'foreign']",pan,LUGBL1
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Panel_C.R,"['itertools', 'doParallel', 'Matrix', 'foreach']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_Figure_5.R,"['wordcloud', 'dplyr']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Boot.R,"['Matrix', 'doParallel', 'dplyr', 'mvtnorm', 'itertools', 'foreach']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Sparsity_80.R,['smacof'],pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Correlation_20.R,"['MASS', 'smacof']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Simulated_Data.R,['smacof'],pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Figure_4.R,"['dplyr', 'smacof', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Figure_7.R,"['dplyr', 'smacof', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Figure_9.R,"['dplyr', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Table_7.R,"['stargazer', 'dplyr', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_SA_T1.R,['smacof'],pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Table_5.R,"['stargazer', 'dplyr', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Figure_8.R,"['dplyr', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_Figure_4.R,"['wordcloud', 'dplyr']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Table_2.R,['stargazer'],pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Table_1.R,"['data.table', 'stargazer']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Figure_10.R,"['dplyr', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Sparsity_50.R,['smacof'],pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Figure_6.R,"['dplyr', 'smacof', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Panel_A.R,"['itertools', 'doParallel', 'Matrix', 'foreach']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Perm_Congress.R,"['Matrix', 'doParallel', 'dplyr', 'itertools', 'foreach']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Table_3.R,['stargazer'],pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Correlation_50.R,"['MASS', 'smacof']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_Figure_6.R,"['wordcloud', 'dplyr']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Table_4.R,['stargazer'],pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Correlation_80.R,"['MASS', 'smacof']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_Table_1.R,['stargazer'],pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Figure_5.R,"['dplyr', 'smacof', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Sparsity_20.R,['smacof'],pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/01_Create_Data_Panel_B.R,"['itertools', 'doParallel', 'Matrix', 'foreach']",pan,FOUVEL
+scripts/pan_datasets_files/FOUVEL/02_SA_Table_6.R,"['stargazer', 'dplyr', 'smacof', 'mvtnorm']",pan,FOUVEL
+scripts/pan_datasets_files/UPL4TT/package_dependencies.R,"['readr', 'haven', 'purrr', 'nnet', 'doParallel', 'mi', 'Amelia', 'mvnmle', 'ggplot2', 'arm', 'dplyr', 'norm2', 'betareg', 'MASS']",pan,UPL4TT
+scripts/pan_datasets_files/BQMLQW/SLF_round2.R,['FindIt'],pan,BQMLQW
+scripts/pan_datasets_files/SVAONZ/fn_5.R,"['bife', 'foreign']",pan,SVAONZ
+scripts/pan_datasets_files/GAK3QS/figure1_simulation.R,['foreign'],pan,GAK3QS
+scripts/pan_datasets_files/NV66YN/hex.R,['hexSticker'],pan,NV66YN
+scripts/pan_datasets_files/VBNDYQ/Figure-3.R,"['multicore', 'plyr', 'doMC', 'compiler', 'foreach']",pan,VBNDYQ
+scripts/pan_datasets_files/AQB4MP/experimental_analysis_main_text.R,['devtools'],pan,AQB4MP
+scripts/pan_datasets_files/AQB4MP/experimental_analysis_appendix.R,['devtools'],pan,AQB4MP
+scripts/pan_datasets_files/AQB4MP/simulation_analysis.R,['devtools'],pan,AQB4MP
+scripts/pan_datasets_files/MCQTYC/Replication_combined_SI.R,['pcse'],pan,MCQTYC
+scripts/pan_datasets_files/8AKACJ/sim_TN.R,"['doParallel', 'foreach', 'doRedis', 'xtable', 'abind']",pan,8AKACJ
+scripts/pan_datasets_files/TOYNMH/main.R,"['devtools', 'here']",pan,TOYNMH
+scripts/pan_datasets_files/2F8CWX/replicationcode.R,['xtable'],pan,2F8CWX
+scripts/pan_datasets_files/C9SAIX/02_replication_appendix.R,"['quanteda', 'ggplot2', 'dplyr', 'reshape2', 'e1071', 'dotwhisker', 'readr', 'ROCit', 'stats', 'ggpubr', 'reticulate', 'glmnet', 'Rmisc', 'stargazer', 'openxlsx', 'randomForest', 'corpus', 'keras', 'stringi', 'irr']",pan,C9SAIX
+scripts/pan_datasets_files/G63OG9/Cui_analysis.R,"['Formula', 'estimatr']",pan,G63OG9
+scripts/pan_datasets_files/G63OG9/twitter_simulation.R,"['Formula', 'estimatr']",pan,G63OG9
+scripts/pan_datasets_files/IE8P0K/replication_code_KRLS.R,['KRLS'],pan,IE8P0K
+scripts/pan_datasets_files/XRR0HM/lda_analysis.R,['preText'],pan,XRR0HM
+scripts/pan_datasets_files/XRR0HM/wordfish_analysis.R,['preText'],pan,XRR0HM
+scripts/pan_datasets_files/XRR0HM/preprocess_data_and_generate_pretext_results.R,['preText'],pan,XRR0HM
+scripts/pan_datasets_files/XRR0HM/wordfish_model_averaging.R,['preText'],pan,XRR0HM
+scripts/pan_datasets_files/UO5WQ4/Sensitivity Analysis for FIGURE 1_v7.R,"['foreign', 'treatSens', 'dummies']",pan,UO5WQ4
+scripts/pan_datasets_files/UO5WQ4/Sensitivity Analysis for FIGURE 2_v7.R,"['foreign', 'treatSens', 'dummies']",pan,UO5WQ4
+scripts/pan_datasets_files/KVZXE8/survey_functions.R,"['pacman', 'sandwich', 'lmtest']",pan,KVZXE8
+scripts/pan_datasets_files/KVZXE8/coercion_provocation.R,"['sandwich', 'lmtest']",pan,KVZXE8
+scripts/pan_datasets_files/TFQPCM/Master.R,"['CADFtest', 'devtools', 'fUnitRoots']",pan,TFQPCM
+scripts/pan_datasets_files/TFQPCM/NetDenSTtest.R,['sna'],pan,TFQPCM
+scripts/pan_datasets_files/S02EBF/labelvalidation.R,['ggplot2'],pan,S02EBF
+scripts/pan_datasets_files/S02EBF/labelvalidation_appendix.R,['ggplot2'],pan,S02EBF
+scripts/pan_datasets_files/S02EBF/moreinfo_appendix.R,"['stm', 'wordcloud']",pan,S02EBF
+scripts/pan_datasets_files/S02EBF/topicvalidation.R,['ggplot2'],pan,S02EBF
+scripts/pan_datasets_files/S02EBF/topicvalidation_appendix.R,['ggplot2'],pan,S02EBF
