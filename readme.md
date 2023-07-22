@@ -9,7 +9,7 @@ see: https://gojiberries.io/2023/07/02/hard-problems-about-research-software/
 
 1. [Datasets by Dataverse](scripts/01_get_datasets_for_dataverses.ipynb) produces [list of datasets by dataverse (.gz)](data/datasets_by_dataverse.gz)
 
-2. [(.R) Scripts For Scripts Per Dataset](scripts/02_get_scripts_per_dataset.ipynb) takes the files from step #1 and produces [list of files per dataset (.gz)](data/02_get_scripts_per_dataset.ipynb) and downloads those scripts (dump [here](data/script_files.gz))
+2. [List And Download All (R) Scripts Per Dataset](scripts/02_get_scripts_per_dataset.ipynb) takes the files from step #1 and produces [list of files per dataset (.gz)](data/02_get_scripts_per_dataset.ipynb) and downloads those scripts (dump [here](data/script_files.gz))
 
 3. [Regex the files to tally imports](scripts/03_tally_imports.ipynb) takes the output from step #2 and produces [imports per file](data/file_imports.csv) and [imports per package](data/imports_per_package.csv). A snippet of that last file can be seen below.
 
