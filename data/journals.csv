@@ -2,7 +2,7 @@
 ,ajps,https://dataverse.harvard.edu/dataverse/ajps,harvard,20,American Journal of Political Science,4.2,15324
 ,BJPolS,https://dataverse.harvard.edu/dataverse/BJPolS,harvard,10,British Journal of Political Science,5,5578
 ,bpsr,https://dataverse.harvard.edu/dataverse/bpsr,,,Brazilian Political Science Review,,
-,cjp,https://dataverse.harvard.edu/dataverse/cjp,havard,33,Canadian Journal of Political Science / Revue candienne de science politique,3.5,1467
+,cjp,https://dataverse.harvard.edu/dataverse/cjp,harvard,33,Canadian Journal of Political Science / Revue candienne de science politique,3.5,1467
 ,cps,https://dataverse.harvard.edu/dataverse/cps,harvard,11,Comparative Political Studies,5,7214
 ,FPA,https://dataverse.harvard.edu/dataverse/FPA,,,Foreign Policy Analysis,,
 ,internationalinteractions,https://dataverse.harvard.edu/dataverse/internationalinteractions,,,International Interactions,,
@@ -20,14 +20,14 @@ This journal applies the Taylor & Francis Basic Data Sharing Policy. Authors are
 ,JPublicPolicy,https://dataverse.harvard.edu/dataverse/JPublicPolicy,harvard,66,Journal of Public Policy,2.4,1316
 ,LAPS,https://dataverse.harvard.edu/dataverse/LAPS,harvard,91,Latin American Politics and Society,1.9,865
 ,lsq,https://dataverse.harvard.edu/dataverse/lsq,,,Legislative Studies Quarterly,,
-,pa,https://dataverse.harvard.edu/dataverse/pa,havard,34,Public Administration,3.5,5033
+,pa,https://dataverse.harvard.edu/dataverse/pa,harvard,34,Public Administration,3.5,5033
 ,pan,https://dataverse.harvard.edu/dataverse/pan,harvard,8,Political Analysis,5.4,6202
 ,PAR,https://dataverse.harvard.edu/dataverse/PAR,,,Public Administration Review ,,
-,perspectives,https://dataverse.harvard.edu/dataverse/perspectives,havard,29,Perspectives on Politics,3.8,3802
-,polbehavior,https://dataverse.harvard.edu/dataverse/polbehavior,havard,26,Political Behavior,3.9,4450
-,politicsandgender,https://dataverse.harvard.edu/dataverse/politicsandgender,havard,36,Politics & Gender,3.4,1682
+,perspectives,https://dataverse.harvard.edu/dataverse/perspectives,harvard,29,Perspectives on Politics,3.8,3802
+,polbehavior,https://dataverse.harvard.edu/dataverse/polbehavior,harvard,26,Political Behavior,3.9,4450
+,politicsandgender,https://dataverse.harvard.edu/dataverse/politicsandgender,harvard,36,Politics & Gender,3.4,1682
 ,ps,https://dataverse.harvard.edu/dataverse/ps,,40,PS: Political Science & Politics,3.3,3668
-,PSRM,https://dataverse.harvard.edu/dataverse/PSRM,havard,27,Political Science Research and Methods,3.9,1734
+,PSRM,https://dataverse.harvard.edu/dataverse/PSRM,harvard,27,Political Science Research and Methods,3.9,1734
 Making datasets publicly available is also a policy of Research & Politics. Authors should ensure that data is available at the time of publication through a recognised third party data repository and will be prompted to upload their data to Dataverse on acceptance of their article. ,researchandpolitics,https://dataverse.harvard.edu/dataverse/researchandpolitics,,59,Research & Politics,2.7,1410
 ,securitystudies,https://dataverse.harvard.edu/dataverse/securitystudies,,,Security Studies,,
 ,the_review,https://dataverse.harvard.edu/dataverse/the_review,harvard,5,American Political Science Review,6.8,18797
@@ -37,6 +37,7 @@ Making datasets publicly available is also a policy of Research & Politics. Auth
 ,sppq,https://dataverse.unc.edu/dataverse/sppq,,,State Politics & Policy Quarterly,,
 ,,https://figshare.com/search?q=Journal%20of%20European%20Public%20Policy,figshare,21,Journal of European Public Policy,4.2,6063
 ,,https://www.prio.org/journals/jpr/replicationdata,prio,32,Journal of Peace Research,3.6,6490
+,JPE_Macroeconomics,https://dataverse.harvard.edu/dataverse/JPE_Macroeconomics,harvard,,Journal of Political Economy Macroeconomics,,
 "Candidates for inclusion in this online repository are figures that will not reproduce well in print, lengthy tables, data sets, and multimedia objects (e.g., sound, video, animations, 3D objects, etc.).",,,,1,Annual Review of Political Science,10.8,5962
 no specific repo,,,,2,Policy and Society,9.3,2000
 Authors agree to make data and materials supporting the results or analyses presented in their paper available upon reasonable request. It is up to the author to determine whether a request is reasonable.,,,,4,Political Communication,7.5,3509
