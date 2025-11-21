@@ -1,5 +1,8 @@
 
+# macOS
 .DS_Store
+
+# R files
 data/.RData
 data/.Rhistory
 .Rproj.user
@@ -7,3 +10,79 @@ data/.Rhistory
 .Rhistory
 data/.Rapp.history
 .Rapp.history
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pytest
+.coverage
+.pytest_cache/
+htmlcov/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Logs
+logs/
+*.log
+
+# Data and checkpoints
+checkpoints/
+datasets/
+scripts/
+temp/
+files_dfs/
+
+# API tokens
+*_token.txt
+token.txt
+
+# Archives
+*.tar.gz
+*.zip
+
+# Test files
+test_data/
+/test_icpsr
+monitor_collection.py

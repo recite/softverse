@@ -53,5 +53,3 @@ p.s. Deprecated R Files [here](scripts/r/)
 ### Authors
 
 Gaurav Sood and Daniel Weitzel
-
-

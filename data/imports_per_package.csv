@@ -2060,7 +2060,7 @@ AUC,1
 ", pkg, ",1
 ") function.
 # to remedy this the next two lines of code install an earlier version (1.9.3",1
-") commands, set working directory to replication folder 
+") commands, set working directory to replication folder
 # using setwd(",1
 CMLE_sanctionsMC_support,1
 CMLE_unstable_support,1
