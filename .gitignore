@@ -86,3 +86,4 @@ token.txt
 test_data/
 /test_icpsr
 monitor_collection.py
+/outputs

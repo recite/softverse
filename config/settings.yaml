@@ -36,13 +36,13 @@ processing:
 
 # Output settings
 output:
-  base_dir: "data/"
+  base_dir: "outputs/"
   files:
-    datasets_archive: "datasets_by_dataverse.tar.gz"
-    files_archive: "files_in_dataverse.tar.gz"
-    scripts_archive: "script_files.tar.gz"
-    file_imports: "file_imports.csv"
-    package_imports: "imports_per_package.csv"
+    datasets_archive: "raw_data/datasets_by_dataverse.tar.gz"
+    files_archive: "raw_data/files_in_dataverse.tar.gz"
+    scripts_archive: "raw_data/script_files.tar.gz"
+    file_imports: "final_results/detailed_file_imports.csv"
+    package_imports: "final_results/library_usage_summary.csv"
 
 # Logging configuration
 logging:
