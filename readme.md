@@ -4,6 +4,42 @@ We analyze replication files from 34 social science journals including the APSR,
 
 see: https://gojiberries.io/2023/07/02/hard-problems-about-research-software/
 
+## Installation
+
+### Prerequisites
+- Python 3.11 or higher
+- [uv](https://docs.astral.sh/uv/) package manager
+
+### Install uv (if not already installed)
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Install Softverse
+```bash
+uv pip install softverse
+```
+
+### Development Setup
+```bash
+git clone https://github.com/recite/softverse.git
+cd softverse
+uv sync --all-extras
+```
+
+### Usage
+Run the complete data collection and analysis pipeline:
+```bash
+uv run run-pipeline --help
+```
+
+Or run individual components:
+```bash
+uv run collect-datasets --help
+uv run collect-scripts --help
+uv run analyze-imports --help
+```
+
 ### Scripts
 
 1. [Datasets by Dataverse](scripts/01_get_datasets_for_dataverses.ipynb) produces [list of datasets by dataverse (.gz)](data/datasets_by_dataverse.tar.gz)

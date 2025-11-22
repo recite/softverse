@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from softverse.collectors.base_collector import BaseCollectorWithStatus
+from softverse.collectors.dataverse_collector import DataverseDatasetCollector
 from softverse.config import get_config
 from softverse.utils.api_utils import get_dataverse_client
 from softverse.utils.file_utils import (
@@ -17,7 +19,7 @@ from softverse.utils.logging_utils import LogProgress, get_logger
 logger = get_logger("dataverse_scripts")
 
 
-class DataverseScriptCollector:
+class DataverseScriptCollector(BaseCollectorWithStatus):
     """Collects script files from Dataverse datasets."""
 
     def __init__(self, config_path: str | None = None):
@@ -29,6 +31,71 @@ class DataverseScriptCollector:
         self.config = get_config(config_path)
         self.client = get_dataverse_client()
         self.checkpoint_manager = CheckpointManager()
+        self.dataset_collector = DataverseDatasetCollector(config_path)
+
+    def _check_and_collect_datasets(
+        self, datasets_dir_path: Path, force_refresh: bool = False
+    ) -> bool:
+        """Check if datasets exist and collect them if needed.
+
+        Args:
+            datasets_dir_path: Directory where dataset CSVs should be stored
+            force_refresh: Force refresh of datasets
+
+        Returns:
+            True if datasets are available (either existing or newly collected)
+        """
+        # Check if dataset directory exists and has files
+        if not datasets_dir_path.exists():
+            logger.info(f"Dataset directory {datasets_dir_path} does not exist")
+            need_collection = True
+        else:
+            dataset_files = list(datasets_dir_path.glob("*_datasets.csv"))
+            if not dataset_files:
+                logger.info(f"No dataset CSV files found in {datasets_dir_path}")
+                need_collection = True
+            elif force_refresh:
+                logger.info("Force refresh enabled - will re-collect datasets")
+                need_collection = True
+            else:
+                # Check if datasets are reasonably recent (within 24 hours)
+                import time
+
+                current_time = time.time()
+                oldest_file_time = min(f.stat().st_mtime for f in dataset_files)
+                age_hours = (current_time - oldest_file_time) / 3600
+
+                if age_hours > 24:
+                    logger.info(
+                        f"Dataset files are {age_hours:.1f} hours old - collecting fresh data"
+                    )
+                    need_collection = True
+                else:
+                    logger.info(f"Found {len(dataset_files)} recent dataset CSV files")
+                    need_collection = False
+
+        if need_collection:
+            logger.info(
+                "🔄 Auto-triggering dataset collection (required for script extraction)"
+            )
+            logger.info(
+                "This is a one-time step that collects metadata from 75 dataverses"
+            )
+
+            success = self.dataset_collector.collect_all_datasets(
+                force_refresh=force_refresh
+            )
+            if not success:
+                logger.error(
+                    "Failed to collect datasets - cannot proceed with script collection"
+                )
+                return False
+
+            logger.info(
+                "✅ Dataset collection completed - proceeding with script extraction"
+            )
+
+        return True
 
     def extract_files_info(
         self, datasets_csv: str, output_dir: Path, force_refresh: bool = False
@@ -69,32 +136,80 @@ class DataverseScriptCollector:
                 try:
                     # Convert DOI format
                     doi = row.persistentUrl.replace("https://doi.org/", "doi:")
+                    repo_id = doi.split("/")[-1]
+
+                    # Check if repository already processed (skip if not force_refresh)
+                    scripts_dir = Path("outputs/scripts/dataverse") / repo_id
+                    if not force_refresh:
+                        status = self._read_repo_status(scripts_dir)
+                        if status:
+                            logger.debug(
+                                f"Skipping repository {repo_id} - status: {status.get('status', 'unknown')}"
+                            )
+                            continue
 
                     # Get dataset details
                     dataset = self.client.get_dataset(doi)
 
                     if dataset.get("status") != "OK":
                         logger.warning(f"Failed to get dataset {doi}")
+                        self._write_repo_status(
+                            scripts_dir,
+                            "failed",
+                            {"reason": "API request failed", "doi": doi},
+                        )
                         continue
 
                     data = dataset.get("data", {})
                     if "latestVersion" not in data:
+                        self._write_repo_status(
+                            scripts_dir,
+                            "no_version",
+                            {"reason": "No latestVersion in data", "doi": doi},
+                        )
                         continue
 
                     # Extract relevant files
+                    repo_files = []
                     for file_info in data["latestVersion"].get("files", []):
                         datafile = file_info.get("dataFile", {})
                         filename = datafile.get("filename", "")
 
                         if any(filename.endswith(ext) for ext in valid_extensions):
-                            files.append(
-                                {"doi": doi, "fid": datafile.get("id"), "fn": filename}
-                            )
+                            file_data = {
+                                "doi": doi,
+                                "fid": datafile.get("id"),
+                                "fn": filename,
+                            }
+                            files.append(file_data)
+                            repo_files.append(filename)
+
+                    # Write status based on results
+                    if repo_files:
+                        self._write_success_status(
+                            scripts_dir,
+                            len(repo_files),
+                            doi,
+                            {
+                                "scripts": repo_files[
+                                    :10
+                                ]  # First 10 scripts for reference
+                            },
+                        )
+                    else:
+                        self._write_success_status(scripts_dir, 0, doi)
 
                 except Exception as e:
+                    error_msg = str(e)
                     logger.warning(
                         f"Error processing dataset {row.get('persistentUrl', 'unknown')}: {e}"
                     )
+
+                    try:
+                        scripts_dir = Path("outputs/scripts/dataverse") / repo_id
+                        self._write_error_status(scripts_dir, error_msg, doi)
+                    except Exception:
+                        pass
                     continue
 
             # Save results
@@ -204,10 +319,19 @@ class DataverseScriptCollector:
     ) -> bool:
         """Collect all script files from Dataverse.
 
+        This method automatically handles both stages of Dataverse collection:
+        1. Dataset collection (if needed) - collects metadata from 75 dataverses
+        2. Script extraction and download - processes datasets to find and download scripts
+
+        The dataset collection is automatically triggered if:
+        - Dataset CSV files don't exist
+        - Dataset files are older than 24 hours
+        - force_refresh is True
+
         Args:
-            datasets_dir: Directory with dataset CSV files
+            datasets_dir: Directory with dataset CSV files (auto-populated if missing)
             output_dir: Output directory for script files
-            force_refresh: Force refresh all files
+            force_refresh: Force refresh all files (including datasets)
             num_workers: Number of parallel workers
 
         Returns:
@@ -216,21 +340,30 @@ class DataverseScriptCollector:
         # Get configuration
         config = self.config.dataverse_config
         datasets_dir_path = Path(
-            datasets_dir or config.get("output_dir", "data/datasets/")
+            datasets_dir or config.get("output_dir", "outputs/data/datasets/")
         )
-        output_dir = output_dir or "scripts/dataverse/"
+        output_dir = output_dir or "outputs/scripts/dataverse/"
 
         ensure_directory(output_dir)
         files_dir = Path("files_dfs")
         ensure_directory(files_dir)
 
-        # Find dataset CSV files
-        dataset_files = list(datasets_dir_path.glob("*_datasets.csv"))
-        if not dataset_files:
-            logger.error(f"No dataset CSV files found in {datasets_dir_path}")
+        # Auto-check and collect datasets if needed
+        logger.info("🔍 Checking dataset availability for script extraction")
+        if not self._check_and_collect_datasets(datasets_dir_path, force_refresh):
             return False
 
-        logger.info(f"Processing {len(dataset_files)} dataset files")
+        # Find dataset CSV files (should exist now)
+        dataset_files = list(datasets_dir_path.glob("*_datasets.csv"))
+        if not dataset_files:
+            logger.error(
+                f"No dataset CSV files found in {datasets_dir_path} even after collection"
+            )
+            return False
+
+        logger.info(
+            f"📊 Processing {len(dataset_files)} dataset files for script extraction"
+        )
 
         # Step 1: Extract file information
         with LogProgress(

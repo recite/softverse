@@ -547,11 +547,8 @@ class ArchiveProcessor:
             # Check if directory has any content
             has_content = any(extract_to.iterdir())
 
-            # If we expect scripts but directory is empty, verification failed
-            require_scripts = self.storage_config.get("require_scripts", False)
-            if require_scripts and expected_script_count == 0:
-                return False
-
+            # Don't require scripts - many Zenodo repos contain data only
+            # Just verify that extraction produced some files
             return has_content
 
         except Exception as e:

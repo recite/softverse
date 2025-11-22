@@ -21,21 +21,21 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
       with:
-        python-version: "3.11"
+        enable-cache: true
 
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
+    - name: Set up Python
+      run: uv python install 3.11
 
     - name: Install dependencies
-      run: poetry install
+      run: uv sync --all-extras
 
     - name: Build documentation
       run: |
         cd docs
-        poetry run sphinx-build -b html . _build/html
+        uv run sphinx-build -b html . _build/html
 
     - name: Setup Pages
       if: github.ref == 'refs/heads/main'

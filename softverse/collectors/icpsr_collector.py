@@ -12,6 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from urllib3.util.retry import Retry
 
+from softverse.collectors.base_collector import BaseCollectorWithStatus
 from softverse.config import get_config
 from softverse.utils.file_utils import (
     ArchiveProcessor,
@@ -23,7 +24,7 @@ from softverse.utils.logging_utils import ArchiveProgressLogger, LogProgress, ge
 logger = get_logger("icpsr_collector")
 
 
-class ICPSRScriptCollector:
+class ICPSRScriptCollector(BaseCollectorWithStatus):
     """Collects script files from OpenICPSR."""
 
     def __init__(self, config_path: str | None = None):
@@ -385,10 +386,28 @@ class ICPSRScriptCollector:
         Returns:
             Tuple of (success, script_count)
         """
+        extract_to = output_dir / str(study_id)
+
         try:
+            # Check if already processed (skip if not force_refresh)
+            status = self._read_repo_status(extract_to)
+            if status:
+                logger.debug(
+                    f"Skipping study {study_id} - status: {status.get('status', 'unknown')}"
+                )
+                script_count = status.get("details", {}).get("script_count", 0)
+                if progress_logger:
+                    progress_logger.update_extraction(study_id, True, script_count)
+                return True, script_count
+
             # Check storage requirements
             if not self.archive_processor.check_storage_requirements():
                 logger.error("Insufficient storage space for downloads")
+                self._write_repo_status(
+                    extract_to,
+                    "storage_error",
+                    {"error": "Insufficient storage space", "study_id": study_id},
+                )
                 return False, 0
 
             # Construct download URL (like in the notebook)
@@ -398,15 +417,6 @@ class ICPSRScriptCollector:
             )
 
             zip_file_path = temp_dir / f"ICPSR_{str(study_id).zfill(5)}.zip"
-            extract_to = output_dir / str(study_id)
-
-            # Check if already processed
-            if extract_to.exists():
-                logger.debug(f"Skipping {study_id} - already processed")
-                script_count = len(list(extract_to.rglob("*")))
-                if progress_logger:
-                    progress_logger.update_extraction(study_id, True, script_count)
-                return True, script_count
 
             # Get authenticated session
             session = self._get_authenticated_session()
@@ -435,6 +445,14 @@ class ICPSRScriptCollector:
                             f"Downloaded file for {study_id} is very small ({file_size} bytes), might be an error"
                         )
                         zip_file_path.unlink(missing_ok=True)
+                        self._write_repo_status(
+                            extract_to,
+                            "download_error",
+                            {
+                                "error": f"File too small ({file_size} bytes)",
+                                "study_id": study_id,
+                            },
+                        )
                         return False, 0
 
                     # Get file size for progress tracking
@@ -447,10 +465,39 @@ class ICPSRScriptCollector:
                     logger.warning(
                         f"Unexpected content type for {study_id}: {content_type}"
                     )
+                    self._write_repo_status(
+                        extract_to,
+                        "download_error",
+                        {
+                            "error": f"Unexpected content type: {content_type}",
+                            "study_id": study_id,
+                        },
+                    )
                     return False, 0
+            elif response.status_code == 403:
+                logger.warning(f"Access forbidden for {study_id}: HTTP 403")
+                self._write_repo_status(
+                    extract_to,
+                    "forbidden",
+                    {"error": "Access forbidden (403)", "study_id": study_id},
+                )
+                return False, 0
+            elif response.status_code == 404:
+                logger.warning(f"Study not found {study_id}: HTTP 404")
+                self._write_repo_status(
+                    extract_to,
+                    "not_found",
+                    {"error": "Study not found (404)", "study_id": study_id},
+                )
+                return False, 0
             else:
                 logger.warning(
                     f"Download failed for {study_id}: HTTP {response.status_code}"
+                )
+                self._write_repo_status(
+                    extract_to,
+                    "download_error",
+                    {"error": f"HTTP {response.status_code}", "study_id": study_id},
                 )
                 return False, 0
 
@@ -458,6 +505,16 @@ class ICPSRScriptCollector:
             success, script_count = self.archive_processor.process_archive_with_cleanup(
                 zip_file_path, extract_to, valid_extensions
             )
+
+            # Write status based on results
+            if success:
+                self._write_success_status(extract_to, script_count, study_id)
+            else:
+                self._write_repo_status(
+                    extract_to,
+                    "extraction_failed",
+                    {"error": "Archive extraction failed", "study_id": study_id},
+                )
 
             # Update progress with extraction results
             if progress_logger:
@@ -469,9 +526,14 @@ class ICPSRScriptCollector:
             return success, script_count
 
         except Exception as e:
+            error_msg = str(e)
             logger.error(f"Failed to download/process study {study_id}: {e}")
+
+            # Write error status with categorization
+            self._write_error_status(extract_to, error_msg, study_id)
+
             if progress_logger:
-                progress_logger.update_extraction(study_id, False, 0, str(e))
+                progress_logger.update_extraction(study_id, False, 0, error_msg)
             return False, 0
 
     def collect_all_scripts(

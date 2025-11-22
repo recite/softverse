@@ -5,7 +5,7 @@ data_sources:
   dataverse:
     base_url: "https://dataverse.harvard.edu/api"
     input_csv: "data/dataverse_socialscience.csv"
-    output_dir: "data/datasets/"
+    output_dir: "outputs/data/datasets/"
     enabled: true
 
   zenodo:
@@ -15,12 +15,12 @@ data_sources:
       - "restud-replication"
       - "ej-replication-repository"
       - "pemj"
-    output_dir: "scripts/zenodo/"
+    output_dir: "outputs/scripts/zenodo/"
     enabled: true
 
   icpsr:
     base_url: "https://www.openicpsr.org"
-    output_dir: "scripts/icpsr/"
+    output_dir: "outputs/scripts/icpsr/"
     enabled: true
 
 # Processing settings
@@ -48,7 +48,7 @@ output:
 logging:
   level: "INFO"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  file: "logs/softverse.log"
+  file: "outputs/logs/softverse.log"
   max_size_mb: 100
   backup_count: 5
 
@@ -61,7 +61,7 @@ api:
 # Incremental processing
 incremental:
   enabled: true
-  checkpoints_dir: "checkpoints/"
+  checkpoints_dir: "outputs/checkpoints/"
   force_refresh: false
 
 # Storage management
@@ -69,12 +69,12 @@ storage:
   # Archive handling settings
   keep_archives: false  # Whether to keep downloaded ZIP files after extraction
   cleanup_temp_files: true  # Whether to clean up temporary files
-  temp_dir: "temp/"  # Temporary directory for downloads
+  temp_dir: "outputs/temp/"  # Temporary directory for downloads
 
   # Archive processing options
   sequential_processing: true  # Process archives one at a time to minimize storage
   progress_indicators: true  # Show detailed progress for archive operations
-  failed_archives_dir: "failed_archives/"  # Directory to store failed archive info
+  failed_archives_dir: "outputs/failed_archives/"  # Directory to store failed archive info
 
   # Error recovery settings
   safe_deletion: true  # Verify extraction before deleting archives

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from softverse.collectors.base_collector import BaseCollectorWithStatus
 from softverse.config import get_config
 from softverse.utils.api_utils import get_zenodo_client
 from softverse.utils.file_utils import (
@@ -16,7 +17,7 @@ from softverse.utils.logging_utils import ArchiveProgressLogger, LogProgress, ge
 logger = get_logger("zenodo_collector")
 
 
-class ZenodoScriptCollector:
+class ZenodoScriptCollector(BaseCollectorWithStatus):
     """Collects script files from Zenodo communities."""
 
     def __init__(self, config_path: str | None = None):
@@ -115,10 +116,13 @@ class ZenodoScriptCollector:
             archive_path = temp_dir / f"{record_id}.zip"
             extract_to = output_dir / record_id
 
-            # Skip if already processed
-            if extract_to.exists():
-                logger.debug(f"Skipping {record_id} - already processed")
-                script_count = len(list(extract_to.rglob("*")))
+            # Check if repository already processed (skip if not force_refresh)
+            status = self._read_repo_status(extract_to)
+            if status:
+                logger.debug(
+                    f"Skipping record {record_id} - status: {status.get('status', 'unknown')}"
+                )
+                script_count = status.get("details", {}).get("script_count", 0)
                 if progress_logger:
                     progress_logger.update_extraction(record_id, True, script_count)
                 return True, script_count
@@ -128,6 +132,11 @@ class ZenodoScriptCollector:
 
             if not success:
                 error_msg = "Download failed"
+                self._write_repo_status(
+                    extract_to,
+                    "download_failed",
+                    {"error": error_msg, "record_id": record_id},
+                )
                 if progress_logger:
                     progress_logger.update_extraction(record_id, False, 0, error_msg)
                 return False, 0
@@ -142,6 +151,16 @@ class ZenodoScriptCollector:
                 archive_path, extract_to, valid_extensions
             )
 
+            # Write status based on results
+            if success:
+                self._write_success_status(extract_to, script_count, record_id)
+            else:
+                self._write_repo_status(
+                    extract_to,
+                    "extraction_failed",
+                    {"error": "Archive extraction failed", "record_id": record_id},
+                )
+
             # Update progress with extraction results
             if progress_logger:
                 extraction_error: str | None = None if success else "Extraction failed"
@@ -152,7 +171,16 @@ class ZenodoScriptCollector:
             return success, script_count
 
         except Exception as e:
+            error_msg = str(e)
             logger.error(f"Failed to download/process record {record_id}: {e}")
+
+            # Write error status with categorization
+            try:
+                extract_to = output_dir / record_id
+                self._write_error_status(extract_to, error_msg, record_id)
+            except Exception:
+                pass
+
             if progress_logger:
                 progress_logger.update_extraction(record_id, False, 0, str(e))
             return False, 0
@@ -178,7 +206,7 @@ class ZenodoScriptCollector:
         # Get configuration
         config = self.config.zenodo_config
         output_dir_path = Path(
-            output_dir or config.get("output_dir", "scripts/zenodo/")
+            output_dir or config.get("output_dir", "outputs/scripts/zenodo/")
         )
         ensure_directory(output_dir_path)
 
