@@ -1,5 +1,10 @@
 ### Softverse: Auto-compute Citations to Software From Replication Files
 
+[![CI](https://github.com/recite/softverse/actions/workflows/test.yml/badge.svg)](https://github.com/recite/softverse/actions/workflows/test.yml)
+[![PyPI version](https://img.shields.io/pypi/v/softverse.svg)](https://pypi.python.org/pypi/softverse)
+[![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://recite.github.io/softverse/)
+[![PePy Downloads](https://static.pepy.tech/badge/softverse)](https://www.pepy.tech/projects/softverse)
+
 We analyze replication files from 34 social science journals including the APSR, AJPS, JoP, BJPolS, Political Analysis, World Politics, Political Behavior, etc. posted to the Harvard Dataverse to tally the libraries used. This can be used as a way to calculate citation metrics for software.
 
 see: https://gojiberries.io/2023/07/02/hard-problems-about-research-software/
