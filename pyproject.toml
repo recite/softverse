@@ -72,6 +72,7 @@ dev = [
     "sphinx>=5.0.0",
     "furo>=2022.6.21",
     "sphinx-click>=4.3.0",
+    "twine>=6.2.0",
 ]
 
 
