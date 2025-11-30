@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.9.13,<0.10.0"]
+build-backend = "uv_build"
 
 [project]
 name = "softverse"
@@ -40,88 +40,40 @@ dependencies = [
     "gitpython>=3.1.0",
     "python-dotenv>=1.2.1",
     "beautifulsoup4>=4.14.2",
+    "boto3>=1.41.5",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "black>=22.0.0",
-    "isort>=5.10.0",
-    "mypy>=0.950",
+    "ruff>=0.14.6",
     "pytest>=7.0.0",
     "pytest-cov>=3.0.0",
     "pre-commit>=2.20.0",
     "sphinx>=5.0.0",
     "furo>=2022.6.21",
     "sphinx-click>=4.3.0",
-    "types-pyyaml>=6.0.12.20250915",
-    "types-requests>=2.32.4.20250913",
-    "pandas-stubs>=2.3.2.250926",
-    "ruff>=0.14.6",
 ]
 
 [project.scripts]
 collect-datasets = "softverse.scripts.collect_datasets:main"
 collect-scripts = "softverse.scripts.collect_scripts:main"
+collect-osf = "softverse.scripts.collect_osf:main"
+collect-researchbox = "softverse.scripts.collect_researchbox:main"
 analyze-imports = "softverse.scripts.analyze_imports:main"
 create-archives = "softverse.scripts.create_archives:main"
 run-pipeline = "softverse.scripts.run_pipeline:main"
 
 [dependency-groups]
 dev = [
-    "black>=22.0.0",
-    "isort>=5.10.0",
-    "mypy>=0.950",
+    "ruff>=0.14.6",
     "pytest>=7.0.0",
     "pytest-cov>=3.0.0",
     "pre-commit>=2.20.0",
     "sphinx>=5.0.0",
     "furo>=2022.6.21",
     "sphinx-click>=4.3.0",
-    "types-pyyaml>=6.0.12.20250915",
-    "types-requests>=2.32.4.20250913",
-    "pandas-stubs>=2.3.2.250926",
-    "ruff>=0.14.6",
 ]
 
-[tool.black]
-line-length = 88
-target-version = ['py311']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-  | scripts
-  | temp
-  | logs
-)/
-|debug_.*\.py
-|monitor_.*\.py
-|test_icpsr_download\.py
-'''
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-known_first_party = ["softverse"]
-skip_glob = ["scripts/*", "temp/*", "logs/*", "debug_*.py", "monitor_*.py", "test_icpsr_download.py"]
-
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = false
-warn_unused_configs = true
-check_untyped_defs = true
-no_implicit_optional = true
-ignore_missing_imports = true
-exclude = ["scripts/", "temp/", "logs/", "tests/", "debug_*.py", "monitor_*.py", "test_icpsr_download.py"]
 
 [tool.ruff]
 line-length = 88
@@ -170,6 +122,10 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = ["softverse"]
 split-on-trailing-comma = true
+
+[tool.uv.build-backend]
+module-name = "softverse"
+module-root = ""
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -23,6 +23,39 @@ data_sources:
     output_dir: "outputs/scripts/icpsr/"
     enabled: true
 
+  osf:
+    base_url: "https://api.osf.io/v2/"
+    output_dir: "outputs/scripts/osf/"
+    enabled: true
+    # OSF specific settings
+    rate_limit_delay: 0.5  # seconds between requests
+    default_page_size: 100
+    # Filter settings (optional)
+    default_filters:
+      public: true  # Only fetch public projects by default
+    # Institution IDs to collect from (optional)
+    institutions: []
+    # Maximum nodes to collect in a single run (optional)
+    max_nodes_per_run: null
+
+  researchbox:
+    s3_base_url: "https://s3.wasabisys.com/zipballs.researchbox.org/"
+    web_base_url: "https://researchbox.org/"
+    output_dir: "outputs/scripts/researchbox/"
+    enabled: true
+    # ResearchBox specific settings
+    rate_limit_delay: 1.0  # seconds between requests (be respectful)
+    max_retries: 3
+    # ID range settings for discovery
+    default_start_id: 1
+    default_end_id: 1000
+    batch_size: 50  # IDs to check in parallel batches
+    # File handling
+    extract_zips: true  # Extract ZIP files by default
+    keep_zips: false  # Delete ZIP files after extraction
+    # Maximum ResearchBoxes to collect in a single run (optional)
+    max_boxes_per_run: null
+
 # Processing settings
 processing:
   parallel_workers: 4

@@ -32,17 +32,165 @@ cd softverse
 uv sync --all-extras
 ```
 
-### Usage
+## Usage
+
+### Quick Start
+
 Run the complete data collection and analysis pipeline:
+
 ```bash
-uv run run-pipeline --help
+uv run run-pipeline
 ```
 
-Or run individual components:
+### Individual Components
+
+#### 1. Collect Datasets from Dataverse
 ```bash
-uv run collect-datasets --help
-uv run collect-scripts --help
-uv run analyze-imports --help
+# Collect datasets using configuration file
+uv run collect-datasets --config config/settings.yaml --output-dir outputs/data/datasets/
+
+# Force refresh to re-download all datasets
+uv run collect-datasets --force-refresh --output-dir outputs/data/datasets/
+
+# Use custom CSV input file with dataverse information
+uv run collect-datasets --input-csv data/dataverse_socialscience.csv --output-dir outputs/data/datasets/
+```
+
+#### 2. Collect Scripts and Code Files
+```bash
+# Collect scripts from all sources (Dataverse, Zenodo, ICPSR)
+uv run collect-scripts --source all --base-output-dir outputs/scripts/
+
+# Collect only from Dataverse
+uv run collect-scripts --source dataverse --datasets-dir outputs/data/datasets/ --base-output-dir outputs/scripts/
+
+# Collect from Zenodo with specific communities
+uv run collect-scripts --source zenodo --zenodo-communities harvard-dataverse --max-zenodo-records 1000
+
+# Collect from ICPSR with query
+uv run collect-scripts --source icpsr --icpsr-query "political science" --max-icpsr-studies 500
+```
+
+#### 3. Analyze Software Imports
+```bash
+# Analyze imports from collected scripts
+uv run analyze-imports --scripts-dir outputs/scripts/ --output-dir outputs/analysis/
+
+# Specify script patterns to analyze
+uv run analyze-imports --scripts-dir outputs/scripts/ --output-dir outputs/analysis/ --config config/settings.yaml
+```
+
+#### 4. Collect from OSF (Open Science Framework)
+```bash
+# Note: OSF collector is available via Python API (see below)
+from softverse.collectors import OSFCollector
+```
+
+#### 5. Collect from ResearchBox
+```bash
+# Note: ResearchBox collector is available via Python API (see below)
+from softverse.collectors import ResearchBoxCollector
+```
+
+### Configuration
+
+#### API Keys and Authentication
+
+API keys can be configured in two ways:
+
+1. **Environment Variables** (Recommended for security):
+```bash
+export DATAVERSE_API_KEY="your-dataverse-api-key"
+export OSF_API_TOKEN="your-osf-personal-access-token"
+export ZENODO_ACCESS_TOKEN="your-zenodo-access-token"
+export ICPSR_USERNAME="your-icpsr-username"
+export ICPSR_PASSWORD="your-icpsr-password"
+```
+
+2. **Configuration File** (`config/settings.yaml`):
+```yaml
+dataverse:
+  base_url: "https://dataverse.harvard.edu"
+  api_key: "your-api-key-here"  # Optional, for authenticated requests
+  input_csv: "data/dataverse_socialscience.csv"
+
+osf:
+  api_token: "your-osf-token-here"  # Optional, for authenticated requests
+  rate_limit_delay: 0.5
+
+zenodo:
+  access_token: "your-zenodo-token"  # Optional, for authenticated requests
+  communities: ["harvard-dataverse"]
+
+icpsr:
+  username: "your-username"
+  password: "your-password"
+
+researchbox:
+  base_url: "https://researchbox.org"
+  concurrent_downloads: 5
+
+# Output directories
+output:
+  datasets_dir: "outputs/data/datasets"
+  scripts_dir: "outputs/scripts"
+  analysis_dir: "outputs/analysis"
+  logs_dir: "outputs/logs"
+```
+
+**Note:** Environment variables take precedence over configuration file values for sensitive data like API keys.
+
+### Python API
+
+```python
+from pathlib import Path
+from softverse.collectors import (
+    DataverseCollector,
+    OSFCollector,
+    ResearchBoxCollector,
+    ZenodoCollector
+)
+from softverse.analyzers import ImportAnalyzer
+
+# Initialize collectors
+dataverse = DataverseCollector()
+osf = OSFCollector()
+researchbox = ResearchBoxCollector()
+
+# Collect datasets from Harvard Dataverse
+datasets = dataverse.collect_from_dataverse_csv(
+    csv_path="data/dataverse_socialscience.csv",
+    output_dir=Path("outputs/datasets")
+)
+
+# Search and collect from OSF
+osf_results = osf.search_nodes("reproducibility")
+osf.collect_nodes(
+    node_ids=[node["id"] for node in osf_results[:10]],
+    output_dir=Path("outputs/osf"),
+    download_files=True
+)
+
+# Collect from ResearchBox
+researchbox.collect_range(
+    start_id=1,
+    end_id=100,
+    output_dir=Path("outputs/researchbox"),
+    extract=True
+)
+
+# Analyze R package imports
+analyzer = ImportAnalyzer()
+results = analyzer.analyze_directory(
+    directory=Path("outputs/scripts"),
+    output_dir=Path("outputs/analysis")
+)
+
+# Get summary statistics
+summary = analyzer.generate_summary_statistics(results)
+print(f"Total scripts analyzed: {summary['total_files']}")
+print(f"Top R packages: {summary['top_r_packages'][:10]}")
+print(f"Top Python packages: {summary['top_python_packages'][:10]}")
 ```
 
 ### Scripts

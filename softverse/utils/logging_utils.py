@@ -303,6 +303,5 @@ class ArchiveProgressLogger:
             space_freed_mb: Space freed in MB
         """
         self.logger.info(
-            f"Cleanup: removed {files_removed} temp files, "
-            f"freed {space_freed_mb:.1f}MB"
+            f"Cleanup: removed {files_removed} temp files, freed {space_freed_mb:.1f}MB"
         )

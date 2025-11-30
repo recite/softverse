@@ -91,12 +91,17 @@ class Config:
         """Get API token from environment variable.
 
         Args:
-            service: Service name (e.g., 'dataverse', 'zenodo')
+            service: Service name (e.g., 'dataverse', 'zenodo', 'osf')
 
         Returns:
             API token or None
         """
-        env_var = f"{service.upper()}_TOKEN"
+        # Special case for OSF which uses different env var name
+        if service.lower() == "osf":
+            env_var = "OSF_API_TOKEN"
+        else:
+            env_var = f"{service.upper()}_TOKEN"
+
         token = os.getenv(env_var)
 
         if not token:
@@ -122,6 +127,16 @@ class Config:
     def icpsr_config(self) -> dict[str, Any]:
         """Get ICPSR configuration."""
         return self.get("data_sources.icpsr", {})
+
+    @property
+    def osf_config(self) -> dict[str, Any]:
+        """Get OSF configuration."""
+        return self.get("data_sources.osf", {})
+
+    @property
+    def researchbox_config(self) -> dict[str, Any]:
+        """Get ResearchBox configuration."""
+        return self.get("data_sources.researchbox", {})
 
     @property
     def processing_config(self) -> dict[str, Any]:
