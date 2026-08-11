@@ -26,20 +26,26 @@ from softverse.sources.dataverse import (
 # -- rate limiting --------------------------------------------------------
 
 
-def test_limiter_caps_the_sustained_rate():
-    limiter = RateLimiter(rate_per_s=20.0, burst=1)
+def test_limiter_spaces_requests_rather_than_bursting():
+    """Asserts *spacing*, not the average -- the average passes either way.
+
+    pyrate-limiter's Rate(20, SECOND) allows twenty requests in the first
+    millisecond and then silence. The average is correct and the behaviour is
+    exactly the burst that earns a WAF challenge. The limiter must therefore be
+    built as one request per interval.
+    """
+    limiter = RateLimiter(rate_per_s=20.0)
     start = time.monotonic()
     for _ in range(10):
         limiter.acquire()
     elapsed = time.monotonic() - start
-    # 10 tokens at 20/s cannot arrive faster than ~0.45 s.
-    assert elapsed >= 0.4, elapsed
+    assert elapsed >= 0.4, f"burst not prevented: 10 requests in {elapsed:.4f}s"
 
 
 def test_limiter_is_global_not_per_thread():
     """A per-worker sleep is not a rate limit: four workers each sleeping 0.5 s
     still issue 8 req/s. The bucket must bind the process."""
-    limiter = RateLimiter(rate_per_s=20.0, burst=1)
+    limiter = RateLimiter(rate_per_s=20.0)
     start = time.monotonic()
     threads = [
         threading.Thread(target=lambda: [limiter.acquire() for _ in range(5)])
@@ -51,7 +57,7 @@ def test_limiter_is_global_not_per_thread():
         t.join()
     elapsed = time.monotonic() - start
     # 20 acquisitions across 4 threads at 20/s is still ~1 s, not ~0.25 s.
-    assert elapsed >= 0.9, elapsed
+    assert elapsed >= 0.9, f"limiter is not global: {elapsed:.4f}s"
 
 
 def test_penalize_only_ever_slows_down():
@@ -63,10 +69,13 @@ def test_penalize_only_ever_slows_down():
 
 
 def test_penalize_has_a_floor():
+    """It slows without ever reaching zero. The floor is 0.1 req/s -- one
+    request per ten seconds -- which is where we want to be against a host that
+    has already challenged us."""
     limiter = RateLimiter(rate_per_s=2.0)
     for _ in range(20):
         limiter.penalize("429")
-    assert limiter.rate >= 0.2
+    assert limiter.rate >= 0.1
 
 
 # -- retry policy ---------------------------------------------------------
@@ -131,7 +140,7 @@ def test_a_429_slows_the_whole_run(monkeypatch):
     class FakeResponse:
         status_code = 429
         headers = {"Retry-After": "0"}
-        content = b""
+        content = b"busy"
 
     limiter = RateLimiter(rate_per_s=4.0)
     client = PoliteClient(limiter=limiter, max_retries=1)
@@ -344,4 +353,43 @@ def test_empty_200_is_also_treated_as_throttling(monkeypatch):
     monkeypatch.setattr(time, "sleep", lambda *_: None)
     monkeypatch.setattr(client._client, "get", lambda url, **kw: Empty())
     assert not client.get("http://x/").ok
+    client.close()
+
+
+def test_waf_challenge_header_is_recognized():
+    """AWS WAF names itself. Harvard's block is definitively identifiable."""
+    import httpx
+
+    from softverse.acquire.http import is_waf_challenge
+
+    challenged = httpx.Response(
+        202, headers={"x-amzn-waf-action": "challenge"}, content=b""
+    )
+    assert is_waf_challenge(challenged)
+    # A 200 with a real body is not a challenge.
+    assert not is_waf_challenge(httpx.Response(200, content=b'{"ok":true}'))
+    # ...and neither is a legitimate empty 204.
+    assert not is_waf_challenge(httpx.Response(204, content=b""))
+
+
+def test_probe_reports_a_challenge_without_retrying(monkeypatch):
+    """The watch loop needs a single cheap check, not a retry storm."""
+    import httpx
+
+    calls = {"n": 0}
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
+
+    def fake_get(url, **kw):
+        calls["n"] += 1
+        return httpx.Response(
+            202,
+            headers={"x-amzn-waf-action": "challenge"},
+            content=b"",
+            request=httpx.Request("GET", url),
+        )
+
+    monkeypatch.setattr(client._client, "get", fake_get)
+    outcome = client.probe("http://x/")
+    assert calls["n"] == 1
+    assert outcome.challenged and not outcome.ok
     client.close()

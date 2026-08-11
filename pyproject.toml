@@ -42,6 +42,10 @@ dependencies = [
     "click>=8.1.0",
     "python-dotenv>=1.0.0",
     "tomli-w>=1.0.0",
+    "stamina>=26.1.0",
+    "pyrate-limiter>=4.4.0",
+    "zenodo-client>=0.4.2",
+    "pydataverse>=0.3.5",
 ]
 
 [project.optional-dependencies]

@@ -1,91 +1,112 @@
-"""Polite HTTP: a global rate limiter and a retry policy that knows what to retry.
+"""Polite HTTP: maintained libraries for the solved parts, ours for the rest.
 
-Harvard Dataverse publishes no rate-limit headers and its configured tier limits
-are not public, so the ceiling is unknown. The response to an unknown ceiling is
-to stay well under it and to back off *harder* on the first sign of pushback,
-not to probe for the edge.
+Retry policy and rate limiting are solved problems, so they come from libraries
+rather than from forty lines of hand-rolled backoff:
 
-Two v1 behaviours this replaces:
+- **stamina** (v26.1.0) for retries -- exponential backoff with jitter and a
+  wall-clock cap, built on tenacity.
+- **pyrate-limiter** (v4.4.0) for rate limiting -- a leaky bucket that enforces
+  *several rates at once*, which matters because Dataverse's documented limits
+  are per-hour and per-tier while politeness is naturally expressed per-second.
 
-- ``time.sleep(5.0)`` after every single download, unconditional, inside the
-  worker. With ~88,000 files that is five days of pure sleeping, which is why
-  the run never finished.
-- Retrying on *any* ``RequestException``, including 404, and backing off
-  ``retry_delay * 2**attempt`` on 403 -- 310 s burned per permanently forbidden
-  file. A 404 and a 403 are answers. Only 429 and 5xx are worth repeating.
+What is *not* delegated, because no library knows about it:
+
+**Harvard Dataverse answers an unwelcome client with `202 Accepted`, an empty
+body, `content-type: text/html`, and the header `x-amzn-waf-action: challenge`.**
+That is an AWS WAF bot challenge, not a rate limit and not an error. Every HTTP
+library on earth treats 202 as success, so a client built on defaults records
+the dataset as having zero files and marks it complete -- which is precisely the
+shape of the v1 disaster (8,953 deposits marked "success", holding nothing),
+arrived at by a different route. Detecting it is ours, it is tested, and it must
+not regress.
+
+We do not attempt to satisfy the challenge. It expects a JS-solved
+`aws-waf-token` cookie; producing one would be circumventing an access control,
+and Harvard's API Terms of Use ask users not to impair the service. The correct
+response to a closed door is to knock more slowly, which is what
+:mod:`softverse.acquire.watch` does.
 """
 
 from __future__ import annotations
 
 import random
 import threading
-import time
 from dataclasses import dataclass
 
 import httpx
+import stamina
+from pyrate_limiter import Duration, Limiter, Rate
 
 from softverse.logging_setup import get_logger
 
 logger = get_logger(__name__)
 
-#: Statuses worth repeating. 404 (gone) and 403 (not yours) are answers.
-#:
-#: 202 is here because of measured Harvard Dataverse behaviour, not the spec.
-#: When it decides a client is going too fast it replies **202 Accepted with an
-#: empty text/html body** rather than 429 -- no Retry-After, no error. A client
-#: that treats 2xx as success therefore records a dataset with zero files and
-#: calls it done, which is precisely the shape of the v1 disaster (8,953
-#: deposits marked "success", holding nothing). Treat it as throttling.
-RETRY_STATUSES = frozenset({202, 429, 500, 502, 503, 504})
+#: Statuses worth repeating. 404 (gone) and 403 (not yours) are answers, not
+#: failures -- v1 retried 404s and burned 310 s per permanently forbidden file.
+RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 
-#: A 2xx whose body is empty is never a real answer from this API.
+#: A 2xx with an empty body is never a real answer from these APIs.
 _EMPTY_IS_THROTTLE = frozenset({200, 202})
+
+#: AWS WAF names itself in the response. When present, this is definitive.
+WAF_HEADER = "x-amzn-waf-action"
+
+
+class Throttled(Exception):
+    """The server is refusing politely: a WAF challenge or an empty 2xx."""
 
 
 class RateLimiter:
-    """Thread-safe token bucket, shared across all workers.
+    """Global limiter over pyrate-limiter, with a one-way penalty.
 
-    A per-worker delay is not a rate limit: four workers each sleeping 0.5 s
-    still issue 8 req/s. The bucket is global so the *process* obeys the limit
-    however many threads are running.
-
-    The rate can only ever go down (:meth:`penalize`). A server that says 429
-    once will say it again, and the polite response to being asked to slow down
-    is to stay slow for the rest of the run rather than creep back up.
+    Wrapping rather than using the library bare buys two things it does not
+    provide: a *global* instance shared across workers (a per-worker delay is
+    not a rate limit -- four workers each sleeping 0.5 s still issue 8 req/s),
+    and :meth:`penalize`, which permanently lowers the rate for the rest of the
+    run. A server that pushed back once will push back again, and creeping the
+    rate back up is how you get blocked twice.
     """
 
-    def __init__(self, rate_per_s: float = 2.0, burst: int = 2) -> None:
+    def __init__(self, rate_per_s: float = 2.0, per_hour: int | None = None) -> None:
         self._rate = rate_per_s
-        self._initial_rate = rate_per_s
-        self._burst = max(1, burst)
-        self._tokens = float(self._burst)
-        self._updated = time.monotonic()
+        self._per_hour = per_hour
         self._lock = threading.Lock()
+        self._limiter = self._build(rate_per_s)
+
+    def _build(self, rate_per_s: float) -> Limiter:
+        """Always ``1 request per interval``, never ``N per second``.
+
+        This distinction matters and is easy to get wrong. ``Rate(20, SECOND)``
+        permits a *burst* of twenty requests in the first millisecond and then
+        silence -- the average is right, the behaviour is not. Against a host
+        that has already served us an AWS WAF challenge, twenty simultaneous
+        requests is exactly the pattern that triggered it. Expressing the same
+        average as one request per 50 ms forces even spacing.
+
+        A test asserts the spacing rather than the average, because the average
+        would have passed either way.
+        """
+        interval_ms = max(1, int(1000 / rate_per_s))
+        rates = [Rate(1, interval_ms)]
+        if self._per_hour:
+            rates.append(Rate(self._per_hour, Duration.HOUR))
+        return Limiter(rates)
 
     @property
     def rate(self) -> float:
         return self._rate
 
-    def acquire(self) -> None:
-        """Block until a token is available."""
-        while True:
-            with self._lock:
-                now = time.monotonic()
-                self._tokens = min(
-                    self._burst, self._tokens + (now - self._updated) * self._rate
-                )
-                self._updated = now
-                if self._tokens >= 1.0:
-                    self._tokens -= 1.0
-                    return
-                deficit = (1.0 - self._tokens) / self._rate
-            # Jitter so concurrent workers do not resynchronize into a burst.
-            time.sleep(deficit + random.uniform(0, 0.05))
+    def acquire(self, name: str = "global") -> None:
+        """Block until the bucket allows another request."""
+        # blocking=True makes try_acquire wait rather than return False, which
+        # is what turns the bucket into a rate limiter rather than a gate.
+        self._limiter.try_acquire(name, blocking=True)
 
     def penalize(self, reason: str) -> None:
         """Halve the sustained rate, permanently for this run."""
         with self._lock:
-            self._rate = max(0.2, self._rate / 2)
+            self._rate = max(0.1, self._rate / 2)
+            self._limiter = self._build(self._rate)
             new = self._rate
         logger.warning(
             "rate limit reduced",
@@ -97,10 +118,8 @@ class RateLimiter:
 class FetchOutcome:
     """What happened, distinguishably.
 
-    ``ok`` false with ``retryable`` false means a definitive negative -- gone,
-    restricted, or refused. v1 collapsed those into the same zero as a timeout,
-    which is why a restricted file and a network failure were indistinguishable
-    in its outputs.
+    ``ok`` false with ``retryable`` false is a definitive negative -- gone,
+    restricted, refused. v1 collapsed those into the same zero as a timeout.
     """
 
     ok: bool
@@ -108,6 +127,7 @@ class FetchOutcome:
     content: bytes | None = None
     error: str | None = None
     retryable: bool = False
+    challenged: bool = False
 
     @property
     def forbidden(self) -> bool:
@@ -118,8 +138,19 @@ class FetchOutcome:
         return self.status == 404
 
 
+def is_waf_challenge(response: httpx.Response) -> bool:
+    """Whether this response is an AWS WAF bot challenge.
+
+    Two signals, either sufficient: the explicit header, or the shape Harvard
+    actually returns (an empty 200/202 body from a JSON API).
+    """
+    if response.headers.get(WAF_HEADER, "").lower() == "challenge":
+        return True
+    return response.status_code in _EMPTY_IS_THROTTLE and not response.content
+
+
 class PoliteClient:
-    """An httpx client wrapped in the limiter and the retry policy."""
+    """httpx client with a shared limiter, stamina retries, and WAF detection."""
 
     def __init__(
         self,
@@ -131,9 +162,10 @@ class PoliteClient:
     ) -> None:
         self.limiter = limiter or RateLimiter()
         self.max_retries = max_retries
-        merged = {"User-Agent": user_agent, **(headers or {})}
         self._client = httpx.Client(
-            timeout=timeout, follow_redirects=True, headers=merged
+            timeout=timeout,
+            follow_redirects=True,
+            headers={"User-Agent": user_agent, **(headers or {})},
         )
 
     def __enter__(self) -> PoliteClient:
@@ -146,75 +178,86 @@ class PoliteClient:
         self._client.close()
 
     def get(self, url: str, **kwargs) -> FetchOutcome:
-        """GET with rate limiting and bounded retries."""
-        last: FetchOutcome = FetchOutcome(ok=False, error="no attempt made")
-        for attempt in range(self.max_retries + 1):
-            self.limiter.acquire()
-            try:
-                response = self._client.get(url, **kwargs)
-            except httpx.HTTPError as exc:
-                last = FetchOutcome(
-                    ok=False, error=f"{type(exc).__name__}: {exc}", retryable=True
-                )
-            else:
-                status = response.status_code
-                if status == 200 and response.content:
-                    return FetchOutcome(ok=True, status=200, content=response.content)
-                if status in _EMPTY_IS_THROTTLE and not response.content:
-                    # Harvard's undocumented throttle: empty 200/202. Slow down
-                    # for the rest of the run and wait properly before retrying.
-                    self.limiter.penalize(f"empty {status} (throttle)")
-                    last = FetchOutcome(
-                        ok=False,
-                        status=status,
-                        error=f"empty {status} body (throttled)",
-                        retryable=True,
-                    )
-                    if attempt < self.max_retries:
-                        delay = min(120.0, 15.0 * (attempt + 1)) + random.uniform(0, 5)
-                        logger.warning(
-                            "throttled, backing off",
-                            extra={"status": status, "sleep_s": round(delay, 1)},
+        """GET with rate limiting, retries, and challenge detection."""
+        last = FetchOutcome(ok=False, error="no attempt made")
+
+        try:
+            for attempt in stamina.retry_context(
+                on=(httpx.HTTPError, Throttled),
+                attempts=self.max_retries + 1,
+                wait_initial=2.0,
+                wait_max=120.0,
+                wait_jitter=5.0,
+            ):
+                with attempt:
+                    self.limiter.acquire()
+                    response = self._client.get(url, **kwargs)
+
+                    if is_waf_challenge(response):
+                        self.limiter.penalize("WAF challenge / empty 2xx")
+                        last = FetchOutcome(
+                            ok=False,
+                            status=response.status_code,
+                            error="WAF challenge (empty body)",
+                            retryable=True,
+                            challenged=True,
                         )
-                        time.sleep(delay)
-                    continue
-                if status not in RETRY_STATUSES:
-                    # A definitive answer. Do not retry it 5 times.
+                        raise Throttled(last.error)
+
+                    if response.status_code == 200:
+                        return FetchOutcome(
+                            ok=True, status=200, content=response.content
+                        )
+
+                    if response.status_code in RETRY_STATUSES:
+                        if response.status_code == 429:
+                            self.limiter.penalize("HTTP 429")
+                        last = FetchOutcome(
+                            ok=False,
+                            status=response.status_code,
+                            error=f"HTTP {response.status_code}",
+                            retryable=True,
+                        )
+                        raise Throttled(last.error)
+
+                    # A definitive answer. Returning inside the retry context
+                    # exits without another attempt, which is the point.
                     return FetchOutcome(
                         ok=False,
-                        status=status,
-                        error=f"HTTP {status}",
+                        status=response.status_code,
+                        error=f"HTTP {response.status_code}",
                         retryable=False,
                     )
-                last = FetchOutcome(
-                    ok=False, status=status, error=f"HTTP {status}", retryable=True
-                )
-                if status == 429:
-                    self.limiter.penalize("HTTP 429")
-                    if retry_after := response.headers.get("Retry-After"):
-                        self._wait_retry_after(retry_after)
-                        continue
-
-            if attempt < self.max_retries:
-                delay = min(60.0, 2.0**attempt) + random.uniform(0, 1.0)
-                logger.debug(
-                    "retrying",
-                    extra={
-                        "url": url[:120],
-                        "attempt": attempt + 1,
-                        "sleep_s": round(delay, 1),
-                    },
-                )
-                time.sleep(delay)
+        except Throttled:
+            return last
+        except httpx.HTTPError as exc:
+            return FetchOutcome(
+                ok=False, error=f"{type(exc).__name__}: {exc}", retryable=True
+            )
         return last
 
-    @staticmethod
-    def _wait_retry_after(value: str) -> None:
-        """Honour ``Retry-After``. v1 never read this header at all."""
+    def probe(self, url: str) -> FetchOutcome:
+        """A single unretried request, for checking whether a block has lifted."""
+        self.limiter.acquire()
         try:
-            seconds = float(value)
-        except ValueError:
-            return
-        seconds = min(seconds, 300.0)
-        logger.warning("honouring Retry-After", extra={"sleep_s": seconds})
-        time.sleep(seconds)
+            response = self._client.get(url)
+        except httpx.HTTPError as exc:
+            return FetchOutcome(ok=False, error=f"{type(exc).__name__}: {exc}")
+        if is_waf_challenge(response):
+            return FetchOutcome(
+                ok=False,
+                status=response.status_code,
+                error="WAF challenge",
+                challenged=True,
+                retryable=True,
+            )
+        return FetchOutcome(
+            ok=response.status_code == 200 and bool(response.content),
+            status=response.status_code,
+            content=response.content,
+        )
+
+
+def jittered(seconds: float, spread: float = 0.2) -> float:
+    """A delay with +/- ``spread`` jitter, so retries do not synchronize."""
+    return seconds * (1 + random.uniform(-spread, spread))
