@@ -58,13 +58,20 @@ data_sources:
 
 # Processing settings
 processing:
-  parallel_workers: 4
+  parallel_workers: 1
   valid_extensions:
     - ".R"
     - ".py"
     - ".do"
     - ".Rscript"
     - ".ipynb"
+    - ".sas"
+    - ".m"
+    - ".jl"
+    - ".ado"
+    - ".mata"
+    - ".sql"
+    - ".sh"
   chunk_size: 8192
 
 # Output settings
@@ -87,9 +94,9 @@ logging:
 
 # API settings
 api:
-  request_timeout: 30
-  max_retries: 3
-  retry_delay: 1.0
+  request_timeout: 60
+  max_retries: 5
+  retry_delay: 10.0
 
 # Incremental processing
 incremental:

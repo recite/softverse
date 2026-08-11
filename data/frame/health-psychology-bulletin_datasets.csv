@@ -1,0 +1,2 @@
+id,identifier,persistentUrl,protocol,authority,separator,publisher,publicationDate,storageIdentifier,datasetType,type
+4028309,DVN/7FA07D,https://doi.org/10.7910/DVN/7FA07D,doi,10.7910,/,Harvard Dataverse,2020-11-20,s3://10.7910/DVN/7FA07D,dataset,dataset

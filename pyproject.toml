@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "softverse"
-version = "0.1.0"
+version = "2.0.0.dev0"
 description = "Auto-compute Citations to Software From Replication Files"
 authors = [
     {name = "Gaurav Sood", email = "gsood07@gmail.com"},
@@ -29,18 +29,19 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "pandas>=1.3.0",
-    "requests>=2.25.0",
-    "pyDataverse>=0.2.1",
-    "tqdm>=4.60.0",
-    "zenodo-get>=1.3.4",
+    "pyarrow>=18.0.0",
+    "duckdb>=1.1.0",
+    "pandas>=2.2.0",
+    "httpx>=0.28.0",
+    "tenacity>=9.0.0",
+    "tree-sitter>=0.25.0",
+    "tree-sitter-language-pack>=1.14.0",
+    "nbformat>=5.10.0",
+    "charset-normalizer>=3.4.0",
     "pyyaml>=6.0",
-    "click>=8.0.0",
-    "selenium>=4.0.0",
-    "gitpython>=3.1.0",
-    "python-dotenv>=1.2.1",
-    "beautifulsoup4>=4.14.2",
-    "boto3>=1.41.5",
+    "click>=8.1.0",
+    "python-dotenv>=1.0.0",
+    "tomli-w>=1.0.0",
 ]
 
 [project.optional-dependencies]
@@ -55,13 +56,7 @@ dev = [
 ]
 
 [project.scripts]
-collect-datasets = "softverse.scripts.collect_datasets:main"
-collect-scripts = "softverse.scripts.collect_scripts:main"
-collect-osf = "softverse.scripts.collect_osf:main"
-collect-researchbox = "softverse.scripts.collect_researchbox:main"
-analyze-imports = "softverse.scripts.analyze_imports:main"
-create-archives = "softverse.scripts.create_archives:main"
-run-pipeline = "softverse.scripts.run_pipeline:main"
+softverse = "softverse.cli:cli"
 
 [dependency-groups]
 dev = [
@@ -91,7 +86,6 @@ exclude = [
     "build",
     "dist",
     "archive/",
-    "scripts/",
     "temp/",
     "logs/",
     "debug_*.py",
@@ -117,7 +111,9 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]  # imported but unused
+"__init__.py" = ["F401"]
+
+["F401"]  # imported but unused
 "softverse/analyzers/import_analyzer.py" = ["E501"]  # long lines in R code templates
 
 [tool.ruff.lint.isort]
@@ -133,4 +129,4 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=softverse --cov-report=term-missing"
+addopts = "--cov=softverse --cov-report=term-missing -q"

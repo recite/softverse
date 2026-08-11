@@ -1,0 +1,4 @@
+id,identifier,persistentUrl,protocol,authority,separator,publisher,publicationDate,storageIdentifier,datasetType,type
+3841992,DVN/NKE1BL,https://doi.org/10.7910/DVN/NKE1BL,doi,10.7910,/,Harvard Dataverse,2020-05-19,s3://10.7910/DVN/NKE1BL,dataset,dataset
+4016661,DVN/V9ER64,https://doi.org/10.7910/DVN/V9ER64,doi,10.7910,/,Harvard Dataverse,2020-11-30,s3://10.7910/DVN/V9ER64,dataset,dataset
+5371671,DVN/VVDIOD,https://doi.org/10.7910/DVN/VVDIOD,doi,10.7910,/,Harvard Dataverse,2021-11-03,s3://10.7910/DVN/VVDIOD,dataset,dataset

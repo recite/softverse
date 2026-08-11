@@ -1,0 +1,4 @@
+id,identifier,persistentUrl,protocol,authority,separator,publisher,publicationDate,storageIdentifier,datasetType,type
+6039689,DVN/GWFB5E,https://doi.org/10.7910/DVN/GWFB5E,doi,10.7910,/,Harvard Dataverse,2022-02-28,s3://10.7910/DVN/GWFB5E,dataset,dataset
+6380540,DVN/COUQZT,https://doi.org/10.7910/DVN/COUQZT,doi,10.7910,/,Harvard Dataverse,2022-07-22,s3://10.7910/DVN/COUQZT,dataset,dataset
+6812694,DVN/8BRLJL,https://doi.org/10.7910/DVN/8BRLJL,doi,10.7910,/,Harvard Dataverse,2022-12-15,s3://10.7910/DVN/8BRLJL,dataset,dataset

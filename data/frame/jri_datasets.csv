@@ -1,0 +1,17 @@
+id,identifier,persistentUrl,protocol,authority,separator,publisher,publicationDate,storageIdentifier,datasetType,type
+6908942,DVN/PTF6GD,https://doi.org/10.7910/DVN/PTF6GD,doi,10.7910,/,Harvard Dataverse,2023-02-13,s3://10.7910/DVN/PTF6GD,dataset,dataset
+7355188,DVN/M4EUWD,https://doi.org/10.7910/DVN/M4EUWD,doi,10.7910,/,Harvard Dataverse,2023-09-06,s3://10.7910/DVN/M4EUWD,dataset,dataset
+7506175,DVN/50IAHS,https://doi.org/10.7910/DVN/50IAHS,doi,10.7910,/,Harvard Dataverse,2023-10-26,s3://10.7910/DVN/50IAHS,dataset,dataset
+7882834,DVN/JM0HRA,https://doi.org/10.7910/DVN/JM0HRA,doi,10.7910,/,Harvard Dataverse,2024-01-09,s3://10.7910/DVN/JM0HRA,dataset,dataset
+8544123,DVN/MTMHLC,https://doi.org/10.7910/DVN/MTMHLC,doi,10.7910,/,Harvard Dataverse,2024-02-13,s3://10.7910/DVN/MTMHLC,dataset,dataset
+9651839,DVN/BNBKEK,https://doi.org/10.7910/DVN/BNBKEK,doi,10.7910,/,Harvard Dataverse,2024-03-20,s3://10.7910/DVN/BNBKEK,dataset,dataset
+9862950,DVN/RCED3C,https://doi.org/10.7910/DVN/RCED3C,doi,10.7910,/,Harvard Dataverse,2024-03-29,s3://10.7910/DVN/RCED3C,dataset,dataset
+10213523,DVN/YJQY2I,https://doi.org/10.7910/DVN/YJQY2I,doi,10.7910,/,Harvard Dataverse,2024-05-20,s3://10.7910/DVN/YJQY2I,dataset,dataset
+10399150,DVN/IASUQM,https://doi.org/10.7910/DVN/IASUQM,doi,10.7910,/,Harvard Dataverse,2024-07-22,s3://10.7910/DVN/IASUQM,dataset,dataset
+10485238,DVN/EAFQPW,https://doi.org/10.7910/DVN/EAFQPW,doi,10.7910,/,Harvard Dataverse,2024-09-03,s3://10.7910/DVN/EAFQPW,dataset,dataset
+10502868,DVN/ZYF9CL,https://doi.org/10.7910/DVN/ZYF9CL,doi,10.7910,/,Harvard Dataverse,2024-09-09,s3://10.7910/DVN/ZYF9CL,dataset,dataset
+10540442,DVN/QSHOSZ,https://doi.org/10.7910/DVN/QSHOSZ,doi,10.7910,/,Harvard Dataverse,2024-11-12,s3://10.7910/DVN/QSHOSZ,dataset,dataset
+10764801,DVN/KE4NQK,https://doi.org/10.7910/DVN/KE4NQK,doi,10.7910,/,Harvard Dataverse,2024-12-16,s3://10.7910/DVN/KE4NQK,dataset,dataset
+10790764,DVN/D7JEM3,https://doi.org/10.7910/DVN/D7JEM3,doi,10.7910,/,Harvard Dataverse,2024-12-19,s3://10.7910/DVN/D7JEM3,dataset,dataset
+10792221,DVN/J3DSH0,https://doi.org/10.7910/DVN/J3DSH0,doi,10.7910,/,Harvard Dataverse,2024-12-20,s3://10.7910/DVN/J3DSH0,dataset,dataset
+10799171,DVN/XJKUVN,https://doi.org/10.7910/DVN/XJKUVN,doi,10.7910,/,Harvard Dataverse,2024-12-30,s3://10.7910/DVN/XJKUVN,dataset,dataset

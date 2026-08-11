@@ -1,0 +1,8 @@
+id,identifier,persistentUrl,protocol,authority,separator,publisher,publicationDate,storageIdentifier,datasetType,type
+4303909,DVN/18K0IC,https://doi.org/10.7910/DVN/18K0IC,doi,10.7910,/,Harvard Dataverse,2023-08-03,s3://10.7910/DVN/18K0IC,dataset,dataset
+6053636,DVN/KGZTIT,https://doi.org/10.7910/DVN/KGZTIT,doi,10.7910,/,Harvard Dataverse,2022-03-02,s3://10.7910/DVN/KGZTIT,dataset,dataset
+6374935,DVN/VVMY1M,https://doi.org/10.7910/DVN/VVMY1M,doi,10.7910,/,Harvard Dataverse,2023-07-28,s3://10.7910/DVN/VVMY1M,dataset,dataset
+6384155,DVN/TOOP4N,https://doi.org/10.7910/DVN/TOOP4N,doi,10.7910,/,Harvard Dataverse,2022-07-20,s3://10.7910/DVN/TOOP4N,dataset,dataset
+7246729,DVN/O0M59W,https://doi.org/10.7910/DVN/O0M59W,doi,10.7910,/,Harvard Dataverse,2023-12-15,s3://10.7910/DVN/O0M59W,dataset,dataset
+7347985,DVN/WHYP5G,https://doi.org/10.7910/DVN/WHYP5G,doi,10.7910,/,Harvard Dataverse,2023-09-04,s3://10.7910/DVN/WHYP5G,dataset,dataset
+7677983,DVN/PEAIAS,https://doi.org/10.7910/DVN/PEAIAS,doi,10.7910,/,Harvard Dataverse,2025-01-31,s3://10.7910/DVN/PEAIAS,dataset,dataset

@@ -87,3 +87,13 @@ test_data/
 /test_icpsr
 monitor_collection.py
 /outputs
+/extracted_scripts
+/extracted_scripts_fresh
+/osf_scraped
+/collections
+
+# v2 pipeline artifacts
+/corpus/
+/build/
+/registries/snapshots/
+/outputs/

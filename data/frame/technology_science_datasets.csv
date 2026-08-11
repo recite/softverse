@@ -1,0 +1,9 @@
+id,identifier,persistentUrl,protocol,authority,separator,publisher,publicationDate,storageIdentifier,datasetType,type
+2698364,DVN/GFTHAN,https://doi.org/10.7910/DVN/GFTHAN,doi,10.7910,/,Harvard Dataverse,2015-08-05,s3://10.7910/DVN/GFTHAN,dataset,dataset
+2698559,DVN/JROUKG,https://doi.org/10.7910/DVN/JROUKG,doi,10.7910,/,Harvard Dataverse,2015-08-06,s3://10.7910/DVN/JROUKG,dataset,dataset
+2698570,DVN/8OPIL7,https://doi.org/10.7910/DVN/8OPIL7,doi,10.7910,/,Harvard Dataverse,2015-08-06,s3://10.7910/DVN/8OPIL7,dataset,dataset
+2698841,DVN/D2SNRI,https://doi.org/10.7910/DVN/D2SNRI,doi,10.7910,/,Harvard Dataverse,2015-08-10,s3://10.7910/DVN/D2SNRI,dataset,dataset
+2702856,DVN/UBDYOO,https://doi.org/10.7910/DVN/UBDYOO,doi,10.7910,/,Harvard Dataverse,2015-08-31,s3://10.7910/DVN/UBDYOO,dataset,dataset
+2702932,DVN/4KFVQV,https://doi.org/10.7910/DVN/4KFVQV,doi,10.7910,/,Harvard Dataverse,2015-08-31,s3://10.7910/DVN/4KFVQV,dataset,dataset
+2703048,DVN/U4OKBP,https://doi.org/10.7910/DVN/U4OKBP,doi,10.7910,/,Harvard Dataverse,2015-09-01,s3://10.7910/DVN/U4OKBP,dataset,dataset
+2703231,DVN/VEBPCZ,https://doi.org/10.7910/DVN/VEBPCZ,doi,10.7910,/,Harvard Dataverse,2015-09-01,s3://10.7910/DVN/VEBPCZ,dataset,dataset

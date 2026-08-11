@@ -1,0 +1,5 @@
+type,id,title,identifier,persistentUrl,protocol,authority,separator,publisher,publicationDate,storageIdentifier,datasetType
+dataverse,6767756,JREG Bulletin,,,,,,,,,
+dataverse,6907896,JREG Volume 40,,,,,,,,,
+dataverse,6907897,JREG Volume 41,,,,,,,,,
+dataset,6361673,,DVN/CEINP8,https://doi.org/10.7910/DVN/CEINP8,doi,10.7910,/,Harvard Dataverse,2022-08-31,s3://10.7910/DVN/CEINP8,dataset

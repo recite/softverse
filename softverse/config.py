@@ -1,182 +1,200 @@
-"""Configuration management for Softverse."""
+"""Paths, credentials and tunables.
+
+Deliberately small. v1's config layer created directories as a side effect of
+import, spread three different output-path conventions across the entry points,
+and kept a per-source option zoo for sources that collected nothing. This module
+does none of that: it resolves paths, reads credentials from the environment,
+and has no side effects until you ask for one.
+"""
+
+from __future__ import annotations
 
 import os
+from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
-from typing import Any
 
-import yaml
+from dotenv import load_dotenv
+
+#: Repository root, resolved from this file's location.
+ROOT = Path(__file__).resolve().parent.parent
 
 
-class Config:
-    """Configuration manager for Softverse."""
+@dataclass(frozen=True)
+class Paths:
+    """Every path the pipeline writes to, in one place."""
 
-    def __init__(self, config_path: str | None = None):
-        """Initialize configuration.
-
-        Args:
-            config_path: Path to configuration file. If None, uses default.
-        """
-        if config_path is None:
-            # Default to config/settings.yaml relative to project root
-            project_root = Path(__file__).parent.parent
-            default_config = project_root / "config" / "settings.yaml"
-            self.config_path = default_config
-        else:
-            self.config_path = Path(config_path)
-        self._config = self._load_config()
-        self._setup_directories()
-
-    def _load_config(self) -> dict[str, Any]:
-        """Load configuration from YAML file."""
-        if not self.config_path.exists():
-            raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
-
-        with open(self.config_path) as f:
-            return yaml.safe_load(f)
-
-    def _setup_directories(self) -> None:
-        """Create necessary directories based on configuration."""
-        dirs_to_create = [
-            self.get("output.base_dir"),
-            self.get("data_sources.dataverse.output_dir"),
-            self.get("data_sources.zenodo.output_dir"),
-            self.get("data_sources.icpsr.output_dir"),
-            self.get("incremental.checkpoints_dir"),
-            os.path.dirname(self.get("logging.file")),
-        ]
-
-        for dir_path in dirs_to_create:
-            if dir_path:
-                Path(dir_path).mkdir(parents=True, exist_ok=True)
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """Get configuration value using dot notation.
-
-        Args:
-            key: Configuration key in dot notation (e.g., 'data_sources.dataverse.enabled')
-            default: Default value if key is not found
-
-        Returns:
-            Configuration value or default
-        """
-        keys = key.split(".")
-        value = self._config
-
-        for k in keys:
-            if isinstance(value, dict) and k in value:
-                value = value[k]
-            else:
-                return default
-
-        return value
-
-    def set(self, key: str, value: Any) -> None:
-        """Set configuration value using dot notation.
-
-        Args:
-            key: Configuration key in dot notation
-            value: Value to set
-        """
-        keys = key.split(".")
-        config = self._config
-
-        for k in keys[:-1]:
-            if k not in config:
-                config[k] = {}
-            config = config[k]
-
-        config[keys[-1]] = value
-
-    def get_api_token(self, service: str) -> str | None:
-        """Get API token from environment variable.
-
-        Args:
-            service: Service name (e.g., 'dataverse', 'zenodo', 'osf')
-
-        Returns:
-            API token or None
-        """
-        # Special case for OSF which uses different env var name
-        if service.lower() == "osf":
-            env_var = "OSF_API_TOKEN"
-        else:
-            env_var = f"{service.upper()}_TOKEN"
-
-        token = os.getenv(env_var)
-
-        if not token:
-            # Try loading from token file
-            token_file = f"{service}_token.txt"
-            if os.path.exists(token_file):
-                with open(token_file) as f:
-                    token = f.read().strip()
-
-        return token
+    root: Path = ROOT
 
     @property
-    def dataverse_config(self) -> dict[str, Any]:
-        """Get Dataverse configuration."""
-        return self.get("data_sources.dataverse", {})
+    def data(self) -> Path:
+        return self.root / "data"
 
     @property
-    def zenodo_config(self) -> dict[str, Any]:
-        """Get Zenodo configuration."""
-        return self.get("data_sources.zenodo", {})
+    def frame(self) -> Path:
+        """The sampling frame: journal collection listings."""
+        return self.data / "frame"
 
     @property
-    def icpsr_config(self) -> dict[str, Any]:
-        """Get ICPSR configuration."""
-        return self.get("data_sources.icpsr", {})
+    def raw(self) -> Path:
+        """Archived raw API responses. Never derived from, only read."""
+        return self.root / "corpus" / "raw"
 
     @property
-    def osf_config(self) -> dict[str, Any]:
-        """Get OSF configuration."""
-        return self.get("data_sources.osf", {})
+    def files(self) -> Path:
+        """Downloaded files, path structure preserved."""
+        return self.root / "corpus" / "files"
 
     @property
-    def researchbox_config(self) -> dict[str, Any]:
-        """Get ResearchBox configuration."""
-        return self.get("data_sources.researchbox", {})
+    def registries(self) -> Path:
+        return self.root / "registries"
 
     @property
-    def processing_config(self) -> dict[str, Any]:
-        """Get processing configuration."""
-        return self.get("processing", {})
+    def tables(self) -> Path:
+        """Parquet output."""
+        return self.root / "build" / "tables"
 
     @property
-    def output_config(self) -> dict[str, Any]:
-        """Get output configuration."""
-        return self.get("output", {})
+    def logs(self) -> Path:
+        return self.root / "build" / "logs"
+
+    @property
+    def release(self) -> Path:
+        return self.root / "build" / "release"
 
 
-# Global configuration instance
-_config: Config | None = None
+PATHS = Paths()
 
 
-def get_config(config_path: str | None = None) -> Config:
-    """Get global configuration instance.
+@dataclass(frozen=True)
+class RateLimit:
+    """Politeness settings for a host.
+
+    Defaults are deliberate. v1 retried on 404, backed off up to 310 s per
+    permanently-forbidden file, and slept 5 s unconditionally after every
+    download -- which is why its run never finished.
+    """
+
+    requests_per_second: float = 3.0
+    max_retries: int = 5
+    backoff_base_s: float = 1.0
+    backoff_max_s: float = 60.0
+    timeout_s: float = 60.0
+    #: Retried with backoff. 404 and 403 are deliberately absent: they are
+    #: answers, not failures.
+    retry_statuses: tuple[int, ...] = (429, 500, 502, 503, 504)
+
+
+@cache
+def _load_env() -> None:
+    load_dotenv(ROOT / ".env")
+
+
+def credential(name: str) -> str | None:
+    """Read a credential from the environment (``.env`` is loaded once).
+
+    Returns ``None`` rather than raising, so callers can decide whether a
+    missing credential is fatal. :func:`require_credential` is the strict form.
+    """
+    _load_env()
+    value = os.environ.get(name)
+    return value.strip() or None if value else None
+
+
+def require_credential(name: str, why: str) -> str:
+    """Read a credential, failing loudly with an actionable message.
 
     Args:
-        config_path: Path to configuration file
-
-    Returns:
-        Configuration instance
+        name: Environment variable name.
+        why: What breaks without it, included in the error.
     """
-    global _config
-    if _config is None or config_path is not None:
-        _config = Config(config_path)
-    return _config
+    value = credential(name)
+    if not value:
+        raise RuntimeError(
+            f"{name} is not set. {why}\nAdd it to {ROOT / '.env'} as {name}=<token>."
+        )
+    return value
 
 
-def reload_config(config_path: str | None = None) -> Config:
-    """Reload configuration.
+#: Harvard Dataverse wants X-Dataverse-key. v1 sent `Authorization: Bearer`,
+#: which Dataverse ignores, so every metadata read was silently anonymous.
+DATAVERSE_BASE_URL = "https://dataverse.harvard.edu"
+DATAVERSE_KEY_HEADER = "X-Dataverse-key"
 
-    Args:
-        config_path: Path to configuration file
 
-    Returns:
-        New configuration instance
-    """
-    global _config
-    _config = Config(config_path)
-    return _config
+def dataverse_headers() -> dict[str, str]:
+    """Auth headers for Dataverse, empty if no token is configured."""
+    token = credential("DATAVERSE_API_KEY")
+    return {DATAVERSE_KEY_HEADER: token} if token else {}
+
+
+#: Extensions collected. Wider than what we parse: manifests and READMEs are
+#: kept because v1 deleted every non-script file and destroyed the
+#: author-declared dependency lists that make free validation possible.
+SCRIPT_EXTENSIONS = frozenset(
+    {
+        ".r",
+        ".rscript",
+        ".rmd",
+        ".qmd",
+        ".rnw",
+        ".py",
+        ".ipynb",
+        ".do",
+        ".ado",
+        ".mata",
+        ".jl",
+        ".m",
+        ".sas",
+        ".sps",
+        ".sh",
+        ".bash",
+        ".sql",
+        ".stan",
+    }
+)
+
+MANIFEST_FILENAMES = frozenset(
+    {
+        "renv.lock",
+        "packrat.lock",
+        "description",
+        "namespace",
+        ".rprofile",
+        "requirements.txt",
+        "pyproject.toml",
+        "environment.yml",
+        "environment.yaml",
+        "pipfile",
+        "pipfile.lock",
+        "poetry.lock",
+        "setup.py",
+        "setup.cfg",
+        "project.toml",
+        "manifest.toml",
+        "requires.txt",
+    }
+)
+
+ARCHIVE_EXTENSIONS = frozenset({".zip", ".tar", ".gz", ".tgz", ".bz2", ".7z", ".rar"})
+
+#: Path components that mark a vendored library tree rather than research code.
+VENDOR_PATH_MARKERS = frozenset(
+    {
+        "renv",
+        "packrat",
+        ".checkpoint",
+        "checkpoint",
+        "site-packages",
+        "dist-packages",
+        "node_modules",
+        ".venv",
+        "venv",
+        "__pycache__",
+        ".git",
+        ".julia",
+        "vendor",
+        "site-library",
+        "__macosx",
+    }
+)

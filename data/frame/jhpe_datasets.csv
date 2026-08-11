@@ -1,0 +1,26 @@
+id,identifier,persistentUrl,protocol,authority,separator,publisher,publicationDate,storageIdentifier,datasetType,type
+6094580,DVN/SPOAH3,https://doi.org/10.7910/DVN/SPOAH3,doi,10.7910,/,Harvard Dataverse,2022-03-15,s3://10.7910/DVN/SPOAH3,dataset,dataset
+6176182,DVN/KPYTNE,https://doi.org/10.7910/DVN/KPYTNE,doi,10.7910,/,Harvard Dataverse,2022-04-17,s3://10.7910/DVN/KPYTNE,dataset,dataset
+6191339,DVN/RBCHZ9,https://doi.org/10.7910/DVN/RBCHZ9,doi,10.7910,/,Harvard Dataverse,2022-06-15,s3://10.7910/DVN/RBCHZ9,dataset,dataset
+6334784,DVN/IABMDQ,https://doi.org/10.7910/DVN/IABMDQ,doi,10.7910,/,Harvard Dataverse,2022-06-15,s3://10.7910/DVN/IABMDQ,dataset,dataset
+6363991,DVN/FNFTPW,https://doi.org/10.7910/DVN/FNFTPW,doi,10.7910,/,Harvard Dataverse,2022-07-06,s3://10.7910/DVN/FNFTPW,dataset,dataset
+6401189,DVN/8J7J8E,https://doi.org/10.7910/DVN/8J7J8E,doi,10.7910,/,Harvard Dataverse,2022-07-27,s3://10.7910/DVN/8J7J8E,dataset,dataset
+6545341,DVN/LDRUJW,https://doi.org/10.7910/DVN/LDRUJW,doi,10.7910,/,Harvard Dataverse,2022-09-28,s3://10.7910/DVN/LDRUJW,dataset,dataset
+6797970,DVN/GAVIQV,https://doi.org/10.7910/DVN/GAVIQV,doi,10.7910,/,Harvard Dataverse,2022-12-10,s3://10.7910/DVN/GAVIQV,dataset,dataset
+6802885,DVN/PRJWN8,https://doi.org/10.7910/DVN/PRJWN8,doi,10.7910,/,Harvard Dataverse,2022-12-13,s3://10.7910/DVN/PRJWN8,dataset,dataset
+6866537,DVN/PHN3NX,https://doi.org/10.7910/DVN/PHN3NX,doi,10.7910,/,Harvard Dataverse,2023-01-03,s3://10.7910/DVN/PHN3NX,dataset,dataset
+6963496,DVN/2HI22C,https://doi.org/10.7910/DVN/2HI22C,doi,10.7910,/,Harvard Dataverse,2023-03-02,s3://10.7910/DVN/2HI22C,dataset,dataset
+7209167,DVN/EVRM7V,https://doi.org/10.7910/DVN/EVRM7V,doi,10.7910,/,Harvard Dataverse,2023-07-26,s3://10.7910/DVN/EVRM7V,dataset,dataset
+7673524,DVN/PXB0FN,https://doi.org/10.7910/DVN/PXB0FN,doi,10.7910,/,Harvard Dataverse,2023-12-13,s3://10.7910/DVN/PXB0FN,dataset,dataset
+7674011,DVN/N6WQAG,https://doi.org/10.7910/DVN/N6WQAG,doi,10.7910,/,Harvard Dataverse,2023-12-13,s3://10.7910/DVN/N6WQAG,dataset,dataset
+7877647,DVN/7GSZUN,https://doi.org/10.7910/DVN/7GSZUN,doi,10.7910,/,Harvard Dataverse,2023-12-20,s3://10.7910/DVN/7GSZUN,dataset,dataset
+8543754,DVN/DBVXJV,https://doi.org/10.7910/DVN/DBVXJV,doi,10.7910,/,Harvard Dataverse,2024-02-13,s3://10.7910/DVN/DBVXJV,dataset,dataset
+10236406,DVN/DD9IVT,https://doi.org/10.7910/DVN/DD9IVT,doi,10.7910,/,Harvard Dataverse,2024-05-28,s3://10.7910/DVN/DD9IVT,dataset,dataset
+10412761,DVN/IOKSVF,https://doi.org/10.7910/DVN/IOKSVF,doi,10.7910,/,Harvard Dataverse,2024-07-31,s3://10.7910/DVN/IOKSVF,dataset,dataset
+10426029,DVN/6YRZE8,https://doi.org/10.7910/DVN/6YRZE8,doi,10.7910,/,Harvard Dataverse,2024-08-06,s3://10.7910/DVN/6YRZE8,dataset,dataset
+10512976,DVN/ZBKRN0,https://doi.org/10.7910/DVN/ZBKRN0,doi,10.7910,/,Harvard Dataverse,2024-09-13,s3://10.7910/DVN/ZBKRN0,dataset,dataset
+11058624,DVN/MXFAFL,https://doi.org/10.7910/DVN/MXFAFL,doi,10.7910,/,Harvard Dataverse,2025-04-10,s3://10.7910/DVN/MXFAFL,dataset,dataset
+11064779,DVN/TLXTZS,https://doi.org/10.7910/DVN/TLXTZS,doi,10.7910,/,Harvard Dataverse,2025-04-17,s3://10.7910/DVN/TLXTZS,dataset,dataset
+11146276,DVN/QS5M9X,https://doi.org/10.7910/DVN/QS5M9X,doi,10.7910,/,Harvard Dataverse,2025-05-08,s3://10.7910/DVN/QS5M9X,dataset,dataset
+11330036,DVN/DNYPWY,https://doi.org/10.7910/DVN/DNYPWY,doi,10.7910,/,Harvard Dataverse,2025-05-20,s3://10.7910/DVN/DNYPWY,dataset,dataset
+13173579,DVN/4RE4LR,https://doi.org/10.7910/DVN/4RE4LR,doi,10.7910,/,Harvard Dataverse,2025-11-24,s3://10.7910/DVN/4RE4LR,dataset,dataset
