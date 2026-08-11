@@ -39,11 +39,15 @@ def test_every_table_has_a_grain_declared():
     [
         ("mentions", "file_uid"),
         ("mentions", "dataset_doi"),
-        ("mentions", "journal_id"),
+        ("mentions", "collection_id"),
+        ("mentions", "source"),
         ("files", "dataset_doi"),
-        ("files", "journal_id"),
-        ("datasets", "journal_id"),
+        ("files", "collection_id"),
+        ("datasets", "collection_id"),
+        ("datasets", "source"),
         ("dataset_packages", "dataset_doi"),
+        ("collections", "source"),
+        ("collections", "kind"),
     ],
 )
 def test_join_keys_are_non_nullable(table, key):
@@ -125,7 +129,8 @@ def _mention_row(**overrides):
         "mention_uid": "m1",
         "file_uid": "f1",
         "dataset_doi": "doi:10.7910/DVN/ABC123",
-        "journal_id": "ajps",
+        "collection_id": "ajps",
+        "source": "dataverse",
         "language": str(Language.R),
         "construct": str(Construct.LIBRARY),
         "raw_name": "ggplot2",
@@ -174,7 +179,7 @@ def test_write_table_roundtrips(tmp_path):
 
 def test_write_table_refuses_to_write_an_invalid_table(tmp_path):
     with pytest.raises(SchemaViolation):
-        write_table([_mention_row(journal_id=None)], "mentions", tmp_path)
+        write_table([_mention_row(collection_id=None)], "mentions", tmp_path)
     assert not (tmp_path / "mentions.parquet").exists()
 
 
@@ -186,3 +191,26 @@ def test_reconcile_catches_a_shortfall():
 
 def test_reconcile_passes_when_parts_sum():
     reconcile(10, {"analyzed": 5, "vendored": 2, "duplicate": 3}, "files")
+
+
+def test_collections_table_lets_other_sources_coexist():
+    """Zenodo/ICPSR/OSF must be addable without a schema migration.
+
+    The grouping a deposit belongs to differs by source -- a journal dataverse,
+    a Zenodo community, an ICPSR series -- so the fact tables key on
+    `collection_id`, which is never null, and `journal_id` lives on the
+    collection and is set only when the collection really is a journal.
+    Hardcoding journal_id into the facts would have forced either a null in a
+    key or an invented journal for every Zenodo record.
+    """
+    names = {f.name for f in schema_for("collections")}
+    assert {"collection_id", "source", "kind", "journal_id"} <= names
+    required = required_fields("collections")
+    assert "collection_id" in required and "source" in required
+    # Nullable by design: a Zenodo community has no journal.
+    assert "journal_id" not in required
+
+
+def test_facts_carry_source_so_rows_are_attributable_without_a_join():
+    for table in ("datasets", "files", "mentions"):
+        assert "source" in required_fields(table), table

@@ -17,6 +17,34 @@ The distinctions encoded here are the ones v1 collapsed. In particular:
 from enum import StrEnum
 
 
+class Source(StrEnum):
+    """Repository a deposit came from.
+
+    Dataverse journal collections are the paper's sampling frame, but the model
+    is source-general so Zenodo, ICPSR, OSF and ResearchBox can be added without
+    a schema migration. What differs between them is the *grouping* a deposit
+    belongs to -- a journal dataverse, a Zenodo community, an ICPSR series -- so
+    that grouping is `collection_id`, and `journal_id` is set only when the
+    collection is in fact a journal.
+    """
+
+    DATAVERSE = "dataverse"
+    ZENODO = "zenodo"
+    ICPSR = "icpsr"
+    OSF = "osf"
+    RESEARCHBOX = "researchbox"
+
+
+class CollectionKind(StrEnum):
+    """What kind of grouping a collection is."""
+
+    JOURNAL = "journal"  # a journal's Dataverse collection
+    COMMUNITY = "community"  # a Zenodo community
+    SERIES = "series"  # an ICPSR series
+    PROJECT_GROUP = "project_group"  # an OSF collection
+    OTHER = "other"
+
+
 class Language(StrEnum):
     """Source language of a file, after dispatch."""
 

@@ -7,6 +7,7 @@ loud instead of invisible.
 """
 
 from softverse.model.enums import (
+    CollectionKind,
     CollectionState,
     Construct,
     Ecosystem,
@@ -14,10 +15,12 @@ from softverse.model.enums import (
     Language,
     ParseStatus,
     Resolution,
+    Source,
     VendorRule,
     VersionState,
 )
 from softverse.model.schemas import (
+    COLLECTIONS,
     DATASETS,
     DECLARED_DEPENDENCIES,
     FILES,
@@ -33,6 +36,7 @@ from softverse.model.schemas import (
 
 __all__ = [
     "SCHEMAS",
+    "COLLECTIONS",
     "DATASETS",
     "DECLARED_DEPENDENCIES",
     "FILES",
@@ -43,6 +47,7 @@ __all__ = [
     "STATA_COMMAND_INDEX",
     "UNKNOWN_NAMES",
     "schema_for",
+    "CollectionKind",
     "CollectionState",
     "Construct",
     "Ecosystem",
@@ -50,6 +55,7 @@ __all__ = [
     "Language",
     "ParseStatus",
     "Resolution",
+    "Source",
     "VendorRule",
     "VersionState",
 ]

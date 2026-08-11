@@ -61,12 +61,35 @@ JOURNALS = pa.schema(
     metadata={"grain": "one row per journal collection", "unit": "journal"},
 )
 
+COLLECTIONS = pa.schema(
+    [
+        pa.field("collection_id", pa.string(), nullable=False),
+        pa.field("source", _dict(), nullable=False),
+        # journal | community | series | project_group. Only `journal`
+        # collections enter the paper's sampling frame; the rest can be
+        # collected and released without contaminating the headline estimand.
+        pa.field("kind", _dict(), nullable=False),
+        pa.field("collection_name", pa.string()),
+        pa.field("collection_url", pa.string()),
+        # Set only when the collection is a journal. Nullable by design: a
+        # Zenodo community has no journal, and forcing one would either invent
+        # data or push a null into a key that must never be null.
+        pa.field("journal_id", pa.string()),
+    ],
+    metadata={
+        "grain": "one row per collection across all sources",
+        "note": "the join point that lets Zenodo/ICPSR/OSF coexist with the "
+        "Dataverse frame without a schema migration",
+    },
+)
+
 DATASETS = pa.schema(
     [
         pa.field("dataset_version_uid", pa.string(), nullable=False),
         pa.field("dataset_doi", pa.string(), nullable=False),
         pa.field("repo_id", pa.string(), nullable=False),
-        pa.field("journal_id", pa.string(), nullable=False),
+        pa.field("source", _dict(), nullable=False),
+        pa.field("collection_id", pa.string(), nullable=False),
         pa.field("dataset_id", pa.int64()),
         pa.field("title", pa.string()),
         # Deposit date is what Dataverse gives us; article year is what the
@@ -97,7 +120,7 @@ DATASETS = pa.schema(
 DATASET_COLLECTIONS = pa.schema(
     [
         pa.field("dataset_doi", pa.string(), nullable=False),
-        pa.field("journal_id", pa.string(), nullable=False),
+        pa.field("collection_id", pa.string(), nullable=False),
         # Dataverse supports nested and linked datasets, so membership is
         # many-to-many. v1's flat read missed 5 nested collections (12 datasets).
         pa.field("membership_kind", _dict(), nullable=False),  # direct|nested|linked
@@ -126,7 +149,8 @@ FILES = pa.schema(
         pa.field("file_uid", pa.string(), nullable=False),
         pa.field("dataset_version_uid", pa.string(), nullable=False),
         pa.field("dataset_doi", pa.string(), nullable=False),
-        pa.field("journal_id", pa.string(), nullable=False),
+        pa.field("source", _dict(), nullable=False),
+        pa.field("collection_id", pa.string(), nullable=False),
         # Null only for files that came out of an archive; those carry
         # container_file_uid + path_in_container instead.
         pa.field("dataverse_file_id", pa.int64()),
@@ -171,7 +195,8 @@ MENTIONS = pa.schema(
         # Denormalized so the common queries need no join. Non-nullable because
         # a null here is exactly the v1 failure.
         pa.field("dataset_doi", pa.string(), nullable=False),
-        pa.field("journal_id", pa.string(), nullable=False),
+        pa.field("source", _dict(), nullable=False),
+        pa.field("collection_id", pa.string(), nullable=False),
         pa.field("deposit_year", pa.int16()),
         pa.field("language", _dict(), nullable=False),
         pa.field("construct", _dict(), nullable=False),
@@ -288,7 +313,7 @@ UNKNOWN_NAMES = pa.schema(
 DATASET_PACKAGES = pa.schema(
     [
         pa.field("dataset_doi", pa.string(), nullable=False),
-        pa.field("journal_id", pa.string(), nullable=False),
+        pa.field("collection_id", pa.string(), nullable=False),
         pa.field("year", pa.int16()),
         pa.field("language", _dict(), nullable=False),
         pa.field("package", pa.string(), nullable=False),
@@ -333,6 +358,7 @@ JOURNAL_YEAR_PACKAGES = pa.schema(
 #: checks, and the datapackage exporter.
 SCHEMAS: dict[str, pa.Schema] = {
     "journals": JOURNALS,
+    "collections": COLLECTIONS,
     "datasets": DATASETS,
     "dataset_collections": DATASET_COLLECTIONS,
     "dataset_articles": DATASET_ARTICLES,
