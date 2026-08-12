@@ -287,7 +287,27 @@ def collect_record(
                 )
                 state.n_failed += 1
                 state.error = f"extract: {result.error}"
+                # Keep the archive: this deposit is retryable, and the archive
+                # is the evidence needed to work out why it failed.
                 continue
+
+            # Extraction succeeded, so drop the compressed original.
+            #
+            # This is *not* v1's mistake. v1 deleted archives before knowing
+            # whether extraction worked ("ALWAYS remove archive after
+            # processing"), kept no record, and so lost the contents outright.
+            # Here the ledger already holds the record id, file key, size and
+            # md5, which makes the archive re-fetchable; the manifests that
+            # matter for validation (renv.lock, requirements.txt, DESCRIPTION)
+            # have been extracted and kept; and an archive that failed to
+            # extract is retained above.
+            #
+            # The ratio forces it: 104 deposits held 4.4 GB of archives around
+            # 13 MB of code, so the full frame would need ~68 GB against 10 GB
+            # of free disk. Keeping the zips would mean truncating the frame,
+            # and losing a quarter of the journals is a worse error than losing
+            # a re-downloadable file.
+            archive_path.unlink(missing_ok=True)
             for path in result.files:
                 rows.append(
                     _row(

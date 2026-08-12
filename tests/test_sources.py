@@ -306,3 +306,90 @@ def test_extraction_failure_marks_the_deposit_retryable(tmp_path, monkeypatch):
     assert state.state == "partial", "must be retryable, not complete"
     assert state.needs_retry
     client.close()
+
+
+def test_archive_is_removed_after_successful_extraction(tmp_path, monkeypatch):
+    """Disk forces this, and the ledger makes it safe.
+
+    104 deposits held 4.4 GB of archives around 13 MB of code; the full frame
+    would need ~68 GB against 10 GB free. Unlike v1 -- which deleted archives
+    before knowing extraction worked and recorded nothing -- the ledger keeps
+    the record id, file key, size and md5, so the archive is re-fetchable, and
+    the manifests that matter for validation are extracted and kept.
+    """
+    import io
+    import zipfile
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("code/analysis.R", b"library(dplyr)")
+    record = zenodo.parse_record(
+        {
+            "id": 7,
+            "metadata": {
+                "doi": "10.5281/zenodo.7",
+                "title": "t",
+                "publication_date": "2021-01-01",
+                "communities": [],
+            },
+            "files": [
+                {
+                    "key": "pkg.zip",
+                    "size": 10,
+                    "checksum": "md5:x",
+                    "links": {"self": "https://zenodo.org/f/pkg.zip"},
+                }
+            ],
+        }
+    )
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
+    monkeypatch.setattr(
+        client._client,
+        "get",
+        lambda url, **kw: httpx.Response(
+            200, content=buf.getvalue(), request=httpx.Request("GET", url)
+        ),
+    )
+    state, rows = zenodo.collect_record(client, record, tmp_path)
+    assert state.state == "complete"
+    assert any(r["filename"] == "analysis.R" for r in rows), "code must survive"
+    assert not (
+        tmp_path / "7" / "_archives" / "pkg.zip"
+    ).exists(), "the compressed original should be gone"
+    client.close()
+
+
+def test_a_failed_archive_is_kept_for_diagnosis(tmp_path, monkeypatch):
+    """A deposit that could not be extracted stays retryable *and* keeps the
+    evidence needed to work out why."""
+    record = zenodo.parse_record(
+        {
+            "id": 8,
+            "metadata": {
+                "doi": "10.5281/zenodo.8",
+                "title": "t",
+                "publication_date": "2021-01-01",
+                "communities": [],
+            },
+            "files": [
+                {
+                    "key": "pkg.zip",
+                    "size": 10,
+                    "checksum": "md5:x",
+                    "links": {"self": "https://zenodo.org/f/pkg.zip"},
+                }
+            ],
+        }
+    )
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
+    monkeypatch.setattr(
+        client._client,
+        "get",
+        lambda url, **kw: httpx.Response(
+            200, content=b"not a zip", request=httpx.Request("GET", url)
+        ),
+    )
+    state, _ = zenodo.collect_record(client, record, tmp_path)
+    assert state.needs_retry
+    assert (tmp_path / "8" / "_archives" / "pkg.zip").exists()
+    client.close()
