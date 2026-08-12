@@ -250,7 +250,9 @@ def fetch_bulk(
 def fetch_single(
     client: PoliteClient, file_id: int, base_url: str = DATAVERSE_BASE_URL
 ) -> tuple[bytes | None, str | None]:
-    outcome = client.get(f"{base_url}/api/access/datafile/{file_id}")
+    outcome = client.get(
+        f"{base_url}/api/access/datafile/{file_id}", expect_content=False
+    )
     if not outcome.ok or outcome.content is None:
         return None, outcome.error or f"HTTP {outcome.status}"
     return outcome.content, None

@@ -393,3 +393,24 @@ def test_probe_reports_a_challenge_without_retrying(monkeypatch):
     assert calls["n"] == 1
     assert outcome.challenged and not outcome.ok
     client.close()
+
+
+def test_an_empty_file_download_is_not_a_challenge():
+    """An empty file is a legitimate answer; the corpus has 373 of them.
+
+    Treating them as challenges would retry each five times and then record a
+    real file as failed -- turning a correct observation into a fabricated
+    error. The WAF header stays definitive either way.
+    """
+    import httpx
+
+    from softverse.acquire.http import is_waf_challenge
+
+    empty = httpx.Response(200, content=b"")
+    assert is_waf_challenge(empty, expect_content=True)
+    assert not is_waf_challenge(empty, expect_content=False)
+    # The header overrides the exemption.
+    flagged = httpx.Response(
+        202, headers={"x-amzn-waf-action": "challenge"}, content=b""
+    )
+    assert is_waf_challenge(flagged, expect_content=False)

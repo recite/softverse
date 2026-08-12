@@ -97,3 +97,4 @@ monitor_collection.py
 /build/
 /registries/snapshots/
 /outputs/
+/corpus/

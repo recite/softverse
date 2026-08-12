@@ -138,14 +138,37 @@ class FetchOutcome:
         return self.status == 404
 
 
-def is_waf_challenge(response: httpx.Response) -> bool:
+def read_rate_headers(response: httpx.Response) -> tuple[int, int] | None:
+    """``(remaining, limit)`` from ``x-ratelimit-*``, if the server publishes them.
+
+    Zenodo does (``x-ratelimit-limit: 30``), which is strictly better than the
+    Dataverse situation where the ceiling is unpublished and had to be inferred
+    from being blocked. When a server tells you its limit, use its number rather
+    than your guess.
+    """
+    try:
+        remaining = int(response.headers["x-ratelimit-remaining"])
+        limit = int(response.headers["x-ratelimit-limit"])
+    except (KeyError, ValueError):
+        return None
+    return remaining, limit
+
+
+def is_waf_challenge(response: httpx.Response, expect_content: bool = True) -> bool:
     """Whether this response is an AWS WAF bot challenge.
 
-    Two signals, either sufficient: the explicit header, or the shape Harvard
-    actually returns (an empty 200/202 body from a JSON API).
+    The header is definitive and always trusted. The empty-body heuristic is
+    not, and ``expect_content`` is why: **an empty file download is
+    legitimate.** The corpus contains 373 byte-identical empty files, and
+    treating those as challenges would retry each five times and then record a
+    real file as a failure -- turning a correct observation into a fabricated
+    error. So the heuristic applies only where a body is guaranteed, which
+    means metadata endpoints, not file downloads.
     """
     if response.headers.get(WAF_HEADER, "").lower() == "challenge":
         return True
+    if not expect_content:
+        return False
     return response.status_code in _EMPTY_IS_THROTTLE and not response.content
 
 
@@ -177,8 +200,12 @@ class PoliteClient:
     def close(self) -> None:
         self._client.close()
 
-    def get(self, url: str, **kwargs) -> FetchOutcome:
-        """GET with rate limiting, retries, and challenge detection."""
+    def get(self, url: str, expect_content: bool = True, **kwargs) -> FetchOutcome:
+        """GET with rate limiting, retries, and challenge detection.
+
+        Set ``expect_content=False`` for file downloads, where an empty body is
+        a legitimate answer rather than a sign of being throttled.
+        """
         last = FetchOutcome(ok=False, error="no attempt made")
 
         try:
@@ -193,7 +220,7 @@ class PoliteClient:
                     self.limiter.acquire()
                     response = self._client.get(url, **kwargs)
 
-                    if is_waf_challenge(response):
+                    if is_waf_challenge(response, expect_content):
                         self.limiter.penalize("WAF challenge / empty 2xx")
                         last = FetchOutcome(
                             ok=False,
@@ -204,9 +231,12 @@ class PoliteClient:
                         )
                         raise Throttled(last.error)
 
-                    if response.status_code == 200:
+                    if response.status_code in {200, 206}:
+                        self._observe_rate_headers(response)
                         return FetchOutcome(
-                            ok=True, status=200, content=response.content
+                            ok=True,
+                            status=response.status_code,
+                            content=response.content,
                         )
 
                     if response.status_code in RETRY_STATUSES:
@@ -235,6 +265,21 @@ class PoliteClient:
                 ok=False, error=f"{type(exc).__name__}: {exc}", retryable=True
             )
         return last
+
+    def _observe_rate_headers(self, response: httpx.Response) -> None:
+        """Slow down *before* being refused, when the server warns us.
+
+        Backing off only after a 429 means the 429 already happened. A server
+        that publishes `remaining` is telling us how much room is left, so the
+        polite move is to ease off at 20% remaining rather than sprint into the
+        wall and apologise.
+        """
+        headers = read_rate_headers(response)
+        if headers is None:
+            return
+        remaining, limit = headers
+        if limit > 0 and remaining <= max(1, limit // 5):
+            self.limiter.penalize(f"rate budget low ({remaining}/{limit})")
 
     def probe(self, url: str) -> FetchOutcome:
         """A single unretried request, for checking whether a block has lifted."""
