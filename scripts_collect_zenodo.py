@@ -1,14 +1,16 @@
-"""Collect the Zenodo frame.
+"""Collect the Zenodo half of the frame.
 
-The frame is stated, not implied: named communities that hold journal
-replication material, plus targeted searches for replication packages
-containing code. Every community is verified to exist before use -- Zenodo
-ignores an unknown `communities=` filter and returns the entire 7.1M-record
-repository, so a typo would silently swap the archive for a journal.
+Reads `data/frame/frame.csv` rather than a hardcoded list. The earlier version
+used four keyword-picked communities plus three free-text queries -- a
+convenience sample, which cannot carry a journal-year claim however careful the
+rest of the pipeline is. Every community is re-verified at run time, because
+Zenodo answers an unknown `communities=` filter by ignoring it and returning all
+7.1 million records.
 """
 
 from __future__ import annotations
 
+import csv
 import sys
 
 from softverse.acquire.http import PoliteClient, RateLimiter
@@ -20,24 +22,15 @@ from softverse.sources import zenodo
 logger = get_logger(__name__)
 ROOT = PATHS.root / "corpus" / "zenodo"
 
-#: Communities verified to exist and to hold replication material.
-COMMUNITIES = [
-    "es-replication-repository",
-    "civica-open-social-science",
-    "economics",
-    "econdesarrollo",
-]
 
-#: Targeted searches for journal-linked replication code outside those.
-QUERIES = [
-    '"replication package" AND (stata OR "do-file")',
-    '"replication package" AND (R OR rscript)',
-    '"replication materials" AND regression',
-]
+def frame_communities() -> list[str]:
+    """Zenodo collection ids from the verified frame."""
+    rows = csv.DictReader(open(PATHS.frame / "frame.csv", encoding="utf-8"))
+    return [r["collection_id"] for r in rows if r["source"] == "zenodo"]
 
 
 def main() -> int:
-    limit = int(sys.argv[1]) if len(sys.argv) > 1 else 400
+    limit = int(sys.argv[1]) if len(sys.argv) > 1 else 2000
     setup_logging("INFO", log_dir=PATHS.logs, stage="zenodo")
     client = PoliteClient(
         headers=zenodo_headers(),
@@ -45,32 +38,42 @@ def main() -> int:
     )
     ledger = Ledger(ROOT / "ledger.jsonl")
     records: dict[str, zenodo.ZenodoRecord] = {}
+    declared: dict[str, int] = {}
 
     with stage("zenodo-frame", logger) as stats:
-        for slug in COMMUNITIES:
+        for slug in frame_communities():
             try:
-                n = zenodo.verify_community(client, slug)
+                declared[slug] = zenodo.verify_community(client, slug)
             except zenodo.UnknownCommunity as exc:
                 logger.error(
                     "skipping community", extra={"slug": slug, "err": str(exc)}
                 )
                 continue
             stats.incr("communities_verified")
+            before = len(records)
             for rec in zenodo.search(client, "", community=slug, authenticated=True):
                 records[rec.record_id] = rec
             logger.info(
                 "community harvested",
-                extra={"slug": slug, "declared": n, "unique_records": len(records)},
+                extra={
+                    "slug": slug,
+                    "declared": declared[slug],
+                    "harvested": len(records) - before,
+                },
             )
-        for query in QUERIES:
-            for rec in zenodo.search(
-                client, query, max_records=limit, authenticated=True
-            ):
-                records.setdefault(rec.record_id, rec)
-            logger.info(
-                "query harvested",
-                extra={"q": query[:40], "unique_records": len(records)},
-            )
+
+    # Declared vs harvested is reported, never absorbed: a systematic shortfall
+    # means the search is not returning the community, not that the community
+    # shrank.
+    print(f"\n{'community':<32}{'declared':>10}{'harvested':>11}")
+    harvested_by: dict[str, int] = {}
+    for rec in records.values():
+        for community in rec.communities:
+            harvested_by[community] = harvested_by.get(community, 0) + 1
+    for slug, n in declared.items():
+        got = harvested_by.get(slug, 0)
+        flag = "" if got >= n * 0.9 else "   <-- shortfall"
+        print(f"  {slug:<30}{n:>10}{got:>11}{flag}")
 
     todo = list(records.values())[:limit]
     logger.info("collecting", extra={"records": len(todo)})
@@ -84,13 +87,18 @@ def main() -> int:
     bad = [r for r in checked if not r["md5_verified"]]
     print(f"md5 verified     : {len(checked) - len(bad)}/{len(checked)}")
     print(
-        f"reconciling      : {len(ledger) - len(ledger.non_reconciling())}/{len(ledger)}"
+        f"reconciling      : "
+        f"{len(ledger) - len(ledger.non_reconciling())}/{len(ledger)}"
     )
     skipped = ledger.skipped_archives()
+    blocked = [
+        r for r in ledger._records.values() if r.n_skipped_over_cap and r.n_fetched == 0
+    ]
     print(
         f"archives skipped : {len(skipped)} "
-        f"({sum(s['size_bytes'] for s in skipped) / 1e9:.2f} GB)"
+        f"({sum(s['size_bytes'] for s in skipped) / 1e9:.1f} GB)"
     )
+    print(f"deposits with NO code obtained (over-cap only): {len(blocked)}")
     client.close()
     return 0
 

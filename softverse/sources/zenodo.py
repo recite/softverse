@@ -36,7 +36,7 @@ from softverse.config import (
 )
 from softverse.logging_setup import get_logger
 from softverse.model.enums import CollectionState, Source
-from softverse.sources.dataverse import DEFAULT_ARCHIVE_CAP_BYTES, is_wanted
+from softverse.sources.dataverse import is_wanted
 
 logger = get_logger(__name__)
 
@@ -57,6 +57,17 @@ PAGE_SIZE_AUTHENTICATED = 100
 #: the filter and handed back the archive. Zenodo held ~7.1M records when this
 #: was measured, so anything near that is the whole thing.
 WHOLE_REPOSITORY_THRESHOLD = 1_000_000
+
+#: Zenodo needs a larger archive cap than Dataverse, and the asymmetry is
+#: measured rather than assumed. On Dataverse 73% of deposits expose loose
+#: script files, so a cap on archives skips extra material. On Zenodo the
+#: archive *is* the delivery mechanism: in a 400-deposit run, 75 of them (19%)
+#: yielded zero code because their only content was an over-cap archive -- a
+#: non-random gap, since data-heavy packages are not a random subset of
+#: research. Raising the cap to 500 MB recovers 31 of the 79 skipped archives
+#: for 8 GB; the remaining tail is 26 archives above 2 GB (largest 100.7 GB)
+#: and stays logged rather than fetched.
+ARCHIVE_CAP_BYTES = 500 * 1024 * 1024
 
 
 @dataclass
@@ -220,7 +231,7 @@ def collect_record(
     client: PoliteClient,
     record: ZenodoRecord,
     files_root: Path,
-    archive_cap: int = DEFAULT_ARCHIVE_CAP_BYTES,
+    archive_cap: int = ARCHIVE_CAP_BYTES,
 ) -> tuple[DatasetRecord, list[dict]]:
     """Download one record's wanted files. Returns its state and file rows."""
     doi = record.doi or f"zenodo:{record.record_id}"
@@ -361,7 +372,7 @@ def collect(
     files_root: Path,
     ledger: Ledger,
     client: PoliteClient,
-    archive_cap: int = DEFAULT_ARCHIVE_CAP_BYTES,
+    archive_cap: int = ARCHIVE_CAP_BYTES,
 ) -> list[dict]:
     """Collect many records, skipping those already in a terminal state."""
     rows: list[dict] = []
