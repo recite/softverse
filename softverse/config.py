@@ -128,6 +128,16 @@ def dataverse_headers() -> dict[str, str]:
     return {DATAVERSE_KEY_HEADER: token} if token else {}
 
 
+def zenodo_headers() -> dict[str, str]:
+    """Auth headers for Zenodo, empty if no token is configured.
+
+    A token is not optional in practice: anonymous clients are capped at a
+    page size of 25, and Zenodo says so explicitly in a 400.
+    """
+    token = credential("ZENODO_API_TOKEN")
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
 #: Extensions collected. Wider than what we parse: manifests and READMEs are
 #: kept because v1 deleted every non-script file and destroyed the
 #: author-declared dependency lists that make free validation possible.

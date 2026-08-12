@@ -225,3 +225,41 @@ def test_osf_collect_stops_on_exhausted_budget_without_losing_state(
     # Whatever finished is durable; the rest is simply still to do.
     assert len(ledger) < len(nodes)
     client.close()
+
+
+def test_unknown_community_is_refused_not_silently_widened(monkeypatch):
+    """Zenodo ignores an unknown communities= filter and returns everything.
+
+    Measured: communities=restud and communities=aeaje (neither exists) each
+    reported 7,106,477 records -- the entire repository. A typo in a frame
+    definition would substitute all of Zenodo for one journal's community, and
+    the error would look like abundance rather than a mistake.
+    """
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
+    monkeypatch.setattr(
+        client._client,
+        "get",
+        lambda url, **kw: httpx.Response(
+            200,
+            content=json.dumps({"hits": {"total": 7_106_477}}).encode(),
+            request=httpx.Request("GET", url),
+        ),
+    )
+    with pytest.raises(zenodo.UnknownCommunity, match="whole"):
+        zenodo.verify_community(client, "restud")
+    client.close()
+
+
+def test_real_community_passes_verification(monkeypatch):
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
+    monkeypatch.setattr(
+        client._client,
+        "get",
+        lambda url, **kw: httpx.Response(
+            200,
+            content=json.dumps({"hits": {"total": 266}}).encode(),
+            request=httpx.Request("GET", url),
+        ),
+    )
+    assert zenodo.verify_community(client, "es-replication-repository") == 266
+    client.close()

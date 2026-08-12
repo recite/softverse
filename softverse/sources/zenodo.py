@@ -53,6 +53,11 @@ DEFAULT_RATE_PER_S = 0.4
 PAGE_SIZE = 25
 PAGE_SIZE_AUTHENTICATED = 100
 
+#: A "community" returning more than this is not a community -- Zenodo ignored
+#: the filter and handed back the archive. Zenodo held ~7.1M records when this
+#: was measured, so anything near that is the whole thing.
+WHOLE_REPOSITORY_THRESHOLD = 1_000_000
+
 
 @dataclass
 class ZenodoFile:
@@ -118,6 +123,45 @@ def parse_record(payload: dict) -> ZenodoRecord:
         communities=[c for c in communities if c],
         files=[f for f in files if f.key and f.link],
     )
+
+
+class UnknownCommunity(Exception):
+    """A community slug Zenodo does not recognise."""
+
+
+def verify_community(client: PoliteClient, slug: str) -> int:
+    """Confirm a community exists, returning its record count.
+
+    **This guard is not paranoia.** Zenodo does not reject an unknown
+    ``communities=`` value -- it ignores the filter and returns the entire
+    repository. Measured: ``communities=restud`` and ``communities=aeaje``
+    (neither exists) each reported 7,106,477 records, which is all of Zenodo.
+    A typo in a frame definition would therefore silently substitute the whole
+    archive for a journal's community, and every downstream number would be
+    wrong in a way that looks like abundance rather than error.
+
+    Raises:
+        UnknownCommunity: if the slug is not a real community.
+    """
+    outcome = client.get(f"{ZENODO_API}/communities/{slug}")
+    if not outcome.ok:
+        raise UnknownCommunity(
+            f"{slug!r} is not a Zenodo community (HTTP {outcome.status}). "
+            f"Filtering on it would return the entire repository."
+        )
+    counted = client.get(
+        f"{ZENODO_API}/records", params={"communities": slug, "size": 1}
+    )
+    if not counted.ok or counted.content is None:
+        raise UnknownCommunity(f"could not count records for {slug!r}")
+    total = json.loads(counted.content)["hits"]["total"]
+    if total > WHOLE_REPOSITORY_THRESHOLD:
+        raise UnknownCommunity(
+            f"{slug!r} returned {total:,} records, which is the whole "
+            f"repository -- the community filter was ignored."
+        )
+    logger.info("community verified", extra={"community": slug, "records": total})
+    return total
 
 
 def search(
