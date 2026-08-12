@@ -318,6 +318,19 @@ def _split_statements(cleaned: str) -> list[tuple[int, int, str]]:
             i = end
             continue
 
+        # `${name}` is a global macro reference, and its braces are part of an
+        # expression rather than a block delimiter. Splitting on them shattered
+        # statements like `g d${_i}Lco = f${_i}.lnL - l.lnL` and reported the
+        # macro name as a command: `_i`, `ind`, `output` and `Level` all reached
+        # the top of the unresolved list this way. Same failure as the LaTeX
+        # braces inside esttab options, arriving through a different syntax.
+        if ch == "$" and nxt == "{":
+            end = cleaned.find("}", i)
+            if end != -1:
+                buffer.append(cleaned[i : end + 1])
+                i = end + 1
+                continue
+
         if ch == "(":
             paren += 1
         elif ch == ")":

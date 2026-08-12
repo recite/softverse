@@ -191,3 +191,24 @@ def test_braces_still_delimit_blocks_at_top_level():
 def test_semicolon_inside_parentheses_is_not_a_terminator():
     source = '#delimit ;\nesttab using t.tex, prehead("a;b") replace;\nregress y x;\n'
     assert commands(source) == ["esttab", "regress"]
+
+
+def test_global_macro_braces_do_not_split_statements():
+    """Found in the mention snippets, not by a test I thought to write.
+
+    `${name}` is a global macro reference and its braces belong to an
+    expression, not a block. Splitting on them shattered statements and
+    reported the macro name as a command -- `_i`, `ind`, `output` and `Level`
+    all reached the top of the unresolved list this way. Same failure as the
+    LaTeX braces inside esttab options, through a different syntax.
+    """
+    assert commands("g d${_i}Lco = f${_i}.lnL - l.lnL") == ["g"]
+    assert commands('use year ${ind}_i using "${data}", clear') == ["use"]
+    assert commands("log using ${output}price_facts, text replace") == ["log"]
+
+
+def test_global_macro_as_the_command_is_still_unresolvable():
+    """`${cmd} varlist` is genuinely unknowable statically."""
+    statements = [s for s in lex("${cmd} y x") if s.is_macro_command]
+    assert len(statements) == 1
+    assert statements[0].command is None
