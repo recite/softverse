@@ -275,10 +275,19 @@ def collect_record(
                 frozenset(MANIFEST_FILENAMES),
             )
             if result.error:
+                # An archive we fetched but could not open is a *failure*, not a
+                # deposit that happens to contain no code. Marking it complete
+                # would make it unretryable, so a later fix -- a raised limit, a
+                # new format -- could never reach it. That is how the first six
+                # of these were nearly lost when the bomb limits turned out to
+                # be miscalibrated.
                 logger.warning(
                     "zenodo archive extraction failed",
                     extra={"record": record.record_id, "err": result.error},
                 )
+                state.n_failed += 1
+                state.error = f"extract: {result.error}"
+                continue
             for path in result.files:
                 rows.append(
                     _row(

@@ -206,3 +206,34 @@ def test_tar_is_handled(tmp_path):
     result = extract(archive, tmp_path / "out", KEEP)
     assert [p.name for p in result.files] == ["run.R"]
     assert result.error is None
+
+
+def test_limits_admit_real_research_archives():
+    """Calibrated against the corpus, not an imagined attacker.
+
+    The first limits (2 GB, 50k members) rejected 6 of the first 100 Zenodo
+    deposits -- economics packages declaring 3.0-6.6 GB uncompressed and one
+    with 140,219 members. None was an attack. A guard that drops 6% of the
+    corpus is not protecting the analysis, it is biasing it toward
+    less-data-heavy work.
+    """
+    from softverse.acquire.unpack import MAX_MEMBERS, MAX_UNCOMPRESSED_BYTES
+
+    assert MAX_UNCOMPRESSED_BYTES >= 7 * 1024**3, "6.6 GB deposits must pass"
+    assert MAX_MEMBERS >= 200_000, "a 140,219-member deposit must pass"
+    # ...but a real bomb is still refused.
+    assert MAX_UNCOMPRESSED_BYTES < 1024**4
+
+
+def test_7z_is_supported(tmp_path):
+    """A .7z deposit was downloaded and lost to a missing branch -- the same
+    way v1 lost every .tar."""
+    py7zr = pytest.importorskip("py7zr")
+    archive = tmp_path / "a.7z"
+    with py7zr.SevenZipFile(archive, "w") as sz:
+        src = tmp_path / "analysis.R"
+        src.write_text("library(dplyr)")
+        sz.write(src, "code/analysis.R")
+    result = extract(archive, tmp_path / "out", KEEP)
+    assert result.error is None, result.error
+    assert [p.name for p in result.files] == ["analysis.R"]

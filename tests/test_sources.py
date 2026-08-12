@@ -263,3 +263,46 @@ def test_real_community_passes_verification(monkeypatch):
     )
     assert zenodo.verify_community(client, "es-replication-repository") == 266
     client.close()
+
+
+def test_extraction_failure_marks_the_deposit_retryable(tmp_path, monkeypatch):
+    """An archive we fetched but could not open is a failure, not an empty
+    deposit.
+
+    Marking it complete makes it unretryable, so a later fix -- a raised limit,
+    a newly supported format -- can never reach it. Six deposits were nearly
+    lost this way when the anti-bomb limits turned out to be calibrated against
+    an imagined attacker rather than the corpus.
+    """
+    record = zenodo.parse_record(
+        {
+            "id": 1,
+            "metadata": {
+                "doi": "10.5281/zenodo.1",
+                "title": "t",
+                "publication_date": "2020-01-01",
+                "communities": [],
+            },
+            "files": [
+                {
+                    "key": "pkg.zip",
+                    "size": 10,
+                    "checksum": "md5:x",
+                    "links": {"self": "https://zenodo.org/f/pkg.zip"},
+                }
+            ],
+        }
+    )
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
+    monkeypatch.setattr(
+        client._client,
+        "get",
+        lambda url, **kw: httpx.Response(
+            200, content=b"not a real zip", request=httpx.Request("GET", url)
+        ),
+    )
+    state, _rows = zenodo.collect_record(client, record, tmp_path)
+    assert state.n_failed == 1
+    assert state.state == "partial", "must be retryable, not complete"
+    assert state.needs_retry
+    client.close()

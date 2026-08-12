@@ -26,8 +26,22 @@ logger = get_logger(__name__)
 
 #: Refuse an archive claiming to expand beyond this. A zip bomb is small on the
 #: wire and unbounded on disk.
-MAX_UNCOMPRESSED_BYTES = 2 * 1024**3
-MAX_MEMBERS = 50_000
+#:
+#: **Calibrated against the corpus, not against an imagined attacker.** The
+#: first limits (2 GB, 50,000 members) were picked for safety without checking
+#: what real research archives look like, and they rejected 6 of the first 100
+#: Zenodo deposits: economics replication packages declaring 3.0, 5.1, 6.2 and
+#: 6.6 GB uncompressed, and one with 140,219 members. None was an attack; that
+#: is simply what a replication package with a large panel dataset looks like.
+#: A guard that excludes 6% of the corpus is not protecting the analysis, it is
+#: biasing it -- and toward exactly the data-heavy work we least want to lose.
+#:
+#: These bounds still stop a real bomb (the classic 42.zip expands to petabytes)
+#: while admitting genuine deposits. The guards that matter for *safety* --
+#: zip-slip, symlink and device rejection -- are unchanged and have cost
+#: nothing, because no legitimate archive needs them.
+MAX_UNCOMPRESSED_BYTES = 20 * 1024**3
+MAX_MEMBERS = 500_000
 #: Nested archives are extracted this many levels deep, then left alone.
 MAX_NESTING = 3
 
@@ -135,6 +149,44 @@ def extract_zip(
     return result
 
 
+def extract_7z(
+    archive: Path,
+    dest: Path,
+    keep_suffixes: frozenset[str],
+    keep_names: frozenset[str] = frozenset(),
+) -> Extracted:
+    """Extract wanted members of a .7z.
+
+    Added because the corpus contains them: ``replication_package.7z`` was
+    downloaded, could not be opened, and was recorded as an unsupported format
+    -- a real deposit lost to a missing branch, which is how v1 lost every
+    ``.tar``.
+    """
+    result = Extracted()
+    dest.mkdir(parents=True, exist_ok=True)
+    try:
+        import py7zr
+
+        with py7zr.SevenZipFile(archive, "r") as sz:
+            names = sz.getnames()
+            if len(names) > MAX_MEMBERS:
+                raise UnsafeArchive(f"{archive.name}: {len(names):,} members")
+            wanted = [
+                n
+                for n in names
+                if is_safe_member(n, dest) and _wanted(n, keep_suffixes, keep_names)
+            ]
+            result.skipped_unsafe = [n for n in names if not is_safe_member(n, dest)]
+            if wanted:
+                sz.extract(path=dest, targets=wanted)
+                result.files = [dest / n for n in wanted if (dest / n).is_file()]
+    except UnsafeArchive as exc:
+        result.error = str(exc)
+    except Exception as exc:  # noqa: BLE001 - py7zr raises a wide variety
+        result.error = f"{type(exc).__name__}: {exc}"
+    return result
+
+
 def extract_tar(
     archive: Path,
     dest: Path,
@@ -179,7 +231,7 @@ def extract_tar(
 
 
 #: Suffixes we recurse into when found inside an archive.
-_ARCHIVE_SUFFIXES = {".zip", ".tar", ".tgz", ".gz", ".bz2", ".xz"}
+_ARCHIVE_SUFFIXES = {".zip", ".tar", ".tgz", ".gz", ".bz2", ".xz", ".7z"}
 
 
 def extract(
@@ -200,6 +252,8 @@ def extract(
     name = archive.name.lower()
     if suffix == ".zip":
         result = extract_zip(archive, dest, keep_suffixes, keep_names)
+    elif suffix == ".7z":
+        result = extract_7z(archive, dest, keep_suffixes, keep_names)
     elif suffix in {".tar", ".tgz", ".bz2", ".xz"} or name.endswith(
         (".tar.gz", ".tar.bz2", ".tar.xz")
     ):
