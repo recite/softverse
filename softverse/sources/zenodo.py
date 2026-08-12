@@ -67,7 +67,23 @@ WHOLE_REPOSITORY_THRESHOLD = 1_000_000
 #: research. Raising the cap to 500 MB recovers 31 of the 79 skipped archives
 #: for 8 GB; the remaining tail is 26 archives above 2 GB (largest 100.7 GB)
 #: and stays logged rather than fetched.
-ARCHIVE_CAP_BYTES = 500 * 1024 * 1024
+#: Raised again after measuring what the cap actually costs. Going 100 MB ->
+#: 500 MB did not move the coverage gap at all -- 19% of deposits yielded zero
+#: code at both settings -- because the size distribution is heavy-tailed rather
+#: than clustered near the cap (of 226 skipped archives: 54 in 0.5-1 GB, 58 in
+#: 1-2 GB, 54 in 2-5 GB, 60 above 5 GB).
+#:
+#: What settles it is that **code scales with archive size**, measured across
+#: 907 deposits: the smallest quartile averages 0.5 MB and 21 code files, the
+#: largest 200 MB and 221. So the skipped tail is not data-without-code, and
+#: dropping 19% of deposits drops considerably more than 19% of the code, biased
+#: toward large code-heavy projects.
+#:
+#: Disk is not the constraint it looked like: archives are deleted after
+#: successful extraction, so peak usage is one archive at a time, not the
+#: cumulative transfer. 2 GB admits 112 of the 226 skipped archives and roughly
+#: halves the gap; the remainder stays logged as a stated limitation.
+ARCHIVE_CAP_BYTES = 2 * 1024 * 1024 * 1024
 
 
 @dataclass

@@ -71,7 +71,11 @@ ZENODO_RECORD = {
         },
         {
             "key": "big.zip",
-            "size": 900_000_000,
+            # Expressed relative to the cap rather than as a literal, so this
+            # tests the behaviour instead of whatever the cap happened to be
+            # when it was written. The previous literal (900 MB) silently
+            # stopped testing anything when the cap rose to 2 GB.
+            "size": zenodo.ARCHIVE_CAP_BYTES + 1,
             "checksum": "md5:def",
             "links": {"self": "https://zenodo.org/api/files/x/big.zip"},
         },
