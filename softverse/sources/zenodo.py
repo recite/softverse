@@ -431,7 +431,13 @@ def collect(
     """
     rows: list[dict] = []
     todo = [
-        r for r in records if ledger.should_process(r.doi or f"zenodo:{r.record_id}")
+        r
+        for r in records
+        if ledger.should_process(
+            r.doi or f"zenodo:{r.record_id}",
+            fresh=fresh,
+            upstream_version=r.record_id,
+        )
     ]
     logger.info(
         "zenodo collection starting",

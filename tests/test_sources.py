@@ -397,3 +397,38 @@ def test_a_failed_archive_is_kept_for_diagnosis(tmp_path, monkeypatch):
     assert state.needs_retry
     assert (tmp_path / "8" / "_archives" / "pkg.zip").exists()
     client.close()
+
+
+def test_collect_honours_fresh(tmp_path, monkeypatch):
+    """`fresh` must reach the filter, not just the signature.
+
+    This exists because the parameter was accepted and silently ignored: a
+    str.replace patch missed its anchor, so `fresh=True` would have quietly
+    behaved as an incremental run. Three separate silent no-ops from that habit
+    in one session is what retired it.
+    """
+    record = zenodo.parse_record(
+        {
+            "id": 5,
+            "metadata": {
+                "doi": "10.5281/zenodo.5",
+                "title": "t",
+                "publication_date": "2020-01-01",
+                "communities": [],
+            },
+            "files": [],
+        }
+    )
+    ledger = Ledger(tmp_path / "l.jsonl")
+    from softverse.acquire.state import DatasetRecord
+
+    ledger.finish(DatasetRecord("10.5281/zenodo.5", "complete", 0, 0))
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
+
+    # Incremental: already complete, so nothing to do.
+    assert zenodo.collect([record], tmp_path, ledger, client) == []
+    # Fresh: the ledger is ignored, so it is attempted again.
+    ledger2 = Ledger(tmp_path / "l.jsonl")
+    zenodo.collect([record], tmp_path, ledger2, client, fresh=True)
+    assert ledger2.get("10.5281/zenodo.5") is not None
+    client.close()
