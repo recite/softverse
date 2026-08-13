@@ -43,6 +43,21 @@ at_risk = (
     .nunique()
     .to_dict()
 )
+
+# A "mention" is not the same object across languages, so no total over all of
+# them means anything. In R and Python a mention is an import statement; in
+# Stata it is every command occurrence, because that is what a Stata program
+# is. Stata therefore contributes ~130 mentions per file against R's 6, and a
+# combined count would be a count of Stata's syntax.
+#
+# The comparable unit is a mention that *could* name a third-party package.
+# That excludes Stata builtins, R and Python standard libraries, and programs
+# defined inside the deposit -- none of which were ever candidates for registry
+# resolution, so leaving them in the denominator deflates the unresolved rate
+# by an order of magnitude (1.0% against 12.0%).
+NOT_THIRD_PARTY = ("builtin", "base_or_stdlib", "local_program")
+candidates = mentions[~mentions["resolution"].isin(NOT_THIRD_PARTY)]
+mentions_by_language = mentions.groupby("language").size().to_dict()
 ```
 
 ## What this measures, and what it does not
@@ -141,7 +156,20 @@ pres.head(8).to_markdown(index=False)
 
 Across `{python} f"{n_deposits:,}"` deposits and
 `{python} f"{n_files:,}"` files we record
-`{python} f"{n_mentions:,}"` mentions.
+`{python} f"{len(candidates):,}"` mentions that could name a third-party
+package.
+
+That qualifier is doing real work, and the raw total is the wrong number to
+report. A *mention* is not the same object in every language: in R and Python
+it is an import statement, but in Stata it is a command occurrence, because a
+Stata script is a sequence of commands rather than a set of imports. Stata
+contributes about 135 mentions per file against R's 6, and
+`{python} f"{mentions_by_language.get('stata', 0):,}"` of the
+`{python} f"{n_mentions:,}"` raw mentions are Stata, nine in ten of them calls
+to `generate`, `replace` and the like. Summed across languages that total
+measures Stata's verbosity. Restricting to mentions that could name a
+third-party package -- dropping builtins, standard libraries and programs the
+deposit defines itself -- puts the languages back on comparable footing.
 
 ```{python}
 #| label: top-packages
@@ -171,16 +199,40 @@ ranking of whichever deposits happen to be largest.
 
 ```{python}
 #| label: resolution
-res = mentions["resolution"].value_counts()
+res = candidates["resolution"].value_counts()
 resolved = res.get("known_current", 0) + res.get("known_archived", 0)
-unknown_share = res.get("unknown", 0) / len(mentions)
+unknown_share = res.get("unknown", 0) / len(candidates)
+by_language = (
+    candidates.assign(unresolved=candidates["resolution"].eq("unknown"))
+    .groupby("language")["unresolved"]
+    .agg(["size", "sum"])
+)
+by_language["rate"] = (by_language["sum"] / by_language["size"]).map("{:.1%}".format)
+by_language.columns = ["candidate mentions", "unresolved", "rate"]
+by_language.sort_values("candidate mentions", ascending=False).to_markdown()
 ```
 
 We report what these checks can establish and no more.
 
 **Registry resolution** is coverage, not precision: a local module can share a
-name with a real distribution. `{python} f"{unknown_share:.1%}"` of mentions
-resolve to no registry, and every such name is enumerated rather than dropped.
+name with a real distribution. `{python} f"{unknown_share:.1%}"` of
+third-party-candidate mentions resolve to no registry, and every such name is
+enumerated rather than dropped.
+
+The denominator matters more than the rate. Against *all* mentions the same
+figure is 1.0%, which would be a flattering way to describe the identical data:
+it divides by 1.7 million Stata builtin calls that were never candidates for
+registry resolution and could not have been unresolved. We report the rate
+against mentions that could name a package, which is roughly twelve times
+larger and is the number a reader should use to discount our coverage.
+
+The rate also differs by language in a way a pooled figure hides, and the
+reasons differ with it. Stata's unresolved names are dominated by official
+commands our builtin list omits and by packages distributed outside SSC
+(`grc1leg`); Python's by relative and dynamically constructed imports and by
+commercial libraries with no public registry entry (`arcpy`, `sfi`); R's, much
+the lowest, by the `library(pkg)`-inside-a-loop idiom, where the package name
+is a variable and is not knowable statically.
 
 **Cross-tool agreement** with `renv::dependencies()` over corpus R deposits
 gives a Jaccard of 0.998. This is *convergent validity, not accuracy*: `renv`
