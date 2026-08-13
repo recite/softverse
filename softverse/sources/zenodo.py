@@ -83,7 +83,22 @@ WHOLE_REPOSITORY_THRESHOLD = 1_000_000
 #: successful extraction, so peak usage is one archive at a time, not the
 #: cumulative transfer. 2 GB admits 112 of the 226 skipped archives and roughly
 #: halves the gap; the remainder stays logged as a stated limitation.
-ARCHIVE_CAP_BYTES = 2 * 1024 * 1024 * 1024
+#: Raised to 5 GB once the nested-archive leak was fixed. At 2 GB, 53 deposits
+#: (3.8%) still yielded no code at all; the 47 in the 2-5 GB band are the
+#: affordable part of that tail and take the gap to roughly 1%. The remainder --
+#: 6 archives above 20 GB, largest 102.7 GB -- stays logged as a stated
+#: limitation, because past some point the honest move is to report the gap
+#: rather than chase it.
+ARCHIVE_CAP_BYTES = 5 * 1024 * 1024 * 1024
+
+#: Refuse to start a download that would leave less than this free.
+#:
+#: A collection run already died of ENOSPC once today, and an out-of-space
+#: failure is uniquely bad here: it can strike between writing a file and
+#: recording it, which is the one window where the ledger's claims and the disk
+#: can disagree. Declining to start is cheap and always recoverable; the deposit
+#: stays retryable.
+MIN_FREE_BYTES = 8 * 1024 * 1024 * 1024
 
 
 @dataclass
@@ -243,6 +258,20 @@ def search(
     return records[:max_records] if max_records else records
 
 
+def _enough_free_space(root: Path, needed: int) -> bool:
+    """Whether ``needed`` bytes can be written and still leave the reserve.
+
+    Checked per download rather than once per run, because free space moves
+    while a collection runs -- both from what we write and from everything else
+    on the machine.
+    """
+    import shutil
+
+    root.mkdir(parents=True, exist_ok=True)
+    free = shutil.disk_usage(root).free
+    return free - needed > MIN_FREE_BYTES
+
+
 def collect_record(
     client: PoliteClient,
     record: ZenodoRecord,
@@ -268,10 +297,28 @@ def collect_record(
     now = datetime.now(tz=UTC)
 
     for item in wanted:
+        # The cap check must come first. It is a policy decision about what we
+        # collect and belongs in the coverage statistic; the disk check is a
+        # transient condition of this machine. Testing disk first would record
+        # an over-cap archive as a disk failure and quietly corrupt the number
+        # we report as the coverage gap -- caught by a test, not by inspection.
         if item.is_archive and item.size > archive_cap:
             state.n_skipped_over_cap += 1
             state.skipped_archives.append(
                 {"filename": item.key, "size_bytes": item.size, "file_id": None}
+            )
+            continue
+
+        if item.is_archive and not _enough_free_space(files_root, item.size):
+            # Stop before the disk does. An ENOSPC can land between writing a
+            # file and recording it, which is the one window where the ledger
+            # and the disk can disagree -- the failure mode the whole state
+            # design exists to prevent.
+            state.n_failed += 1
+            state.error = "insufficient free disk; deferred"
+            logger.warning(
+                "deferring download, low disk",
+                extra={"record": record.record_id, "size_mb": item.size // 1_000_000},
             )
             continue
 
