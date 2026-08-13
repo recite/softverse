@@ -237,3 +237,50 @@ def test_7z_is_supported(tmp_path):
     result = extract(archive, tmp_path / "out", KEEP)
     assert result.error is None, result.error
     assert [p.name for p in result.files] == ["analysis.R"]
+
+
+def test_nested_archive_is_deleted_but_its_contents_survive(tmp_path):
+    """The leak, stated as a test.
+
+    extract() recurses into a data.zip inside a replication.zip, writes it to
+    disk, extracts it -- and used to keep the compressed copy forever. Measured
+    in production: 572 nested archives holding 2.2 GB, still growing mid-run,
+    on a disk at 99%. The top-level delete had always existed, which is exactly
+    why "we delete archives after extracting" was true and insufficient.
+    """
+    inner = io.BytesIO()
+    with zipfile.ZipFile(inner, "w") as zf:
+        zf.writestr("deep/analysis.R", b"library(brms)")
+    archive = make_zip(
+        tmp_path / "outer.zip", {"data.zip": inner.getvalue(), "top.R": b"library(x)"}
+    )
+    dest = tmp_path / "out"
+    result = extract(archive, dest, KEEP | {".zip"})
+
+    assert "analysis.R" in {p.name for p in result.files}, "contents must survive"
+    assert not (dest / "data.zip").exists(), "the nested archive should be gone"
+    assert not any(
+        p.suffix == ".zip" for p in result.files
+    ), "a deleted archive must not remain in the file list"
+
+
+def test_a_nested_archive_that_fails_to_extract_is_kept(tmp_path):
+    """Same rule as top-level: a failure keeps its evidence."""
+    archive = make_zip(
+        tmp_path / "outer.zip", {"broken.zip": b"not a zip at all", "top.R": b"x"}
+    )
+    dest = tmp_path / "out"
+    extract(archive, dest, KEEP | {".zip"})
+    assert (dest / "broken.zip").exists()
+
+
+def test_expansion_budget_stops_a_runaway_deposit(tmp_path, monkeypatch):
+    """The download cap bounds transfer; this bounds expansion.
+
+    Without it a small archive of nested archives can still fill the disk,
+    whatever the download cap says.
+    """
+    monkeypatch.setattr("softverse.acquire.unpack.MAX_EXTRACTED_BYTES", 100)
+    archive = make_zip(tmp_path / "big.zip", {"a.R": b"x" * 5000})
+    result = extract(archive, tmp_path / "out", KEEP)
+    assert result.error is not None and "expanded" in result.error

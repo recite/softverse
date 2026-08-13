@@ -45,6 +45,16 @@ MAX_MEMBERS = 500_000
 #: Nested archives are extracted this many levels deep, then left alone.
 MAX_NESTING = 3
 
+#: Ceiling on what one archive may write to disk, across all nesting levels.
+#:
+#: The download cap bounds the *transfer*; this bounds the *expansion*, and they
+#: are not the same constraint. A 2 GB deposit made of nested data archives can
+#: write far more than 2 GB before the caller's delete fires, so without this a
+#: single pathological deposit can still fill the disk no matter how the
+#: download cap is set. Generous enough that no legitimate replication package
+#: has hit it -- the point is to bound the worst case, not to filter.
+MAX_EXTRACTED_BYTES = 10 * 1024**3
+
 
 class UnsafeArchive(Exception):
     """An archive member would escape the extraction root, or the archive is a bomb."""
@@ -266,6 +276,15 @@ def extract(
     else:
         return Extracted(error=f"unsupported archive type: {archive.name}")
 
+    written = sum(p.stat().st_size for p in result.files if p.exists())
+    if written > MAX_EXTRACTED_BYTES:
+        result.error = (
+            f"{archive.name}: expanded to {written / 1e9:.1f} GB on disk "
+            f"(limit {MAX_EXTRACTED_BYTES / 1e9:.0f} GB); stopped extracting"
+        )
+        logger.warning("extraction budget exceeded", extra={"archive": archive.name})
+        return result
+
     if depth < MAX_NESTING:
         for path in list(result.files):
             if path.suffix.lower() in _ARCHIVE_SUFFIXES:
@@ -279,6 +298,22 @@ def extract(
                 result.files.extend(inner.files)
                 result.skipped_unsafe.extend(inner.skipped_unsafe)
                 result.nested_archives.append(path)
+                if inner.error is None:
+                    # Its contents are now on disk uncompressed, so keeping the
+                    # compressed copy stores the same bytes twice. Only the
+                    # *top-level* archive is worth retaining, and that is the
+                    # caller's call because it is the unit the ledger can
+                    # refetch; a nested archive has no such record.
+                    #
+                    # Measured before this existed: 572 nested archives holding
+                    # 2.2 GB and still growing mid-run, on a disk already at
+                    # 99%. The outer delete had always been there, which is
+                    # precisely why the leak was invisible -- "we delete
+                    # archives after extracting" was true and insufficient.
+                    path.unlink(missing_ok=True)
+                    result.files.remove(path)
+                # A nested archive that failed to extract is kept, for the same
+                # reason a failed top-level one is: it is the evidence.
     return result
 
 
