@@ -130,6 +130,41 @@ def test_unresolved_names_are_retried_not_cached(tmp_path):
     assert verify({"ds"}, path, client=client).official == {"ds"}
 
 
+def test_crawl_checkpoints_so_an_interruption_is_not_total(tmp_path, monkeypatch):
+    """A twenty-minute crawl must not lose everything if it dies at minute 19.
+
+    The cache exists so a rerun does not re-crawl someone else's server.
+    Writing only at the end would defeat that in exactly the case it matters.
+    """
+    import softverse.stata.official as official
+
+    monkeypatch.setattr(official, "CHECKPOINT_EVERY", 2)
+    path = tmp_path / "official.json"
+
+    class DyingClient(FakeClient):
+        def get(self, url, **kwargs):
+            if len(self.asked) >= 5:
+                raise KeyboardInterrupt("crawl killed mid-run")
+            return super().get(url, **kwargs)
+
+    client = DyingClient({"aaa": REAL_PAGE, "bbb": REAL_PAGE, "ccc": REAL_PAGE})
+    with pytest.raises(KeyboardInterrupt):
+        official.verify({"aaa", "bbb", "ccc", "ddd", "eee", "fff"}, path, client=client)
+
+    survived = json.loads(path.read_text())["commands"]
+    assert len(survived) >= 4, f"only {len(survived)} answers survived"
+    assert survived["aaa"] is True
+
+
+def test_checkpoint_is_atomic(tmp_path):
+    """A half-written cache would be parsed as authoritative on the next run."""
+    path = tmp_path / "official.json"
+    client = FakeClient({"ds": REAL_PAGE})
+    verify({"ds"}, path, client=client)
+    assert json.loads(path.read_text())["commands"] == {"ds": True}
+    assert not list(tmp_path.glob("*.tmp")), "temporary file left behind"
+
+
 def test_snapshot_round_trips(tmp_path):
     path = tmp_path / "official.json"
     client = FakeClient({"ds": REAL_PAGE})

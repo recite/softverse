@@ -45,6 +45,10 @@ HELP_URL = "https://www.stata.com/help.cgi?{name}"
 #: documentation server for a few hundred names, not a bulk harvest.
 DEFAULT_RATE_PER_S = 0.5
 
+#: Persist every this many answers, so an interrupted crawl resumes rather than
+#: restarting. At the rate above this is a checkpoint roughly every minute.
+CHECKPOINT_EVERY = 25
+
 #: The stub served for a name Stata does not know. Matched as a sentence
 #: because the status code is always 200 and the body size is only incidentally
 #: different -- see the module docstring.
@@ -92,6 +96,28 @@ def is_official(client: PoliteClient, name: str) -> bool | None:
     return not _NOT_FOUND.search(body)
 
 
+def _write(path: Path, checked: dict[str, bool]) -> None:
+    """Persist the cache. Called during the crawl, not only at the end."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "source": HELP_URL,
+        "method": (
+            "GET help.cgi?<name>; a body matching 'help for <name> not found' "
+            "means the name is not official Stata. Status is always 200, so it "
+            "carries no information."
+        ),
+        "snapshot_date": datetime.now(tz=UTC).date().isoformat(),
+        "n_checked": len(checked),
+        "n_official": sum(checked.values()),
+        "commands": dict(sorted(checked.items())),
+    }
+    # Write-then-rename, so an interrupted checkpoint cannot leave behind a
+    # truncated file that the next run would parse as an authoritative cache.
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, indent=1))
+    temporary.replace(path)
+
+
 def verify(
     names: set[str],
     path: Path,
@@ -117,36 +143,25 @@ def verify(
             user_agent="softverse/2.0 (research; github.com/recite/softverse)",
         )
         try:
-            for name in todo:
+            for done, name in enumerate(todo, 1):
                 verdict = is_official(session, name)
                 if verdict is not None:
                     cached[name] = verdict
+                # Checkpoint, because at one request every two seconds a few
+                # hundred names is a twenty-minute crawl. Writing only at the
+                # end would make an interruption at minute nineteen cost the
+                # whole run and re-crawl a vendor's server to recover it --
+                # which is exactly what the cache exists to prevent.
+                if done % CHECKPOINT_EVERY == 0:
+                    _write(path, cached)
         finally:
             if owned:
                 session.close()
+            _write(path, cached)
 
-    snapshot = OfficialSnapshot(
+    return OfficialSnapshot(
         checked=cached, snapshot_date=datetime.now(tz=UTC).date().isoformat()
     )
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(
-            {
-                "source": HELP_URL,
-                "method": (
-                    "GET help.cgi?<name>; a body matching 'help for <name> not "
-                    "found' means the name is not official Stata. Status is "
-                    "always 200, so it carries no information."
-                ),
-                "snapshot_date": snapshot.snapshot_date,
-                "n_checked": len(cached),
-                "n_official": sum(cached.values()),
-                "commands": dict(sorted(cached.items())),
-            },
-            indent=1,
-        )
-    )
-    return snapshot
 
 
 def load(path: Path) -> OfficialSnapshot | None:
