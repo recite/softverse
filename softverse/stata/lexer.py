@@ -230,6 +230,32 @@ def strip_comments(source: str) -> str:
     return "".join(out)
 
 
+#: Characters that, immediately before a brace, mark it as part of a word
+#: rather than a block delimiter. Stata's own block braces always follow
+#: whitespace or a closing parenthesis -- `if x==1 {`, `if (x==1){` -- so
+#: nothing legitimate is suppressed, while `\multicolumn{3}{c}` is protected.
+_WORD_BEFORE_BRACE = frozenset("_\\}")
+
+
+def _brace_is_word_internal(cleaned: str, i: int, buffer: list[str]) -> bool:
+    """True when the brace at ``i`` belongs to a word, not to a block.
+
+    Quoted and parenthesised braces are already handled by the string and paren
+    guards. This covers the remaining case: raw LaTeX at the top level, which
+    `texdoc`'s `tex` command takes unquoted --
+
+        tex & \\multicolumn{3}{c}{Full Sample} &
+
+    -- where splitting on the braces produces fragments led by `3` and `c`, and
+    `c` is the sole command of the package `fastcd`.
+    """
+    if not buffer or i == 0:
+        # Nothing precedes it in this statement, so it cannot be word-internal.
+        return False
+    previous = cleaned[i - 1]
+    return previous.isalnum() or previous in _WORD_BEFORE_BRACE
+
+
 def _split_statements(cleaned: str) -> list[tuple[int, int, str]]:
     """Split cleaned source into ``(line, col, text)``, honouring ``#delimit``.
 
@@ -343,7 +369,11 @@ def _split_statements(cleaned: str) -> list[tuple[int, int, str]]:
 
         # Braces delimit blocks only at the top level. Inside an option list
         # they are data, not syntax.
-        if ch in "{}" and paren == 0:
+        if (
+            ch in "{}"
+            and paren == 0
+            and not _brace_is_word_internal(cleaned, i, buffer)
+        ):
             flush(line)
             i += 1
             continue

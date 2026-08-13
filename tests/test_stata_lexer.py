@@ -180,10 +180,48 @@ def test_option_names_are_not_commands():
     assert commands("esttab using x.tex, b(a2) se(a2) star") == ["esttab"]
 
 
+def test_unquoted_latex_braces_are_not_block_delimiters():
+    """The same bug as above, arriving without a string to hide behind.
+
+    `texdoc`'s `tex` command takes raw LaTeX with no quoting, so the braces sit
+    at the top level where the string- and paren-guards cannot see them:
+
+        tex & \\multicolumn{3}{c}{Full Sample} & \\multicolumn{3}{c}{RDD} \\\\
+
+    Splitting there yields fragments led by `3`, `c` and `Full Sample`, and `c`
+    is the only command of the package `fastcd`. That put `fastcd` in 10
+    deposits' package lists -- survivors of the earlier fix, found by reading
+    the tally rather than by a test.
+
+    A brace preceded by an alphanumeric, `_`, `\\` or `}` is part of a word, not
+    a block delimiter: Stata's own block braces always follow whitespace or a
+    closing parenthesis.
+    """
+    source = (
+        "tex & \\multicolumn{3}{c}{Full Sample} & \\multicolumn{3}{c}{RDD} \\\\\n"
+        "regress y x"
+    )
+    found = commands(source)
+    assert found == ["tex", "regress"], found
+    for ghost in ("c", "3", "full", "rdd", "multicolumn"):
+        assert ghost not in found
+
+
 def test_braces_still_delimit_blocks_at_top_level():
     source = "foreach v of varlist a b {\n    summarize `v'\n}\nregress y x"
     found = commands(source)
     assert "foreach" in found
+    assert "summarize" in found
+    assert "regress" in found
+
+
+def test_brace_after_closing_paren_still_opens_a_block():
+    """`if (x==1){` is legal Stata with no space, so `)` must stay a delimiter.
+
+    The guard keys on the preceding character, so this is exactly the case it
+    could get wrong in the other direction -- suppressing a real block.
+    """
+    found = commands("if (x==1){\n    summarize y\n}\nregress y x")
     assert "summarize" in found
     assert "regress" in found
 
