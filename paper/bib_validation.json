@@ -1,0 +1,50 @@
+{
+  "checked_at": "2026-08-13T03:52:20.918781+00:00",
+  "bibliography": "paper/references.bib",
+  "n_entries": 6,
+  "n_verified": 6,
+  "results": [
+    {
+      "key": "trisovic2022",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1038/s41597-022-01143-6",
+      "registered_title": null
+    },
+    {
+      "key": "schindler2022",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.7717/peerj-cs.835",
+      "registered_title": null
+    },
+    {
+      "key": "howison2011",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1145/1958824.1958904",
+      "registered_title": null
+    },
+    {
+      "key": "smith2016",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.7717/peerj-cs.86",
+      "registered_title": null
+    },
+    {
+      "key": "stodden2018",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1073/pnas.1708290115",
+      "registered_title": null
+    },
+    {
+      "key": "vilhuber2020",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1162/99608f92.4f6b9e67",
+      "registered_title": null
+    }
+  ]
+}

@@ -30,7 +30,11 @@ def frame_communities() -> list[str]:
 
 
 def main() -> int:
-    limit = int(sys.argv[1]) if len(sys.argv) > 1 else 2000
+    # `--fresh` refetches everything; the default is incremental, which fetches
+    # only deposits never successfully collected plus anything left partial.
+    fresh = "--fresh" in sys.argv
+    positional = [a for a in sys.argv[1:] if not a.startswith("-")]
+    limit = int(positional[0]) if positional else 2000
     setup_logging("INFO", log_dir=PATHS.logs, stage="zenodo")
     client = PoliteClient(
         headers=zenodo_headers(),
@@ -77,7 +81,7 @@ def main() -> int:
 
     todo = list(records.values())[:limit]
     logger.info("collecting", extra={"records": len(todo)})
-    rows = zenodo.collect(todo, ROOT / "files", ledger, client)
+    rows = zenodo.collect(todo, ROOT / "files", ledger, client, fresh=fresh)
 
     print(f"\nrecords in frame : {len(records):,}")
     print(f"collected        : {len(todo):,}")

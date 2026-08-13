@@ -414,3 +414,46 @@ def test_an_empty_file_download_is_not_a_challenge():
         202, headers={"x-amzn-waf-action": "challenge"}, content=b""
     )
     assert is_waf_challenge(flagged, expect_content=False)
+
+
+# -- incremental vs fresh -------------------------------------------------
+
+
+def test_incremental_skips_what_is_already_done(tmp_path):
+    """The default: fetch only what was never successfully fetched."""
+    ledger = Ledger(tmp_path / "l.jsonl")
+    ledger.finish(DatasetRecord("doi:a", CollectionState.COMPLETE.value, 1, 1))
+    assert not ledger.should_process("doi:a")
+    assert ledger.should_process("doi:b")
+
+
+def test_fresh_refetches_everything(tmp_path):
+    """A full re-scrape is a flag, not an undocumented `rm` of the ledger."""
+    ledger = Ledger(tmp_path / "l.jsonl")
+    ledger.finish(DatasetRecord("doi:a", CollectionState.COMPLETE.value, 1, 1))
+    assert ledger.should_process("doi:a", fresh=True)
+
+
+def test_a_revised_deposit_is_refetched(tmp_path):
+    """Incremental must mean more than 'deposits we have not seen'.
+
+    Without an upstream version, a deposit revised after we fetched it is
+    invisible forever -- the corpus goes quietly stale while every run reports
+    success.
+    """
+    ledger = Ledger(tmp_path / "l.jsonl")
+    record = DatasetRecord("doi:a", CollectionState.COMPLETE.value, 1, 1)
+    record.upstream_version = "v1"
+    ledger.finish(record)
+    assert not ledger.should_process("doi:a", upstream_version="v1")
+    assert ledger.should_process("doi:a", upstream_version="v2")
+
+
+def test_stale_lists_moved_deposits_without_acting(tmp_path):
+    """A refresh should be inspectable before it runs."""
+    ledger = Ledger(tmp_path / "l.jsonl")
+    for key, version in (("doi:a", "v1"), ("doi:b", "v1")):
+        record = DatasetRecord(key, CollectionState.COMPLETE.value, 1, 1)
+        record.upstream_version = version
+        ledger.finish(record)
+    assert ledger.stale({"doi:a": "v2", "doi:b": "v1"}) == ["doi:a"]

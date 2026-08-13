@@ -252,6 +252,10 @@ def collect_record(
     """Download one record's wanted files. Returns its state and file rows."""
     doi = record.doi or f"zenodo:{record.record_id}"
     state = DatasetRecord(dataset_doi=doi, state=CollectionState.FAILED.value)
+    # Zenodo records are immutable and a revision gets a new id, so the id is
+    # a sufficient version marker here. Recorded anyway, so a refresh works
+    # the same way across sources that mutate in place.
+    state.upstream_version = record.record_id
     rows: list[dict] = []
 
     wanted = [f for f in record.files if is_wanted(f.key)]
@@ -418,8 +422,13 @@ def collect(
     ledger: Ledger,
     client: PoliteClient,
     archive_cap: int = ARCHIVE_CAP_BYTES,
+    fresh: bool = False,
 ) -> list[dict]:
-    """Collect many records, skipping those already in a terminal state."""
+    """Collect many records.
+
+    Incremental by default: only deposits never successfully fetched, plus
+    anything left partial or failed. ``fresh=True`` refetches everything.
+    """
     rows: list[dict] = []
     todo = [
         r for r in records if ledger.should_process(r.doi or f"zenodo:{r.record_id}")

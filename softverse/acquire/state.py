@@ -49,6 +49,11 @@ class DatasetRecord:
     bytes_fetched: int = 0
     version_number: int | None = None
     version_minor: int | None = None
+    #: Whatever the source uses to say "this deposit changed" -- a Zenodo
+    #: record id, a Dataverse version string, an OSF date_modified. Recorded so
+    #: a later run can tell a *revised* deposit from one it has already seen.
+    #: Without it, incremental collection only ever notices new deposits.
+    upstream_version: str | None = None
     error: str | None = None
     finished_at: str | None = None
     #: Archives passed over by the size cap, kept so the coverage gap is
@@ -108,16 +113,52 @@ class Ledger:
     def get(self, doi: str) -> DatasetRecord | None:
         return self._records.get(doi)
 
-    def should_process(self, doi: str) -> bool:
+    def should_process(
+        self, doi: str, *, fresh: bool = False, upstream_version: str | None = None
+    ) -> bool:
         """Whether this dataset still needs work.
 
-        A dataset in a retryable state (``partial``/``failed``) is always
-        retried. v1 treated *any* existing status -- including
-        ``download_failed`` and ``forbidden`` -- as done, and counted those
-        failures as successes on every subsequent run.
+        Three modes, because "incremental" can mean two different things and
+        conflating them is how a corpus silently goes stale:
+
+        - **incremental** (default): fetch what we have never successfully
+          fetched. A dataset in a retryable state (``partial``/``failed``) is
+          always retried. v1 treated *any* existing status -- including
+          ``download_failed`` and ``forbidden`` -- as done, and counted those
+          failures as successes on every subsequent run.
+        - **refresh**: pass ``upstream_version`` and a deposit is also
+          refetched when its upstream version differs from the recorded one.
+          Without this, "incremental" only ever means *new* deposits, and a
+          revised deposit is invisible forever.
+        - **fresh**: ignore the ledger entirely and refetch everything. This is
+          a flag rather than a manual ``rm`` so that a full re-scrape is a
+          deliberate act with a record of it, not an undocumented step.
         """
+        if fresh:
+            return True
         record = self._records.get(doi)
-        return record is None or record.needs_retry
+        if record is None or record.needs_retry:
+            return True
+        if upstream_version is not None and record.upstream_version is not None:
+            return upstream_version != record.upstream_version
+        return False
+
+    def stale(self, upstream: dict[str, str]) -> list[str]:
+        """Deposits whose upstream version has moved since we fetched them.
+
+        ``upstream`` maps doi -> current version. Returned rather than acted
+        on, so a refresh can be inspected before it runs.
+        """
+        moved = []
+        for doi, version in upstream.items():
+            record = self._records.get(doi)
+            if (
+                record is not None
+                and record.upstream_version is not None
+                and record.upstream_version != version
+            ):
+                moved.append(doi)
+        return moved
 
     def finish(self, record: DatasetRecord) -> None:
         """Record a terminal outcome. Call this only after the work is done."""

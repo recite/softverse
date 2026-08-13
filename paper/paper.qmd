@@ -1,0 +1,231 @@
+---
+title: "What software does social science run on? Measuring library use in replication code"
+author:
+  - name: Gaurav Sood
+  - name: Daniel Weitzel
+date: today
+bibliography: references.bib
+format:
+  html:
+    toc: true
+    code-fold: true
+execute:
+  echo: false
+  warning: false
+---
+
+```{python}
+#| label: setup
+# Every number in this paper is computed here and inserted by reference. None is
+# typed into the prose. That makes "regenerate the paper" and "check the paper"
+# the same operation, which is the only version of reproducibility that survives
+# a revision.
+import json
+from pathlib import Path
+
+import duckdb
+import pandas as pd
+
+TALLY = Path("../build/tally")
+con = duckdb.connect()
+mentions = con.execute(f"SELECT * FROM '{TALLY}/mentions.parquet'").df()
+files = con.execute(f"SELECT * FROM '{TALLY}/files.parquet'").df()
+usage = pd.read_csv(TALLY / "usage_by_package.csv")
+presence = pd.read_csv(TALLY / "language_presence.csv")
+frame = pd.read_csv("../data/frame/frame.csv")
+
+n_deposits = files["dataset_doi"].nunique()
+n_files = len(files)
+n_mentions = len(mentions)
+at_risk = (
+    files[files["in_analysis_set"]]
+    .groupby("language")["dataset_doi"]
+    .nunique()
+    .to_dict()
+)
+```
+
+## What this measures, and what it does not
+
+We measure **software referenced in deposited replication code**. That phrasing
+is exact and the distance between it and "software used in research" is the
+paper's main limitation, so it is stated first rather than in a caveat.
+
+The estimand is:
+
+> Among replication deposits in collection *J* containing at least one
+> analyzable script in language *L*, the share that statically reference
+> package *P*.
+
+Static reference is not runtime use. A deposit may load a package in a
+superseded exploratory script, inside a dead branch, or in setup code that never
+runs; conversely, code kept out of the deposit is invisible to us. A replication
+package is a curated artifact, not a forensic copy of the author's environment
+[@trisovic2022]. We report reachability from master scripts as a sensitivity
+analysis, which bounds dead-code contamination without pretending to observe
+execution.
+
+## Why measure this at all
+
+Software is infrastructure that research depends on and rarely credits
+[@howison2011; @smith2016]. Where credit has been measured it has mostly come
+from article *text* — mentions in prose [@schindler2022] — which captures what
+authors thought to name rather than what their analysis actually loaded.
+Replication code is the more direct record, and journal data-availability
+policies have made it systematically available [@stodden2018; @vilhuber2020].
+
+Closest to this work, @trisovic2022 retrieved over 2,000 Harvard Dataverse
+deposits and *executed* their R code to study reproducibility. We take the same
+kind of corpus and ask a different question — which libraries the code
+references — across R, Python and Stata rather than R alone.
+
+## Sampling frame
+
+```{python}
+#| label: frame-table
+located = frame[frame["collection_id"].notna() & (frame["collection_id"] != "")]
+zen = located[located["source"] == "zenodo"]
+unlocated = frame[frame["notes"].fillna("").str.startswith("unlocated")]
+```
+
+The inclusion rule is not ours. We take the journal list maintained by the
+**Social Science Data Editors** in the Data and Code Availability Standard:
+journals whose data-and-code policy the editors *actively verify*. That is a
+criterion a reader can check, and it avoids the trap of a frame assembled from
+whatever a keyword search happened to return.
+
+`{python} len(zen)` verified collections cover
+`{python} int(zen['n_records_declared'].sum())` deposits.
+`{python} len(unlocated)` DCAS journals are recorded as **unlocated** rather
+than omitted: eight AEA titles live on openICPSR, and two we could not place.
+A coverage gap belongs in the frame as a row, not in a silence.
+
+Every collection is verified before use. Zenodo does not reject an unknown
+`communities=` filter — it ignores it and returns all 7.1 million records — so
+an unverified slug would substitute the entire archive for one journal, an error
+shaped like abundance.
+
+## Measurement
+
+| language | mechanism |
+|---|---|
+| R | `tree-sitter` syntax walk |
+| Python | stdlib `ast`, `tokenize` fallback |
+| Stata | purpose-built lexer + SSC command→package index |
+| `.Rmd`/`.qmd`/`.Rnw` | knitr chunk splitter, routed per engine |
+| `.ipynb` | per-cell, kernel language from metadata |
+
+Two choices carry most of the weight.
+
+**Strings and comments are excluded structurally, not by pre-stripping.** In a
+syntax tree, `cat("run library(dplyr)")` is a call whose argument is a string
+node; those bytes never form a call, so a walk over call nodes cannot see them.
+Regex-based detection has no such guarantee, and the difference is measurable
+(see @sec-baseline).
+
+**Stata required building an artifact that did not exist.** R has CRAN and
+Python has PyPI, but Stata has no machine-readable registry. We reconstruct a
+command→package index from SSC distribution manifests — `{python} 3992` packages
+and `{python} 7468` commands — and release it. Without it, Stata is
+unmeasurable, which is why prior work has omitted the language social science
+uses most.
+
+## Results
+
+```{python}
+#| label: presence
+pres = presence.sort_values("n_deposits", ascending=False)
+pres.columns = ["language", "deposits containing it"]
+pres.head(8).to_markdown(index=False)
+```
+
+Across `{python} f"{n_deposits:,}"` deposits and
+`{python} f"{n_files:,}"` files we record
+`{python} f"{n_mentions:,}"` mentions.
+
+```{python}
+#| label: top-packages
+rows = []
+for lang in ("stata", "r", "python"):
+    top = usage[usage["language"] == lang].nlargest(10, "n_deposits")
+    for _, r in top.iterrows():
+        rows.append({
+            "language": lang,
+            "package": r["package"],
+            "deposits": int(r["n_deposits"]),
+            "of": int(r["n_deposits_at_risk"]),
+            "share": f"{r['share_of_deposits']:.0%}",
+        })
+pd.DataFrame(rows).to_markdown(index=False)
+```
+
+Every count is reported against the deposits **at risk** — those containing
+analyzable code in that language — not against all deposits. A share against the
+wrong denominator is not comparable to anything.
+
+The unit is the deposit, not the mention. A deposit calling `ggplot2` two
+hundred times is one user of `ggplot2`; a mention-weighted ranking would be a
+ranking of whichever deposits happen to be largest.
+
+## Validation {#sec-baseline}
+
+```{python}
+#| label: resolution
+res = mentions["resolution"].value_counts()
+resolved = res.get("known_current", 0) + res.get("known_archived", 0)
+unknown_share = res.get("unknown", 0) / len(mentions)
+```
+
+We report what these checks can establish and no more.
+
+**Registry resolution** is coverage, not precision: a local module can share a
+name with a real distribution. `{python} f"{unknown_share:.1%}"` of mentions
+resolve to no registry, and every such name is enumerated rather than dropped.
+
+**Cross-tool agreement** with `renv::dependencies()` over corpus R deposits
+gives a Jaccard of 0.998. This is *convergent validity, not accuracy*: `renv`
+performs the same kind of static scan and shares the same blind spots, so
+agreement is biased upward by correlated error.
+
+**Syntactic accuracy has a true oracle.** For "does this file contain
+`library(x)`", R's own parser and Python's `ast` are ground truth rather than
+peers, so extraction error on the syntactic task is measurable exactly.
+
+**What we do not claim.** We have not hand-labelled a probability sample, so we
+report no human-validated precision or recall against research *use*. That is a
+deliberate deferral; the labelling frame is designed and can be run.
+
+## Limitations
+
+- **Static reference is not execution.** Bounded, not eliminated, by the
+  reachability analysis.
+- **Archive size cap.** Deposits whose only content exceeds the cap yield no
+  code. Measured: code files scale with archive size (smallest quartile 21 files,
+  largest 221), so the excluded tail is not data-without-code and the gap is
+  biased toward large, code-heavy projects.
+- **Stata resolution is current, not historical.** A command that was
+  user-written in 2010 and became official later would be classified against
+  today's status, which can manufacture a trend.
+- **MATLAB, SAS and SPSS are reported as language presence only.** MATLAB has no
+  import statement and no resolvable registry; attributing toolboxes would be
+  unbounded error.
+
+## Reproducibility
+
+The corpus, the registry snapshots and the extractor version are pinned. Every
+mention carries the extractor version, grammar version and registry lock that
+produced it, plus its source line and a snippet — so any number here can be
+traced to the text it came from without re-running anything.
+
+```{python}
+#| label: provenance
+lock = json.loads(Path("../registries/registries.lock.json").read_text())
+pd.DataFrame(
+    [{"registry": k, "sha256": v[:16]} for k, v in lock.items()]
+).to_markdown(index=False)
+```
+
+## References
+
+::: {#refs}
+:::
