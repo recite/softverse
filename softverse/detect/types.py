@@ -33,6 +33,13 @@ class Mention:
     is_conditional: bool = False
     cell_index: int | None = None
     chunk_label: str | None = None
+    #: The language this mention is *in*, when it differs from the file's.
+    #: A `.Rmd` can hold Python chunks and a notebook can run an R kernel, so
+    #: resolving against the file's language would send every mention in a
+    #: literate document to the wrong registry and return UNKNOWN for all of
+    #: them. Left None for single-language files, where the file's language is
+    #: the mention's language.
+    language: Language | None = None
 
 
 @dataclass

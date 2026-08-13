@@ -20,7 +20,7 @@ from pathlib import Path
 
 from charset_normalizer import from_bytes
 
-from softverse.detect import python_, r, stata
+from softverse.detect import notebooks, python_, r, stata
 from softverse.detect.types import ExtractResult, ParseReport
 from softverse.model.enums import Language, ParseStatus
 
@@ -48,7 +48,13 @@ EXTENSION_LANGUAGE: dict[str, Language] = {
 #: Languages we currently have an extractor for. The rest are recorded as
 #: present (a real, defensible claim about language use) but not attributed to
 #: packages. v1 read .sas/.jl/.m into memory and silently discarded them.
-IMPLEMENTED = {Language.R, Language.PYTHON, Language.STATA}
+IMPLEMENTED = {
+    Language.R,
+    Language.PYTHON,
+    Language.STATA,
+    Language.RMARKDOWN,
+    Language.NOTEBOOK,
+}
 
 _BOMS = (
     (b"\xef\xbb\xbf", "utf-8-sig"),
@@ -146,6 +152,10 @@ def extract_file(path: Path) -> tuple[ExtractResult, Decoded | None, Language]:
         result = r.extract(decoded.text)
     elif language is Language.STATA:
         result = stata.extract(decoded.text)
+    elif language is Language.RMARKDOWN:
+        result = notebooks.extract_rmarkdown(decoded.text)
+    elif language is Language.NOTEBOOK:
+        result = notebooks.extract_notebook(decoded.text)
     else:
         result = python_.extract(decoded.text, str(path))
 
