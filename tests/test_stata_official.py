@@ -250,9 +250,23 @@ def test_documented_is_not_the_same_as_being_a_command():
     assert is_official(client, "e") is False, "[FN] documents functions"
 
 
-def test_a_page_with_no_manual_reference_is_not_a_command():
-    client = FakeClient({"x": b"<html><body><p>Some prose.</p></body></html>"})
-    assert is_official(client, "x") is False
+def test_a_dispatch_page_with_no_manual_code_is_still_a_command():
+    """Requiring a `[R] name` title looked safer and was wrong.
+
+    `npregress` and `irtgraph` are dispatch pages listing their subcommands,
+    and `ivreg` is headed "Out-of-date command". All three are official Stata
+    and none carries a manual code, so demanding one demoted seven real
+    commands. Across the twenty names the rule changed, every page lacking a
+    code was a command and every non-command carried `[U]` or `[FN]`.
+    """
+    pages = {
+        "npregress": b"<html><body><pre>Command       Description</pre></body></html>",
+        "irtgraph": b"<html><body><p>Graphs after irt commands</p></body></html>",
+        "ivreg": b"<html><body><p>Out-of-date command</p></body></html>",
+    }
+    client = FakeClient(pages)
+    for name in pages:
+        assert is_official(client, name) is True, name
 
 
 @pytest.mark.parametrize(

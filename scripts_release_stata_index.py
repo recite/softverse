@@ -20,7 +20,7 @@ from datetime import UTC, datetime
 import duckdb
 
 from softverse.config import PATHS
-from softverse.stata.builtins import curated
+from softverse.stata.builtins import builtins
 from softverse.stata.index import ambiguous_commands
 
 OUT = PATHS.root / "build" / "release" / "stata-index"
@@ -167,18 +167,28 @@ def main() -> int:
     ambiguous = ambiguous_commands(dict_rows)
     (OUT / "ambiguous.json").write_text(json.dumps(ambiguous, indent=1, sort_keys=True))
 
-    builtins = curated()
+    # Ship the verified list, not the curated one. Every name in it was
+    # checked against StataCorp's help server, which is the difference between
+    # "we believe these are official" and "we asked".
+    official_snapshot = (
+        PATHS.root / "registries" / "snapshots" / "stata_official" / "official.json"
+    )
+    builtin_set = builtins(verified_snapshot=official_snapshot)
     (OUT / "builtins.json").write_text(
         json.dumps(
             {
-                "source": builtins.source,
+                "source": builtin_set.source,
                 "note": (
-                    "Curated and deliberately incomplete. Resolution is "
-                    "inclusive, so a missing builtin costs recall, never "
-                    "precision: it lands in `unknown`, never in a package."
+                    "Each name was checked against StataCorp's help server "
+                    "(help.cgi), not curated from memory. Still incomplete, "
+                    "but resolution is inclusive, so a missing builtin costs "
+                    "recall and never precision: it lands in `unknown`, never "
+                    "in a package. Pages from the [U] and [FN] manuals are "
+                    "excluded -- they document system variables and functions "
+                    "such as `_n` and `e()`, which are not commands."
                 ),
-                "canonical": sorted(builtins.canonical),
-                "forms": sorted(builtins.forms),
+                "canonical": sorted(builtin_set.canonical),
+                "forms": sorted(builtin_set.forms),
             },
             indent=1,
         )
@@ -268,7 +278,7 @@ def main() -> int:
         f"  {n_mappings:,} mappings · {n_packages:,} packages · {n_commands:,} commands"
     )
     print(f"  {len(ambiguous)} ambiguous · snapshot {snapshot}")
-    print(f"  builtins: {len(builtins.forms)} forms")
+    print(f"  builtins: {len(builtin_set.forms)} forms ({builtin_set.source})")
     if problems:
         print("\nVERIFICATION FAILED:")
         for p in problems:

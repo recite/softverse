@@ -123,11 +123,14 @@ def is_official(client: PoliteClient, name: str) -> bool | None:
     body = outcome.content.decode("utf-8", errors="replace")
     if _NOT_FOUND.search(body):
         return False
-    manual = manual_of(body)
-    # A page with no manual reference at all is not a command reference. Under
-    # inclusive resolution the cost of being wrong here is recall, not
-    # precision: the name falls through to the SSC index unchanged.
-    return manual is not None and manual not in NOT_COMMAND_MANUALS
+    # A page with no manual code is still a command page. Requiring one looked
+    # safer and was wrong: `npregress` and `irtgraph` are dispatch pages that
+    # list subcommands, and `ivreg` is headed "Out-of-date command" -- all
+    # official, none carrying a `[R] name` title. Measured over the twenty
+    # names this rule changed, every one without a manual code was a real
+    # command (`for`, `iis`, `tis`, `levels`, ...) and every one that was not a
+    # command carried `[U]` or `[FN]`. So the manual code only ever excludes.
+    return manual_of(body) not in NOT_COMMAND_MANUALS
 
 
 def manual_of(body: str) -> str | None:
