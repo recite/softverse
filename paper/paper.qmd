@@ -47,17 +47,37 @@ at_risk = (
 # A "mention" is not the same object across languages, so no total over all of
 # them means anything. In R and Python a mention is an import statement; in
 # Stata it is every command occurrence, because that is what a Stata program
-# is. Stata therefore contributes ~130 mentions per file against R's 6, and a
-# combined count would be a count of Stata's syntax.
+# is, so a combined count would be a count of Stata's syntax.
 #
 # The comparable unit is a mention that *could* name a third-party package.
 # That excludes Stata builtins, R and Python standard libraries, and programs
 # defined inside the deposit -- none of which were ever candidates for registry
 # resolution, so leaving them in the denominator deflates the unresolved rate
-# by an order of magnitude (1.0% against 12.0%).
+# by an order of magnitude -- both figures are computed below.
 NOT_THIRD_PARTY = ("builtin", "base_or_stdlib", "local_program")
 candidates = mentions[~mentions["resolution"].isin(NOT_THIRD_PARTY)]
 mentions_by_language = mentions.groupby("language").size().to_dict()
+
+# Computed, not typed. The naive rate is quoted in the text to show how much
+# the denominator matters, so it has to move when the data does -- a stale
+# literal there would be the same error the passage is about.
+naive_unknown_share = mentions["resolution"].eq("unknown").mean()
+stata_mentions_per_file = mentions_by_language.get("stata", 0) / max(
+    1, files[files["language"] == "stata"]["file_uid"].nunique()
+)
+r_mentions_per_file = mentions_by_language.get("r", 0) / max(
+    1, files[files["language"] == "r"]["file_uid"].nunique()
+)
+# The released index's own size, read from the index rather than typed, so the
+# paper cannot disagree with the artifact it cites.
+INDEX = "../registries/snapshots/ssc/stata_command_index.parquet"
+n_ssc_packages, n_ssc_commands = con.execute(
+    f"SELECT count(DISTINCT package), count(DISTINCT command) "
+    f"FROM '{INDEX}' WHERE NOT is_helper"
+).fetchone()
+stata_builtin_share = (
+    mentions[mentions["language"] == "stata"]["resolution"].eq("builtin").mean()
+)
 ```
 
 ## What this measures, and what it does not
@@ -140,8 +160,9 @@ Regex-based detection has no such guarantee, and the difference is measurable
 
 **Stata required building an artifact that did not exist.** R has CRAN and
 Python has PyPI, but Stata has no machine-readable registry. We reconstruct a
-command→package index from SSC distribution manifests — `{python} 3992` packages
-and `{python} 7468` commands — and release it. Without it, Stata is
+command→package index from SSC distribution manifests —
+`{python} f"{n_ssc_packages:,}"` packages and
+`{python} f"{n_ssc_commands:,}"` commands — and release it. Without it, Stata is
 unmeasurable, which is why prior work has omitted the language social science
 uses most.
 
@@ -163,10 +184,12 @@ That qualifier is doing real work, and the raw total is the wrong number to
 report. A *mention* is not the same object in every language: in R and Python
 it is an import statement, but in Stata it is a command occurrence, because a
 Stata script is a sequence of commands rather than a set of imports. Stata
-contributes about 135 mentions per file against R's 6, and
+contributes about `{python} f"{stata_mentions_per_file:.0f}"` mentions per
+file against R's `{python} f"{r_mentions_per_file:.0f}"`, and
 `{python} f"{mentions_by_language.get('stata', 0):,}"` of the
-`{python} f"{n_mentions:,}"` raw mentions are Stata, nine in ten of them calls
-to `generate`, `replace` and the like. Summed across languages that total
+`{python} f"{n_mentions:,}"` raw mentions are Stata,
+`{python} f"{stata_builtin_share:.0%}"` of them calls to `generate`,
+`replace` and the like. Summed across languages that total
 measures Stata's verbosity. Restricting to mentions that could name a
 third-party package -- dropping builtins, standard libraries and programs the
 deposit defines itself -- puts the languages back on comparable footing.
@@ -220,11 +243,13 @@ third-party-candidate mentions resolve to no registry, and every such name is
 enumerated rather than dropped.
 
 The denominator matters more than the rate. Against *all* mentions the same
-figure is 1.0%, which would be a flattering way to describe the identical data:
+figure is `{python} f"{naive_unknown_share:.1%}"`, which would be a
+flattering way to describe the identical data:
 it divides by 1.7 million Stata builtin calls that were never candidates for
 registry resolution and could not have been unresolved. We report the rate
-against mentions that could name a package, which is roughly twelve times
-larger and is the number a reader should use to discount our coverage.
+against mentions that could name a package, which is
+`{python} f"{unknown_share / naive_unknown_share:.0f}"` times larger and is the
+number a reader should use to discount our coverage.
 
 The rate also differs by language in a way a pooled figure hides, and the
 reasons differ with it. Stata's unresolved names are dominated by official

@@ -35,6 +35,8 @@ distribution manifests.
 
 **{n_mappings:,} mappings · {n_packages:,} packages · {n_commands:,} user commands · snapshot {snapshot}**
 
+Packages and commands are both counted excluding helper files (`is_helper`).
+
 ## Why this exists
 
 R has CRAN and Python has PyPI: given an import, you can look up the package. For
@@ -183,7 +185,12 @@ def main() -> int:
     )
 
     n_mappings = len(dict_rows)
-    n_packages = len({r["package"] for r in dict_rows})
+    # Both counts apply the same helper filter. They did not, which made the
+    # headline read "3,992 packages · 7,468 user commands" -- packages counted
+    # including 25 whose only contribution is internal subroutines, commands
+    # counted excluding them. Two filters in one sentence is the kind of
+    # inconsistency a reader is right to distrust the rest of the file over.
+    n_packages = len({r["package"] for r in dict_rows if not r["is_helper"]})
     n_commands = len({r["command"] for r in dict_rows if not r["is_helper"]})
     snapshot = max(str(r["snapshot_date"]) for r in dict_rows)
 

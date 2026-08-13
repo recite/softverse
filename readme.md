@@ -85,8 +85,8 @@ node — those bytes never form a call, so a walk over call nodes cannot see the
 
 **Stata needed an artifact that did not exist.** R has CRAN and Python has PyPI;
 Stata has no machine-readable registry. Softverse reconstructs a command→package
-index from SSC distribution manifests — 3,992 packages, 7,468 commands — and
-releases it. Without it Stata is unmeasurable, which is why it tends to be left
+index from SSC distribution manifests — 3,967 packages, 7,468 commands, both
+excluding internal helper files — and releases it. Without it Stata is unmeasurable, which is why it tends to be left
 out of work like this, despite being the language this corpus uses most.
 
 ## Design commitments
