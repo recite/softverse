@@ -1,244 +1,127 @@
-### Softverse: Auto-compute Citations to Software From Replication Files
+### Softverse: measuring software use in social science replication code
 
 [![CI](https://github.com/recite/softverse/actions/workflows/ci.yml/badge.svg)](https://github.com/recite/softverse/actions/workflows/ci.yml)
 [![PyPI version](https://img.shields.io/pypi/v/softverse.svg)](https://pypi.python.org/pypi/softverse)
 [![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://recite.github.io/softverse/)
 [![PePy Downloads](https://static.pepy.tech/badge/softverse)](https://www.pepy.tech/projects/softverse)
 
-We analyze replication files from 34 social science journals including the APSR, AJPS, JoP, BJPolS, Political Analysis, World Politics, Political Behavior, etc. posted to the Harvard Dataverse to tally the libraries used. This can be used as a way to calculate citation metrics for software.
+Which libraries does social science research actually run on? Softverse answers
+that by statically analyzing the code inside replication packages deposited to
+journal collections, across **R, Python and Stata**.
 
 see: https://gojiberries.io/2023/07/02/hard-problems-about-research-software/
 
-## Installation
+## What is measured
 
-### Prerequisites
-- Python 3.11 or higher
-- [uv](https://docs.astral.sh/uv/) package manager
+Precisely: **software referenced in deposited replication code.**
 
-### Install uv (if not already installed)
+> Among replication deposits in collection *J* containing at least one
+> analyzable script in language *L*, the share that statically reference
+> package *P*.
+
+Static reference is not runtime use — a deposit can load a package in a
+superseded script or a dead branch, and code kept out of the deposit is
+invisible. The distance between the two is the main limitation and is reported
+rather than glossed.
+
+The unit is the **deposit**, not the mention. A deposit calling `ggplot2` two
+hundred times is one user of `ggplot2`; a mention-weighted ranking would rank
+whichever deposits happen to be largest.
+
+Every count carries its denominator. "273 deposits use `estout`" is reported as
+**273/469** — of the deposits containing analyzable Stata, not of all deposits.
+
+## Sampling frame
+
+The inclusion rule is not ours to invent. We use the journal list maintained by
+the [Social Science Data Editors](https://github.com/social-science-data-editors/DCAS)
+— journals whose data-and-code policy the editors *actively verify* — mapped to
+the repositories that actually hold the material.
+
+`data/frame/frame.csv` is deliberately small and readable: someone who knows
+these journals should be able to read all of it and say one is misplaced.
+Journals we could not locate are rows in that file, not omissions.
+
+## Quick start
+
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-### Install Softverse
-```bash
-uv pip install softverse
-```
-
-### Development Setup
-```bash
-git clone https://github.com/recite/softverse.git
-cd softverse
 uv sync --all-extras
+
+# Build registry snapshots (CRAN, CRAN Archive, Bioconductor, PyPI, Julia)
+uv run python -c "from softverse.registries.fetch import fetch_all; from pathlib import Path; fetch_all(Path('registries/snapshots'))"
+
+# Collect. Incremental by default: only deposits never successfully fetched.
+uv run python scripts_collect_zenodo.py
+uv run python scripts_collect_zenodo.py --fresh   # full re-scrape
+
+# Tally. Safe to run mid-collection; it describes whatever is on disk.
+uv run python scripts_build_tally.py
 ```
 
-## Usage
+Outputs land in `build/tally/`:
 
-### Quick Start
+| file | contents |
+|---|---|
+| `usage_by_package.csv` | the tally: package → deposits, files, mentions, share |
+| `usage_by_package_year.csv` | the same over time |
+| `language_presence.csv` | deposits containing each language |
+| `unknown_names.csv` | detected names resolving to no registry |
+| `mentions.parquet` | every mention, with line, column and snippet |
+| `files.parquet` | the provenance spine |
 
-Run the complete data collection and analysis pipeline:
+## How detection works
 
-```bash
-uv run run-pipeline
+| language | mechanism |
+|---|---|
+| R | `tree-sitter` syntax walk |
+| Python | stdlib `ast`, with a `tokenize` fallback for Python 2 |
+| Stata | purpose-built lexer + an SSC command→package index |
+| `.Rmd` / `.qmd` / `.Rnw` | knitr chunk splitter, routed per engine |
+| `.ipynb` | per cell, kernel language read from metadata |
+
+**Strings and comments are excluded structurally, not by pre-stripping.** In a
+syntax tree, `cat("run library(dplyr)")` is a call whose argument is a string
+node — those bytes never form a call, so a walk over call nodes cannot see them.
+
+**Stata needed an artifact that did not exist.** R has CRAN and Python has PyPI;
+Stata has no machine-readable registry. Softverse reconstructs a command→package
+index from SSC distribution manifests — 3,992 packages, 7,468 commands — and
+releases it. Without it Stata is unmeasurable, which is why it tends to be left
+out of work like this, despite being the language this corpus uses most.
+
+## Design commitments
+
+These exist because the previous version of this project got each one wrong, in
+ways that silently invalidated its published numbers.
+
+- **Join keys are never null.** Enforced at the write boundary, not merely
+  declared: pyarrow treats `nullable=False` as documentation.
+- **Every stage reconciles.** `files_total == analyzed + vendored + duplicate +
+  skipped + unparseable`, asserted in code.
+- **"No packages here" is never the same value as "could not read this."**
+  Parse status is recorded per file.
+- **Provenance on every row.** Extractor version, grammar version, registry lock,
+  plus source line and snippet, so any published number traces back to text.
+- **Registries are pinned**, so resolution does not depend on when it ran.
+- **Coverage gaps are rows, not silences.** Skipped archives and unlocated
+  journals are recorded with their sizes and reasons.
+
+## Repository layout
+
+```
+softverse/
+  frame.py          the sampling frame, verified
+  sources/          zenodo, osf, dataverse, dataverse_oai
+  acquire/          http (rate limits, retries), state (ledger), unpack
+  detect/           r, python_, stata, notebooks, dispatch
+  registries/       snapshot fetch + resolution
+  stata/            command index, builtins, lexer
+  corpus/           vendored-library and duplicate rules
+  build/            pipeline and aggregation
+paper/              manuscript (Quarto) + validate_bib.py
+data/frame/         the frame, human-readable
 ```
 
-### Individual Components
-
-#### 1. Collect Datasets from Dataverse
-```bash
-# Collect datasets using configuration file
-uv run collect-datasets --config config/settings.yaml --output-dir outputs/data/datasets/
-
-# Force refresh to re-download all datasets
-uv run collect-datasets --force-refresh --output-dir outputs/data/datasets/
-
-# Use custom CSV input file with dataverse information
-uv run collect-datasets --input-csv data/dataverse_socialscience.csv --output-dir outputs/data/datasets/
-```
-
-#### 2. Collect Scripts and Code Files
-```bash
-# Collect scripts from all sources (Dataverse, Zenodo, ICPSR)
-uv run collect-scripts --source all --base-output-dir outputs/scripts/
-
-# Collect only from Dataverse
-uv run collect-scripts --source dataverse --datasets-dir outputs/data/datasets/ --base-output-dir outputs/scripts/
-
-# Collect from Zenodo with specific communities
-uv run collect-scripts --source zenodo --zenodo-communities harvard-dataverse --max-zenodo-records 1000
-
-# Collect from ICPSR with query
-uv run collect-scripts --source icpsr --icpsr-query "political science" --max-icpsr-studies 500
-```
-
-#### 3. Analyze Software Imports
-```bash
-# Analyze imports from collected scripts
-uv run analyze-imports --scripts-dir outputs/scripts/ --output-dir outputs/analysis/
-
-# Specify script patterns to analyze
-uv run analyze-imports --scripts-dir outputs/scripts/ --output-dir outputs/analysis/ --config config/settings.yaml
-```
-
-#### 4. Collect from OSF (Open Science Framework)
-```bash
-# Note: OSF collector is available via Python API (see below)
-from softverse.collectors import OSFCollector
-```
-
-#### 5. Collect from ResearchBox
-```bash
-# Note: ResearchBox collector is available via Python API (see below)
-from softverse.collectors import ResearchBoxCollector
-```
-
-### Configuration
-
-#### API Keys and Authentication
-
-API keys can be configured in two ways:
-
-1. **Environment Variables** (Recommended for security):
-```bash
-export DATAVERSE_API_KEY="your-dataverse-api-key"
-export OSF_API_TOKEN="your-osf-personal-access-token"
-export ZENODO_ACCESS_TOKEN="your-zenodo-access-token"
-export ICPSR_USERNAME="your-icpsr-username"
-export ICPSR_PASSWORD="your-icpsr-password"
-```
-
-2. **Configuration File** (`config/settings.yaml`):
-```yaml
-dataverse:
-  base_url: "https://dataverse.harvard.edu"
-  api_key: "your-api-key-here"  # Optional, for authenticated requests
-  input_csv: "data/dataverse_socialscience.csv"
-
-osf:
-  api_token: "your-osf-token-here"  # Optional, for authenticated requests
-  rate_limit_delay: 0.5
-
-zenodo:
-  access_token: "your-zenodo-token"  # Optional, for authenticated requests
-  communities: ["harvard-dataverse"]
-
-icpsr:
-  username: "your-username"
-  password: "your-password"
-
-researchbox:
-  base_url: "https://researchbox.org"
-  concurrent_downloads: 5
-
-# Output directories
-output:
-  datasets_dir: "outputs/data/datasets"
-  scripts_dir: "outputs/scripts"
-  analysis_dir: "outputs/analysis"
-  logs_dir: "outputs/logs"
-```
-
-**Note:** Environment variables take precedence over configuration file values for sensitive data like API keys.
-
-### Python API
-
-```python
-from pathlib import Path
-from softverse.collectors import (
-    DataverseCollector,
-    OSFCollector,
-    ResearchBoxCollector,
-    ZenodoCollector
-)
-from softverse.analyzers import ImportAnalyzer
-
-# Initialize collectors
-dataverse = DataverseCollector()
-osf = OSFCollector()
-researchbox = ResearchBoxCollector()
-
-# Collect datasets from Harvard Dataverse
-datasets = dataverse.collect_from_dataverse_csv(
-    csv_path="data/dataverse_socialscience.csv",
-    output_dir=Path("outputs/datasets")
-)
-
-# Search and collect from OSF
-osf_results = osf.search_nodes("reproducibility")
-osf.collect_nodes(
-    node_ids=[node["id"] for node in osf_results[:10]],
-    output_dir=Path("outputs/osf"),
-    download_files=True
-)
-
-# Collect from ResearchBox
-researchbox.collect_range(
-    start_id=1,
-    end_id=100,
-    output_dir=Path("outputs/researchbox"),
-    extract=True
-)
-
-# Analyze R package imports
-analyzer = ImportAnalyzer()
-results = analyzer.analyze_directory(
-    directory=Path("outputs/scripts"),
-    output_dir=Path("outputs/analysis")
-)
-
-# Get summary statistics
-summary = analyzer.generate_summary_statistics(results)
-print(f"Total scripts analyzed: {summary['total_files']}")
-print(f"Top R packages: {summary['top_r_packages'][:10]}")
-print(f"Top Python packages: {summary['top_python_packages'][:10]}")
-```
-
-### Scripts
-
-1. [Datasets by Dataverse](scripts/01_get_datasets_for_dataverses.ipynb) produces [list of datasets by dataverse (.gz)](data/datasets_by_dataverse.tar.gz)
-
-2. [List And Download All (R) Scripts Per Dataset](scripts/02_get_scripts_per_dataset.ipynb) takes the files from step #1 and produces [list of files per dataset (.gz)](data/02_get_scripts_per_dataset.ipynb) and downloads those scripts (dump [here](data/script_files.tar.gz))
-
-3. [Regex the files to tally imports](scripts/03_tally_imports.ipynb) takes the output from step #2 and produces [imports per file](data/file_imports.csv) and [imports per package](data/imports_per_package.csv) (if there are multiple imports per repository, we only count it once). A snippet of that last file can be seen below.
-
-p.s. Deprecated R Files [here](scripts/r/)
-
-#### Top R Package Imports
-
-| package       | count |
-|---------------|-------|
-| ggplot2       | 1322  |
-| foreign       | 1009  |
-| stargazer     | 901   |
-| dplyr         | 789   |
-| tidyverse     | 720   |
-| xtable        | 608   |
-| plyr          | 485   |
-| lmtest        | 451   |
-| MASS          | 442   |
-| gridExtra     | 420   |
-| sandwich      | 394   |
-| haven         | 356   |
-| car           | 342   |
-| readstata13   | 339   |
-| reshape2      | 324   |
-| stringr       | 318   |
-| texreg        | 273   |
-| data.table    | 263   |
-| scales        | 257   |
-| tidyr         | 253   |
-| grid          | 247   |
-| lme4          | 241   |
-| Hmisc         | 236   |
-| lubridate     | 223   |
-| readxl        | 218   |
-| broom         | 195   |
-| lfe           | 190   |
-| RColorBrewer  | 188   |
-| ggpubr        | 188   |
-| estimatr      | 174   |
-
-
-### Authors
+## Authors
 
 Gaurav Sood and Daniel Weitzel
