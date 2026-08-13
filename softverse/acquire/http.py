@@ -32,6 +32,7 @@ from __future__ import annotations
 import random
 import threading
 from dataclasses import dataclass
+from pathlib import Path
 
 import httpx
 import stamina
@@ -44,6 +45,11 @@ logger = get_logger(__name__)
 #: Statuses worth repeating. 404 (gone) and 403 (not yours) are answers, not
 #: failures -- v1 retried 404s and burned 310 s per permanently forbidden file.
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+
+#: Streaming chunk size. Large enough that per-chunk overhead is irrelevant on
+#: a multi-gigabyte archive, small enough that an over-cap transfer is aborted
+#: after a megabyte rather than after the whole file.
+DOWNLOAD_CHUNK_BYTES = 1024 * 1024
 
 #: A 2xx with an empty body is never a real answer from these APIs.
 _EMPTY_IS_THROTTLE = frozenset({200, 202})
@@ -261,6 +267,123 @@ class PoliteClient:
         except Throttled:
             return last
         except httpx.HTTPError as exc:
+            return FetchOutcome(
+                ok=False, error=f"{type(exc).__name__}: {exc}", retryable=True
+            )
+        return last
+
+    def download(
+        self,
+        url: str,
+        destination: Path,
+        cap_bytes: int | None = None,
+        **kwargs,
+    ) -> FetchOutcome:
+        """Stream ``url`` to ``destination``, resuming a partial file if present.
+
+        :meth:`get` buffers the whole body in memory and discards it on any
+        error. For a multi-gigabyte archive over a flaky link that is the worst
+        of both: peak memory equal to the file size, and a three-hour transfer
+        thrown away by a timeout in its final minute. Measured on this corpus,
+        every large Zenodo archive failed that way -- `ReadTimeout`,
+        `Connection reset by peer` -- each recording `bytes_fetched: 0`.
+
+        So bytes go straight to ``destination.part`` as they arrive, and a
+        retry sends ``Range: bytes=<already have>-`` to continue rather than
+        restart. The part file is kept on failure, which is the whole point:
+        the next run resumes instead of re-downloading.
+
+        Two server behaviours have to be handled, because getting either wrong
+        corrupts the file silently rather than loudly:
+
+        - A server that ignores ``Range`` answers **200** with the whole body
+          rather than **206** with the tail. Appending that to what we already
+          have would splice a duplicate prefix into the middle of the archive,
+          producing a corrupt file that still has a plausible size. On 200 we
+          truncate and start over.
+        - A **416** means we already hold at least the whole file, which is
+          success, not an error.
+
+        ``cap_bytes`` aborts a transfer that exceeds the cap *while streaming*,
+        so an archive far over the limit costs one chunk rather than a full
+        download. The part file is removed in that case; it is not coming back.
+        """
+        part = destination.with_suffix(destination.suffix + ".part")
+        last = FetchOutcome(ok=False, error="no attempt made")
+
+        try:
+            for attempt in stamina.retry_context(
+                on=(httpx.HTTPError, Throttled),
+                attempts=self.max_retries + 1,
+                wait_initial=2.0,
+                wait_max=120.0,
+                wait_jitter=5.0,
+            ):
+                with attempt:
+                    self.limiter.acquire()
+                    have = part.stat().st_size if part.exists() else 0
+                    headers = dict(kwargs.pop("headers", {}) or {})
+                    if have:
+                        headers["Range"] = f"bytes={have}-"
+
+                    with self._client.stream(
+                        "GET", url, headers=headers, **kwargs
+                    ) as response:
+                        if response.status_code == 416 and have:
+                            # Already have the whole thing.
+                            part.replace(destination)
+                            return FetchOutcome(ok=True, status=206)
+
+                        if response.status_code in RETRY_STATUSES:
+                            if response.status_code == 429:
+                                self.limiter.penalize("HTTP 429")
+                            last = FetchOutcome(
+                                ok=False,
+                                status=response.status_code,
+                                error=f"HTTP {response.status_code}",
+                                retryable=True,
+                            )
+                            raise Throttled(last.error)
+
+                        if response.status_code not in {200, 206}:
+                            return FetchOutcome(
+                                ok=False,
+                                status=response.status_code,
+                                error=f"HTTP {response.status_code}",
+                                retryable=False,
+                            )
+
+                        # The server ignored Range and is resending everything.
+                        # Appending would corrupt the file at a size that still
+                        # looks right, so discard what we have.
+                        resuming = response.status_code == 206 and have > 0
+                        if not resuming:
+                            have = 0
+
+                        written = have
+                        part.parent.mkdir(parents=True, exist_ok=True)
+                        with part.open("ab" if resuming else "wb") as handle:
+                            for chunk in response.iter_bytes(DOWNLOAD_CHUNK_BYTES):
+                                handle.write(chunk)
+                                written += len(chunk)
+                                if cap_bytes is not None and written > cap_bytes:
+                                    handle.close()
+                                    part.unlink(missing_ok=True)
+                                    return FetchOutcome(
+                                        ok=False,
+                                        status=response.status_code,
+                                        error=(f"exceeds cap: {written} > {cap_bytes}"),
+                                        retryable=False,
+                                    )
+
+                        self._observe_rate_headers(response)
+                        part.replace(destination)
+                        return FetchOutcome(ok=True, status=response.status_code)
+        except Throttled:
+            return last
+        except httpx.HTTPError as exc:
+            # Deliberately leaves the part file behind so the next attempt
+            # resumes. This is the failure mode the method exists for.
             return FetchOutcome(
                 ok=False, error=f"{type(exc).__name__}: {exc}", retryable=True
             )

@@ -42,9 +42,17 @@ from softverse.config import PATHS
 from softverse.logging_setup import get_logger, setup_logging
 from softverse.model.io import write_table
 from softverse.registries.resolve import Registry
-from softverse.stata.builtins import curated
+from softverse.stata.builtins import builtins
 
 logger = get_logger(__name__)
+
+#: Commands checked one by one against StataCorp's help server. Widens the
+#: curated builtin list by 165 official commands that were otherwise reported
+#: as resolving to no registry. Built by scripts_verify_stata_official.py; the
+#: tally falls back to the curated list alone if it is absent.
+OFFICIAL_SNAPSHOT = (
+    PATHS.root / "registries" / "snapshots" / "stata_official" / "official.json"
+)
 OUT = PATHS.root / "build" / "tally"
 
 
@@ -74,7 +82,7 @@ def load_registry() -> tuple[Registry, frozenset[str]]:
             pypi=names("pypi"),
             julia=names("julia_general"),
             stata_commands={k: tuple(v) for k, v in commands.items()},
-            stata_builtins=curated().forms,
+            stata_builtins=builtins(verified_snapshot=OFFICIAL_SNAPSHOT).forms,
             lock_id=json.load(open("registries/registries.lock.json")).get("cran", "")[
                 :12
             ],

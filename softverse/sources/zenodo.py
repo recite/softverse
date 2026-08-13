@@ -322,18 +322,37 @@ def collect_record(
             )
             continue
 
-        outcome = client.get(item.link, expect_content=False)
-        if not outcome.ok or outcome.content is None:
-            state.n_failed += 1
-            state.error = outcome.error
-            continue
-
-        content = outcome.content
-        state.bytes_fetched += len(content)
-
         if item.is_archive:
+            # Stream, and resume if a previous attempt died partway.
+            #
+            # Buffering these in memory and starting over on any error is what
+            # made the large-archive tail uncollectable: every multi-gigabyte
+            # download over this link ended in a ReadTimeout or a reset peer
+            # after one to three hours, each recording bytes_fetched: 0. The
+            # cap is passed down as well, so an archive whose metadata
+            # understates its size is abandoned after a chunk instead of after
+            # the whole transfer.
             archive_path = target / "_archives" / item.key
-            atomic_write_bytes(archive_path, content)
+            outcome = client.download(item.link, archive_path, cap_bytes=archive_cap)
+            if not outcome.ok:
+                if "exceeds cap" in (outcome.error or ""):
+                    # Metadata lied about the size. This is a coverage gap, not
+                    # a transport failure, and belongs in the same statistic as
+                    # the archives skipped before download.
+                    state.n_skipped_over_cap += 1
+                    state.skipped_archives.append(
+                        {
+                            "filename": item.key,
+                            "size_bytes": item.size,
+                            "file_id": None,
+                        }
+                    )
+                else:
+                    state.n_failed += 1
+                    state.error = outcome.error
+                continue
+
+            state.bytes_fetched += archive_path.stat().st_size
             unpack_root = target / "_archives" / f"{item.key}_extracted"
             result = extract(
                 archive_path,
@@ -393,6 +412,18 @@ def collect_record(
                 )
             state.n_fetched += 1
             continue
+
+        # Loose files are scripts and manifests -- kilobytes, not gigabytes --
+        # and the md5 check wants the bytes in hand anyway, so these keep the
+        # buffered path.
+        outcome = client.get(item.link, expect_content=False)
+        if not outcome.ok or outcome.content is None:
+            state.n_failed += 1
+            state.error = outcome.error
+            continue
+
+        content = outcome.content
+        state.bytes_fetched += len(content)
 
         path = target / item.key
         atomic_write_bytes(path, content)

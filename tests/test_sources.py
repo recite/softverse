@@ -15,6 +15,23 @@ from softverse.acquire.http import PoliteClient, RateLimiter, read_rate_headers
 from softverse.acquire.state import Ledger
 from softverse.sources import osf, zenodo
 
+
+def serving(body: bytes) -> PoliteClient:
+    """A client whose every request returns ``body``.
+
+    Wired at the transport rather than by patching ``get``, because archives
+    are streamed through ``stream()`` and loose files are fetched through
+    ``get()``. Patching one method would leave the other talking to the real
+    network, and a test that silently exercises the wrong path is worse than
+    no test.
+    """
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
+    client._client = httpx.Client(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, content=body))
+    )
+    return client
+
+
 # -- rate headers ---------------------------------------------------------
 
 
@@ -297,14 +314,7 @@ def test_extraction_failure_marks_the_deposit_retryable(tmp_path, monkeypatch):
             ],
         }
     )
-    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
-    monkeypatch.setattr(
-        client._client,
-        "get",
-        lambda url, **kw: httpx.Response(
-            200, content=b"not a real zip", request=httpx.Request("GET", url)
-        ),
-    )
+    client = serving(b"not a real zip")
     state, _rows = zenodo.collect_record(client, record, tmp_path)
     assert state.n_failed == 1
     assert state.state == "partial", "must be retryable, not complete"
@@ -346,14 +356,7 @@ def test_archive_is_removed_after_successful_extraction(tmp_path, monkeypatch):
             ],
         }
     )
-    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
-    monkeypatch.setattr(
-        client._client,
-        "get",
-        lambda url, **kw: httpx.Response(
-            200, content=buf.getvalue(), request=httpx.Request("GET", url)
-        ),
-    )
+    client = serving(buf.getvalue())
     state, rows = zenodo.collect_record(client, record, tmp_path)
     assert state.state == "complete"
     assert any(r["filename"] == "analysis.R" for r in rows), "code must survive"
@@ -385,14 +388,7 @@ def test_a_failed_archive_is_kept_for_diagnosis(tmp_path, monkeypatch):
             ],
         }
     )
-    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
-    monkeypatch.setattr(
-        client._client,
-        "get",
-        lambda url, **kw: httpx.Response(
-            200, content=b"not a zip", request=httpx.Request("GET", url)
-        ),
-    )
+    client = serving(b"not a zip")
     state, _ = zenodo.collect_record(client, record, tmp_path)
     assert state.needs_retry
     assert (tmp_path / "8" / "_archives" / "pkg.zip").exists()

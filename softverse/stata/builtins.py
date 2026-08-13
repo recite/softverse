@@ -424,8 +424,66 @@ def load_official(path: Path) -> BuiltinSet:
     )
 
 
-def builtins(official_export: Path | None = None) -> BuiltinSet:
-    """The builtin set to use: authoritative if available, curated otherwise."""
+def load_verified(path: Path) -> BuiltinSet:
+    """Load names checked one by one against StataCorp's help server.
+
+    Written by :mod:`softverse.stata.official`. This is the same question
+    ``load_official`` answers from a Stata installation, asked of a public
+    server instead, so it needs no licence -- and unlike the curated list it is
+    a measurement rather than a recollection.
+
+    Exact names only: the help server confirms that ``summarize`` exists but
+    does not say that ``su`` is a legal abbreviation of it, and inventing
+    abbreviations would be exactly the guessing this replaces. Abbreviations
+    keep coming from the curated list, which documents its minimums.
+    """
+    payload = json.loads(Path(path).read_text())
+    commands = {name for name, ok in payload["commands"].items() if ok}
+    logger.info(
+        "loaded verified Stata command list",
+        extra={
+            "n_official": len(commands),
+            "n_checked": len(payload["commands"]),
+            "snapshot": payload.get("snapshot_date"),
+        },
+    )
+    return BuiltinSet(
+        frozenset(commands),
+        frozenset(commands),
+        source=f"stata.com-help-{payload.get('snapshot_date', 'unknown')}",
+    )
+
+
+def merge(*sets: BuiltinSet) -> BuiltinSet:
+    """Union several builtin sets, keeping every source in the provenance.
+
+    Union rather than precedence because the sources answer the same question
+    with different coverage: the curated list carries abbreviations the help
+    server cannot confirm, and the help server carries hundreds of commands
+    nobody thought to curate. Taking one over the other discards real
+    information either way.
+    """
+    return BuiltinSet(
+        frozenset().union(*(s.forms for s in sets)),
+        frozenset().union(*(s.canonical for s in sets)),
+        source="+".join(s.source for s in sets),
+    )
+
+
+def builtins(
+    official_export: Path | None = None,
+    verified_snapshot: Path | None = None,
+) -> BuiltinSet:
+    """The builtin set to use, widest available.
+
+    A Stata installation's own listing is authoritative and wins outright.
+    Otherwise the curated list is widened by whatever the help server
+    confirmed, which on this corpus adds 165 commands that were previously
+    reported as unresolved -- `ds`, `pca`, `bsample`, `testparm` and the like,
+    official commands that simply were not in anyone's curated list.
+    """
     if official_export is not None and Path(official_export).exists():
         return load_official(official_export)
+    if verified_snapshot is not None and Path(verified_snapshot).exists():
+        return merge(curated(), load_verified(verified_snapshot))
     return curated()

@@ -93,7 +93,9 @@ def main() -> int:
             collisions,
         ).fetchall()
         for name, package, deposits in rows:
-            print(f"  {name:<18} -> {package:<18} {deposits:>4} deposits")
+            # `ambiguous` rows carry no single package, so this is None rather
+            # than a string.
+            print(f"  {name:<18} -> {package or '(ambiguous)':<18} {deposits:>4} dep")
 
     print(f"\n== recall: {len(recoverable)} unresolved names are official Stata ==")
     for name in recoverable[:30]:

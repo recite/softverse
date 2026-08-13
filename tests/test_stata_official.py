@@ -24,7 +24,7 @@ from softverse.stata.official import (
 #: Trimmed from the real responses. Both arrive as HTTP 200 with the same
 #: title, which is the whole reason the body has to be inspected.
 REAL_PAGE = b"""<html><head><title>StataNow 19 help for ds</title></head>
-<body><h2>Title</h2><p>ds -- Compactly list variables with specified properties</p>
+<body><h2>Title</h2><p><b>[D] ds</b> -- Compactly list variables with properties</p>
 <pre>ds [varlist] [, options]</pre></body></html>"""
 
 STUB_PAGE = b"""<html><head><title>StataNow 19 help for notarealcmd</title></head>
@@ -191,3 +191,95 @@ def test_stub_detection_survives_name_substitution(name):
     """The stub echoes the queried name, so the pattern must not hardcode one."""
     client = FakeClient({})
     assert is_official(client, name) is False
+
+
+def test_verified_snapshot_widens_the_curated_builtin_list(tmp_path):
+    """The payoff: commands nobody curated stop being reported as unresolved.
+
+    `ds` is an official Stata command absent from the curated list, so it
+    resolved to `unknown` in 77 deposits and inflated the coverage statistic
+    the paper reports.
+    """
+    from softverse.stata.builtins import builtins, curated
+
+    assert "ds" not in curated(), "fixture is stale; pick a command still missing"
+
+    path = tmp_path / "official.json"
+    client = FakeClient({"ds": REAL_PAGE, "pca": REAL_PAGE})
+    verify({"ds", "pca", "reghdfe"}, path, client=client)
+
+    widened = builtins(verified_snapshot=path)
+    assert "ds" in widened
+    assert "pca" in widened
+    assert "reghdfe" not in widened, "an SSC package must never become a builtin"
+    assert "regress" in widened, "curated entries must survive the merge"
+    assert "su" in widened, "curated abbreviations must survive the merge"
+
+
+def test_verified_snapshot_is_ignored_when_absent(tmp_path):
+    from softverse.stata.builtins import builtins, curated
+
+    assert builtins(verified_snapshot=tmp_path / "nope.json").forms == curated().forms
+
+
+#: The real shapes: a command reference, a User's Guide concept, a function.
+COMMAND_PAGE = b"""<html><title>StataNow 19 help for ds</title><body>
+<h2>Title</h2><p><b>[D] ds</b> -- Compactly list variables</p></body></html>"""
+
+SYSTEM_VARIABLE_PAGE = b"""<html><title>StataNow 19 help for n</title><body>
+<h2>Title</h2><p><b>[U] 13.4 System variables (_variables)</b></p>
+<p>Expressions may also contain _variables.</p></body></html>"""
+
+FUNCTION_PAGE = b"""<html><title>StataNow 19 help for e</title><body>
+<p><b>[FN] Programming functions</b></p><p>e(name)</p></body></html>"""
+
+
+def test_documented_is_not_the_same_as_being_a_command():
+    """The bug this guard exists for.
+
+    help.cgi answers for anything in the manuals. `n` and `b` return the
+    User's Guide page for system variables `_n` and `_b`; `e` returns the
+    programming-functions page. Treating "a page exists" as "a command
+    exists" made all three official, and `n` alone is 750 corpus mentions.
+    """
+    client = FakeClient(
+        {"ds": COMMAND_PAGE, "n": SYSTEM_VARIABLE_PAGE, "e": FUNCTION_PAGE}
+    )
+    assert is_official(client, "ds") is True
+    assert is_official(client, "n") is False, "[U] documents concepts, not commands"
+    assert is_official(client, "e") is False, "[FN] documents functions"
+
+
+def test_a_page_with_no_manual_reference_is_not_a_command():
+    client = FakeClient({"x": b"<html><body><p>Some prose.</p></body></html>"})
+    assert is_official(client, "x") is False
+
+
+@pytest.mark.parametrize(
+    "manual,expected",
+    [
+        ("R", True),
+        ("D", True),
+        ("MV", True),
+        ("P", True),
+        ("TS", True),
+        ("U", False),
+        ("FN", False),
+    ],
+)
+def test_command_manuals_are_accepted_and_concept_manuals_are_not(manual, expected):
+    page = f"<html><body><p><b>[{manual}] thing</b> -- desc</p></body></html>"
+    client = FakeClient({"thing": page.encode()})
+    assert is_official(client, "thing") is expected
+
+
+def test_abbreviations_resolving_to_their_full_entry_still_count():
+    """`l` is a legal abbreviation of `list`; its page is titled `[D] list`.
+
+    Requiring the title to echo the queried name would reject every
+    abbreviation, so the check is on the manual, not on the name.
+    """
+    page = (
+        b"<html><body><p><b>[D] list</b> -- List values of variables</p></body></html>"
+    )
+    assert is_official(FakeClient({"l": page}), "l") is True

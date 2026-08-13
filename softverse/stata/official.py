@@ -54,6 +54,27 @@ CHECKPOINT_EVERY = 25
 #: different -- see the module docstring.
 _NOT_FOUND = re.compile(r"help for\s+\S+\s+not found", re.I)
 
+#: Stata help pages open with the manual they come from: `[R] regress`,
+#: `[D] list`, `[MV] pca`. The bracketed code says what *kind* of thing is
+#: documented, which matters because the server answers for anything in the
+#: manuals, not only for commands.
+_MANUAL = re.compile(r"\[([A-Z][A-Z0-9-]*)\]\s")
+
+#: Manuals that document concepts and functions rather than commands.
+#:
+#: Without this the oracle reports `n`, `b` and `e` as official commands: the
+#: first two resolve to "[U] 13.4 System variables (_variables)" -- the help
+#: for `_n` and `_b`, which are system variables -- and `e` to "[FN]
+#: Programming functions", the help for `e()`. `n` alone accounts for 750
+#: corpus mentions, so treating it as a command both deflates the unresolved
+#: rate on a false basis and, where a package ships a same-named command,
+#: quietly outvotes it.
+#:
+#: Only these two are excluded, and deliberately: every other manual (`[R]`,
+#: `[D]`, `[P]`, `[MV]`, `[TS]`, ...) documents commands, and excluding one on
+#: suspicion would cost real recall.
+NOT_COMMAND_MANUALS = frozenset({"U", "FN"})
+
 #: Names that cannot be asked about safely. A query string is not a command,
 #: and sending these would either error or match something unrelated.
 _UNASKABLE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.]*$")
@@ -80,7 +101,14 @@ class OfficialSnapshot:
 
 
 def is_official(client: PoliteClient, name: str) -> bool | None:
-    """True if StataCorp serves a help page for ``name``.
+    """True if StataCorp documents ``name`` as a *command*.
+
+    Two things have to be true, and checking only the first is the mistake
+    this function used to make. The name must be documented at all -- a
+    missing name gets the "not found" stub -- and the manual it is documented
+    in must be one that describes commands. The help server answers for system
+    variables and functions too, so "the page exists" alone reports `n`, `b`
+    and `e` as commands.
 
     Returns ``None`` when the question could not be answered -- a network
     failure or an unaskable name -- so that "we do not know" stays distinct
@@ -93,7 +121,20 @@ def is_official(client: PoliteClient, name: str) -> bool | None:
     if not outcome.ok or outcome.content is None:
         return None
     body = outcome.content.decode("utf-8", errors="replace")
-    return not _NOT_FOUND.search(body)
+    if _NOT_FOUND.search(body):
+        return False
+    manual = manual_of(body)
+    # A page with no manual reference at all is not a command reference. Under
+    # inclusive resolution the cost of being wrong here is recall, not
+    # precision: the name falls through to the SSC index unchanged.
+    return manual is not None and manual not in NOT_COMMAND_MANUALS
+
+
+def manual_of(body: str) -> str | None:
+    """The manual code a help page comes from -- `R`, `D`, `MV` -- or None."""
+    text = re.sub(r"<[^>]*>", "\n", body)
+    match = _MANUAL.search(text)
+    return match.group(1) if match else None
 
 
 def _write(path: Path, checked: dict[str, bool]) -> None:
