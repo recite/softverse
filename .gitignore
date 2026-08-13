@@ -98,3 +98,4 @@ monitor_collection.py
 /registries/snapshots/
 /outputs/
 /corpus/
+!/build/release/
