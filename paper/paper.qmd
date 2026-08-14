@@ -421,6 +421,15 @@ references — across R, Python and Stata rather than R alone.
 located = frame[frame["collection_id"].notna() & (frame["collection_id"] != "")]
 zen = located[located["source"] == "zenodo"]
 unlocated = frame[frame["notes"].fillna("").str.startswith("unlocated")]
+
+# The Dataverse half of the frame, enumerated collection by collection rather
+# than declared: one request returns a journal's whole dataset list, so these
+# are counted deposits and not an estimate.
+_dv_path = Path("../data/frame/dataverse_deposits.csv")
+dv = pd.read_csv(_dv_path) if _dv_path.exists() else pd.DataFrame()
+n_dv_deposits = len(dv)
+n_dv_collections = dv["collection_id"].nunique() if len(dv) else 0
+n_frame_total = int(zen["n_records_declared"].sum()) + n_dv_deposits
 ```
 
 The inclusion rule is not ours. We take the journal list maintained by the
@@ -429,8 +438,31 @@ journals whose data-and-code policy the editors *actively verify*. That is a
 criterion a reader can check, and it avoids the trap of a frame assembled from
 whatever a keyword search happened to return.
 
-`{python} len(zen)` verified collections cover
-`{python} int(zen['n_records_declared'].sum())` deposits.
+The frame spans two repositories, which is not a convenience: they hold
+different disciplines. Zenodo's verified collections are economics;
+Harvard Dataverse's journal collections are mostly political science, and a
+study of only one would describe a field while claiming to describe social
+science.
+
+| repository | collections | deposits |
+|---|---:|---:|
+| Zenodo | `{python} len(zen)` | `{python} f"{int(zen['n_records_declared'].sum()):,}"` |
+| Harvard Dataverse | `{python} f"{n_dv_collections}"` | `{python} f"{n_dv_deposits:,}"` |
+| **total** | | **`{python} f"{n_frame_total:,}"`** |
+
+The Dataverse figure is enumerated rather than declared. One request returns
+a journal collection's entire dataset list, so these are deposits we counted,
+not an estimate we were given — and where a collection was too large for that
+single listing, it was paged instead.
+
+Two things the enumeration found are worth recording, because a frame that
+only reports its successes is not a frame. One journal collection present in
+a 2024 snapshot, `regionalstatistics`, no longer exists: Harvard answers
+"Can't find dataverse with identifier". And six collections returned nothing
+on one pass, of which five succeeded minutes later — transient, and
+distinguished from the one that is genuinely gone, because retrying the first
+kind works and retrying the second never will.
+
 `{python} len(unlocated)` DCAS journals are recorded as **unlocated** rather
 than omitted: eight AEA titles live on openICPSR, and two we could not place.
 A coverage gap belongs in the frame as a row, not in a silence.
