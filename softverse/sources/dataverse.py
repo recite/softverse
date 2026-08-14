@@ -158,6 +158,37 @@ def walk_collection(
 #: cheap for the server, which is the point of using search at all.
 SEARCH_PAGE_SIZE = 100
 
+#: How Dataverse says a collection is not there. Two spellings, because
+#: `/api/dataverses/{alias}` and `/api/search?subtree=` word it differently.
+_MISSING = (
+    "find dataverse with identifier",
+    "find dataverse with alias",
+)
+
+
+def collection_missing(outcome) -> bool:
+    """Whether the response says this collection does not exist.
+
+    Worth separating from a failure, because the two want opposite
+    responses: a transient error should be retried and a deleted collection
+    never will succeed. `regionalstatistics` held 23 deposits in the 2024
+    scrape and Harvard now answers "Can't find dataverse with identifier",
+    while five other collections that failed in the same run recovered on a
+    retry minutes later. Counting them together would overstate the coverage
+    gap and hide the one fact that is actually about the frame: a journal
+    collection has gone.
+    """
+    if not outcome.ok or not outcome.content:
+        return False
+    try:
+        payload = json.loads(outcome.content)
+    except json.JSONDecodeError:
+        return False
+    if payload.get("status") != "ERROR":
+        return False
+    message = str(payload.get("message", "")).lower()
+    return any(phrase in message for phrase in _MISSING)
+
 
 def search_collection(
     client, alias: str, base_url: str = DATAVERSE_BASE_URL

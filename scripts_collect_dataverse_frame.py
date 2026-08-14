@@ -30,7 +30,11 @@ from softverse.acquire.browser import BrowserClient
 from softverse.acquire.http import RateLimiter
 from softverse.config import PATHS, credential
 from softverse.logging_setup import get_logger, setup_logging, stage
-from softverse.sources.dataverse import search_collection, walk_collection
+from softverse.sources.dataverse import (
+    collection_missing,
+    search_collection,
+    walk_collection,
+)
 
 logger = get_logger(__name__)
 
@@ -141,6 +145,7 @@ def main() -> int:
     before = legacy_counts()
     rows: list[dict] = []
     failed: list[str] = []
+    gone: list[str] = []
 
     print(f"{'journal':<30}{'now':>8}{'2024':>8}  via")
     with stage("dataverse-frame", logger) as stats:
@@ -155,7 +160,18 @@ def main() -> int:
                 datasets = search_collection(client, alias)
                 via = "search"
                 if not datasets:
-                    failed.append(alias)
+                    # A collection that is gone and one we could not reach
+                    # want opposite responses: retrying the first never
+                    # works, and lumping them together overstates the gap
+                    # while hiding the fact that a journal has vanished.
+                    probe = client.get(
+                        f"https://dataverse.harvard.edu/api/dataverses/{alias}"
+                    )
+                    if collection_missing(probe):
+                        gone.append(alias)
+                        via = "GONE"
+                    else:
+                        failed.append(alias)
             stats.incr("collections")
             stats.incr("deposits", len(datasets))
             for entry in datasets:
@@ -175,7 +191,8 @@ def main() -> int:
             was = before.get(alias)
             print(
                 f"  {alias:<28}{len(datasets):>8}"
-                f"{was if was is not None else '-':>8}  {via if datasets else 'FAILED'}"
+                f"{was if was is not None else '-':>8}  "
+                f"{via if datasets else ('GONE' if via == 'GONE' else 'FAILED')}"
             )
 
     # Only collections that actually returned something are replaced; one
@@ -186,6 +203,13 @@ def main() -> int:
     print(f"\n{len(rows):,} deposits from {len(succeeded)} collections this run")
     print(f"{total:,} deposits in the frame across all runs")
     print(f"written to {OUT}")
+    if gone:
+        print(f"\n{len(gone)} collections no longer exist at Harvard:")
+        for alias in gone:
+            print(
+                f"  {alias} (had {before.get(alias, '?')} deposits in the 2024 scrape)"
+            )
+
     if failed:
         # Reported, never absorbed -- and named for what was seen rather than
         # diagnosed. An empty response here was once labelled a WAF challenge

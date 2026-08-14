@@ -135,3 +135,36 @@ def test_a_failed_page_stops_the_walk_rather_than_returning_a_partial():
     """
     client = FakeSearch(total=1638, fail_after=3)
     assert search_collection(client, "restat") == []
+
+
+def test_a_collection_that_no_longer_exists_is_gone_not_failed():
+    """`regionalstatistics` was in the 2024 scrape with 23 deposits and
+    Harvard now answers "Can't find dataverse with identifier".
+
+    That is a different fact from a transient failure and needs a different
+    response: retrying it will never work, and counting it beside collections
+    we simply could not reach would overstate the coverage gap. Six
+    collections failed on one run and five recovered on retry; only this one
+    is actually gone.
+    """
+    from softverse.sources.dataverse import collection_missing
+
+    for body in (
+        b'{"status":"ERROR","message":"Can\'t find dataverse with identifier=\'x\'"}',
+        b'{"status":"ERROR","message":"Could not find dataverse with alias x"}',
+    ):
+        assert collection_missing(FetchOutcome(ok=True, content=body))
+
+
+def test_a_transient_failure_is_not_mistaken_for_a_missing_collection():
+    from softverse.sources.dataverse import collection_missing
+
+    assert not collection_missing(FetchOutcome(ok=False, error="no payload after 90s"))
+    assert not collection_missing(
+        FetchOutcome(ok=True, content=b'{"status":"OK","data":[]}')
+    )
+    # An error about something other than a missing dataverse is still a
+    # failure; only the specific one is terminal.
+    assert not collection_missing(
+        FetchOutcome(ok=True, content=b'{"status":"ERROR","message":"server busy"}')
+    )
