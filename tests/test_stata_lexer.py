@@ -268,3 +268,39 @@ def test_global_macro_as_the_command_is_still_unresolvable():
     statements = [s for s in lex("${cmd} y x") if s.is_macro_command]
     assert len(statements) == 1
     assert statements[0].command is None
+
+
+def test_a_program_with_options_is_still_a_local_program():
+    """`program _stubstar2names, sclass` -- the comma defeated the name match.
+
+    An `.ado` file almost always declares its class: `sclass`, `rclass`,
+    `eclass`, `sortpreserve`, `byable(...)`. The name token therefore arrives
+    with a comma attached and failed the identifier pattern, so the program
+    was not recorded as locally defined and every call to it resolved to
+    `unknown`. One corpus deposit vendors Stata's own `ado/base` tree, 7,094
+    files, and alone contributed 56% of all unresolved Stata mentions.
+    """
+    for source, expected in (
+        ("program _stubstar2names, sclass", "_stubstar2names"),
+        ("program define myhelper, rclass", "myhelper"),
+        ("program mycmd, eclass sortpreserve", "mycmd"),
+        ("program drop myold", "myold"),
+        ("program myplain", "myplain"),
+        ("pr mycmd, rclass", "mycmd"),
+        ("prog mycmd", "mycmd"),
+    ):
+        assert expected in local_programs(source), source
+
+
+def test_commands_that_merely_start_with_pr_do_not_define_programs():
+    """`pr` abbreviates `program`, but `predict` is not an abbreviation of it.
+
+    Matching any command starting with `pr` made `predict yhat` declare a
+    local program called `yhat`, which silently suppresses whatever else that
+    name might have been. StataCorp's help server resolves `pr`, `pro` and
+    `prog` to `[P] program`; `predict`, `probit` and `preserve` are their own
+    commands and are excluded by matching the abbreviations exactly.
+    """
+    assert local_programs("predict yhat") == set()
+    assert local_programs("probit y x") == set()
+    assert local_programs("preserve") == set()

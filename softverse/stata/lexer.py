@@ -110,6 +110,12 @@ _COLON_PREFIXES = frozenset(
 )
 
 _IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+#: Legal spellings of `program`. Matching any command merely *starting* with
+#: `pr` also caught `predict`, `probit` and `preserve`, so `predict yhat`
+#: declared a local program called `yhat`. StataCorp's help server resolves
+#: `pr`, `pro` and `prog` to `[P] program`; the others are their own commands.
+_PROGRAM_FORMS = frozenset({"pr", "pro", "prog", "progr", "progra", "program"})
 #: A token containing a macro reference cannot be resolved to a command name.
 _MACRO = re.compile(r"[`$]")
 
@@ -475,9 +481,20 @@ def local_programs(source: str) -> set[str]:
     """
     names: set[str] = set()
     for statement in lex(source):
-        if statement.command and statement.command.lower().startswith("pr"):
-            tokens = statement.text.split()
-            rest = [t for t in tokens[1:] if t.lower() not in {"define", "def", "drop"}]
-            if rest and _IDENT.match(rest[0]):
-                names.add(rest[0])
+        if not statement.command or statement.command.lower() not in _PROGRAM_FORMS:
+            continue
+        tokens = statement.text.split()
+        rest = [t for t in tokens[1:] if t.lower() not in {"define", "def", "drop"}]
+        if not rest:
+            continue
+        # `program mycmd, rclass` -- the options are attached to the name by a
+        # comma, and an `.ado` file almost always declares a class (`sclass`,
+        # `rclass`, `eclass`, `sortpreserve`). Leaving the comma on the token
+        # failed the identifier match, so the program was never recorded as
+        # locally defined and every call to it resolved to `unknown`. One
+        # deposit that vendors Stata's own `ado/base` tree alone contributed
+        # 56% of the corpus's unresolved Stata mentions this way.
+        candidate = rest[0].split(",", 1)[0]
+        if _IDENT.match(candidate):
+            names.add(candidate)
     return names
