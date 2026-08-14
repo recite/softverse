@@ -35,6 +35,10 @@ def main() -> int:
     fresh = "--fresh" in sys.argv
     positional = [a for a in sys.argv[1:] if not a.startswith("-")]
     limit = int(positional[0]) if positional else 2000
+    workers = zenodo.DEFAULT_WORKERS
+    for arg in sys.argv[1:]:
+        if arg.startswith("--workers="):
+            workers = int(arg.split("=", 1)[1])
     setup_logging("INFO", log_dir=PATHS.logs, stage="zenodo")
     client = PoliteClient(
         headers=zenodo_headers(),
@@ -81,7 +85,9 @@ def main() -> int:
 
     todo = list(records.values())[:limit]
     logger.info("collecting", extra={"records": len(todo)})
-    rows = zenodo.collect(todo, ROOT / "files", ledger, client, fresh=fresh)
+    rows = zenodo.collect(
+        todo, ROOT / "files", ledger, client, fresh=fresh, workers=workers
+    )
 
     print(f"\nrecords in frame : {len(records):,}")
     print(f"collected        : {len(todo):,}")

@@ -1,16 +1,18 @@
-"""Create a Zenodo **draft** deposit for the Stata command→package index.
+"""Create, and on request publish, the Zenodo deposit for the Stata index.
 
-    uv run python scripts_deposit_stata_index.py          # create or update the draft
-    uv run python scripts_deposit_stata_index.py --show   # just print its state
+    uv run python scripts_deposit_stata_index.py             # create/update the draft
+    uv run python scripts_deposit_stata_index.py --show      # print its state
+    uv run python scripts_deposit_stata_index.py --publish   # mint the DOI
 
-This never publishes. Publishing mints a DOI, which is permanent and public,
-and that is the author's decision to make in the web interface -- not
-something a script should do on their behalf. The draft is private and can be
-deleted; the moment it is published, neither is true.
+The default never publishes, and `--publish` exists so that the irreversible
+step is a deliberate, separate act with a record in the repository rather than
+a one-off command in somebody's shell history. Publishing mints a DOI, which
+is permanent and public: a draft is private and can be deleted, and the moment
+it is published neither is true.
 
-Re-running replaces the files on the existing draft rather than creating a
-second one, so iterating on the bundle does not litter the account with
-half-finished deposits.
+Re-running the default replaces the files on the existing draft rather than
+creating a second one, so iterating on the bundle does not litter the account
+with half-finished deposits.
 """
 
 from __future__ import annotations
@@ -129,6 +131,22 @@ def show(deposit: dict) -> None:
     print(f"  DOI     {deposit['metadata'].get('prereserve_doi', {}).get('doi', '-')}")
 
 
+def publish(client: httpx.Client, token: str, deposit: dict) -> int:
+    """Mint the DOI. There is no undo."""
+    response = client.post(
+        f"{API}/deposit/depositions/{deposit['id']}/actions/publish",
+        params={"access_token": token},
+    )
+    if response.status_code >= 400:
+        print(f"publish failed ({response.status_code}): {response.text[:500]}")
+        return 1
+    published = response.json()
+    print("PUBLISHED")
+    print(f"  DOI  {published.get('doi')}")
+    print(f"  URL  {published['links'].get('record_html', published['links']['html'])}")
+    return 0
+
+
 def main() -> int:
     token = credential("ZENODO_API_TOKEN")
     if not token:
@@ -148,6 +166,14 @@ def main() -> int:
                 return 0
             show(existing)
             return 0
+
+        if "--publish" in sys.argv:
+            if existing is None:
+                print("no draft to publish; run without --publish first")
+                return 1
+            show(existing)
+            print()
+            return publish(client, token, existing)
 
         if existing is None:
             created = client.post(
