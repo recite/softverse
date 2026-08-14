@@ -296,10 +296,26 @@ n_keyword_noise = len(_keyword_noise)
 n_keyword_noise_deposits = int(_keyword_noise["dataset_doi"].nunique())
 
 # Named in Limitations. Computed so the claim cannot go stale silently.
-n_fastcd, n_wordy = (
-    int(mentions[(mentions["language"] == "stata")
-                 & (mentions["resolved_package"] == pkg)]["dataset_doi"].nunique())
-    for pkg in ("fastcd", "wordy")
+# Written as a computed sentence rather than two typed package names, so a
+# false positive that gets fixed disappears from the prose instead of being
+# reported as affecting zero deposits. `wordy` did exactly that once vendored
+# library code stopped being read as research code.
+_KNOWN_FALSE_POSITIVES = {"fastcd": "c", "wordy": "word"}
+_residual = {
+    pkg: int(
+        mentions[
+            (mentions["language"] == "stata") & (mentions["resolved_package"] == pkg)
+        ]["dataset_doi"].nunique()
+    )
+    for pkg in _KNOWN_FALSE_POSITIVES
+}
+residual_false_positives = (
+    ", ".join(
+        f"`{pkg}` (command `{_KNOWN_FALSE_POSITIVES[pkg]}`) in {n} deposits"
+        for pkg, n in sorted(_residual.items(), key=lambda kv: -kv[1])
+        if n
+    )
+    or "none"
 )
 stata_builtin_share = (
     mentions[mentions["language"] == "stata"]["resolution"].eq("builtin").mean()
@@ -601,13 +617,28 @@ differ with it.
 
 **Stata carries almost all of it** —
 `{python} f"{stata_unknown_share_of_all:.0%}"` of unresolved mentions — and
-three things are mixed together there. Some are real packages distributed
-outside SSC: `{python} top_unresolved_stata` is the most widespread,
-appearing in `{python} f"{n_grc1leg_deposits}"` deposits, and comes from
-StataCorp's own site rather than the archive we index. Some are internal
-subroutines from `.ado` files vendored into a deposit, which are code we
-correctly see and correctly decline to attribute. The rest are lexer error,
-enumerated in the limitations below rather than netted out.
+what remains there is mostly not our error. It is a property of the Stata
+ecosystem, and it is the second half of the argument the command→package
+index makes.
+
+The most widespread unresolved command is
+`{python} top_unresolved_stata`, in `{python} f"{n_grc1leg_deposits}"`
+deposits: a real, widely used program distributed from StataCorp's own
+website and indexed in no machine-readable registry, SSC included. Below it
+the pattern holds — `dcdensity` from its author's page, `btscs` from a
+replication archive, `prvalue` and `listcoef` from the SPost suite
+distributed with a textbook. These are not obscure. They are ordinary tools
+in political science and economics, and no amount of indexing SSC will find
+them, because they were never on SSC.
+
+That is worth stating plainly rather than reporting as coverage. R has CRAN,
+Python has PyPI, and a package outside those registries is unusual enough to
+be remarkable. Stata's third-party ecosystem has a substantial tail that
+lives on personal pages, textbook companion sites and the vendor's own
+server, and any measurement of Stata software use — ours or anyone's — is
+bounded by that rather than by how carefully the indexing is done. The
+remainder of the unresolved names are lexer error, enumerated in the
+limitations below rather than netted out.
 
 **Names that no package could ever have.** A mention is unresolved when we
 cannot name a package for it, which is not the same as there being one. Two
@@ -733,13 +764,13 @@ deliberate deferral; the labelling frame is designed and can be run.
 - **Stata resolution is current, not historical.** A command that was
   user-written in 2010 and became official later would be classified against
   today's status, which can manufacture a trend.
-- **Known residual false positives, enumerated.** Two SSC packages whose only
-  command is a single common token still attract stray matches: `fastcd`
-  (command `c`) in `{python} f"{n_fastcd}"` deposits and `wordy` (command
-  `word`) in `{python} f"{n_wordy}"`. Both come from Mata-style bare
+- **Known residual false positives, enumerated.** SSC packages whose only
+  command is a single common token attract stray matches from Mata-style bare
   assignments outside a `mata:` block, which the lexer cannot recognise as
-  Mata. We report them rather than suppressing single-letter commands by rule,
-  because such a rule would hide the next instance instead of surfacing it.
+  Mata. Currently `{python} residual_false_positives`. We enumerate them
+  rather than suppressing single-letter commands by rule, because such a rule
+  would hide the next instance instead of surfacing it — and because the
+  count is computed, the list shrinks on its own as the causes are fixed.
 - **Three lexer gaps we can name and have not closed.** Stata keywords are
   reaching command position in contexts the lexer does not model: `in` and
   `using` after an old-style `/* */` line continuation, and `str` inside an
