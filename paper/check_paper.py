@@ -24,12 +24,14 @@ repository, not user input, so there is no boundary here to cross.
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 import traceback
 from pathlib import Path
 
-PAPER = Path(__file__).parent / "paper.qmd"
+HERE = Path(__file__).parent
+PAPER = HERE / "paper.qmd"
 
 #: ```{python} ... ``` chunks, with their `#| label:` if they carry one.
 _CHUNK = re.compile(r"^```\{python\}\n(.*?)^```", re.M | re.S)
@@ -39,6 +41,10 @@ _LABEL = re.compile(r"^#\|\s*label:\s*(\S+)", re.M)
 
 
 def main() -> int:
+    # The chunks resolve `../build/tally` and `../data`, which is correct
+    # relative to this file and wrong from anywhere else. Anchor to the
+    # script so `make paper` from the repo root behaves like running it here.
+    os.chdir(HERE)
     text = PAPER.read_text()
     namespace: dict = {}
     failures = 0

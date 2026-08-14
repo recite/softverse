@@ -1,8 +1,8 @@
 {
-  "checked_at": "2026-08-14T02:09:32.653952+00:00",
+  "checked_at": "2026-08-14T22:04:04.641087+00:00",
   "bibliography": "paper/references.bib",
-  "n_entries": 6,
-  "n_verified": 6,
+  "n_entries": 7,
+  "n_verified": 7,
   "results": [
     {
       "key": "trisovic2022",
@@ -44,6 +44,13 @@
       "ok": true,
       "reason": "verified",
       "doi": "10.1162/99608f92.4f6b9e67",
+      "registered_title": null
+    },
+    {
+      "key": "sood_countpy",
+      "ok": true,
+      "reason": "verified by URL",
+      "doi": null,
       "registered_title": null
     }
   ]

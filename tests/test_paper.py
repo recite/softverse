@@ -57,9 +57,89 @@ def test_the_paper_types_no_numbers_it_could_compute():
     #: it appears -- which is how an allowlist quietly becomes a way of
     #: silencing the check it belongs to.
     year = re.compile(r"^(19|20)\d\d$")
+    # Two digits is enough to be a claim. The first version of this pattern
+    # demanded three or more characters, so every two-digit number walked
+    # through it: "ahead of all 47 estimators" was invisible to the check
+    # that exists to catch exactly that. Found by mutating the paper and
+    # watching the build succeed.
     found = {
         m.group(0)
-        for m in re.finditer(r"\b\d[\d,.]{2,}\b", prose)
+        for m in re.finditer(r"\b\d[\d,.]*\d\b|\b\d+%", prose)
         if m.group(0) not in allowed and not year.match(m.group(0))
     }
     assert not found, f"literal numbers in the prose: {sorted(found)}"
+
+
+def _prose() -> str:
+    """The paper with code chunks and inline expressions removed."""
+    import re
+
+    text = (PAPER_DIR / "paper.qmd").read_text()
+    text = re.sub(r"^```\{python\}\n.*?^```", "", text, flags=re.M | re.S)
+    return re.sub(r"`\{python\}[^`]*`", "", text)
+
+
+def test_the_prose_carries_no_em_or_en_dashes():
+    """A hard ban, and one that fails silently.
+
+    An em dash is the single most reliable mark of machine prose, and the
+    draft this rewrite replaced had forty of them. Nothing about the rendered
+    PDF would tell you.
+    """
+    import re
+
+    prose = _prose()
+    # Search for the character itself. An earlier version of this test asked
+    # for forty characters of context either side, and `.` does not match a
+    # newline, so any dash near a line break passed unnoticed. A check that
+    # fails silently is worse than no check, and this one exists precisely
+    # because the defect it looks for is invisible in the rendered output.
+    hits = [m.start() for m in re.finditer(r"[\u2013\u2014]", prose)]
+    context = [prose[max(0, i - 40) : i + 40].replace("\n", " ") for i in hits[:3]]
+    assert not hits, f"{len(hits)} em/en dashes, first: ...{context}..."
+
+
+def test_no_bold_header_list_items():
+    """`- **Thing:** description` restates its own label and reads as generated.
+
+    Seven of these were in Limitations and Validation; they are prose now.
+    """
+    import re
+
+    found = re.findall(r"^\s*[-*]\s+\*\*[^*]+\*\*", _prose(), re.M)
+    assert not found, f"bold-header list items: {found}"
+
+
+def test_no_sentence_opens_with_however_also_or_therefore():
+    import re
+
+    found = re.findall(r"(?:^|\. )(However|Also|Therefore),", _prose())
+    assert not found, f"sentence-initial connectives: {found}"
+
+
+def test_the_paper_opens_on_a_finding_not_a_topic():
+    """Shafer's test: give away the murderer in the first paragraph.
+
+    The previous draft opened on "What this measures, and what it does not",
+    which is a caveat about a contribution the reader has not been given yet.
+    The first heading should name the problem and the first sentence should
+    state a result.
+    """
+    import re
+
+    prose = _prose()
+    first_heading = re.search(r"^## (.+)$", prose, re.M)
+    assert first_heading, "no sections found"
+    assert (
+        "what this measures" not in first_heading.group(1).lower()
+    ), "the paper opens on its own caveats again"
+
+    after = prose[first_heading.end() :].strip()
+    opening = " ".join(after.split("\n\n")[0].split())
+    # A finding names something concrete. A topic sentence says a field is
+    # important. The cheapest discriminator is whether the paper's own
+    # subject matter appears before the reader is asked to care.
+    assert len(opening) > 40, "the opening paragraph is missing"
+    assert not opening.lower().startswith(
+        ("research software is", "software is", "in recent years", "it has long")
+    ), f"opens on a topic rather than a finding: {opening[:90]}"

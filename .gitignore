@@ -99,3 +99,8 @@ monitor_collection.py
 /outputs/
 /corpus/
 !/build/release/
+
+# Rendered paper outputs; rebuilt by `make paper`
+paper/paper.md
+paper/paper.html
+paper/softverse.pdf

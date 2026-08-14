@@ -21,6 +21,7 @@ assertion.
 
 from __future__ import annotations
 
+import html
 import json
 import re
 import sys
@@ -131,6 +132,18 @@ def registered_title(client: httpx.Client, doi: str) -> str | None:
     return None
 
 
+def page_title(client: httpx.Client, url: str) -> str | None:
+    """The `<title>` of a page, for sources that carry no DOI."""
+    try:
+        response = client.get(url)
+        if response.status_code >= 400:
+            return None
+        match = re.search(r"<title[^>]*>(.*?)</title>", response.text, re.S | re.I)
+        return html.unescape(match.group(1)).strip() if match else None
+    except httpx.HTTPError:
+        return None
+
+
 def validate(entries: list[Entry]) -> list[Result]:
     results: list[Result] = []
     with httpx.Client(
@@ -140,13 +153,34 @@ def validate(entries: list[Entry]) -> list[Result]:
     ) as client:
         for entry in entries:
             if not entry.doi:
-                results.append(
-                    Result(
-                        entry.key,
-                        ok=False,
-                        reason="no DOI and no DOI-bearing URL: unverifiable",
+                # Not everything worth citing has a DOI. A blog post that
+                # supplies an argument is still a source, and refusing it
+                # outright would push it into an untraceable aside instead.
+                # So it is held to the same standard by a different route:
+                # the page must exist and must carry the title we claim for
+                # it. That catches the two failures a reader would care
+                # about, a dead link and a citation pointing somewhere else.
+                if not entry.url:
+                    results.append(
+                        Result(entry.key, ok=False, reason="no DOI and no URL")
                     )
-                )
+                    continue
+                found = page_title(client, entry.url)
+                if found is None:
+                    results.append(
+                        Result(entry.key, ok=False, reason="URL does not resolve")
+                    )
+                elif entry.title and normalize(entry.title) not in normalize(found):
+                    results.append(
+                        Result(
+                            entry.key,
+                            ok=False,
+                            reason="page title does not match",
+                            registered_title=found,
+                        )
+                    )
+                else:
+                    results.append(Result(entry.key, ok=True, reason="verified by URL"))
                 continue
             found = registered_title(client, entry.doi)
             if found is None:
