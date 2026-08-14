@@ -95,6 +95,50 @@ def test_character_only_records_dynamic_rather_than_the_loop_variable():
     assert mention.construct is Construct.DYNAMIC_UNRESOLVED
 
 
+def test_xfun_attach_helpers_are_multi_loaders():
+    """`renv`'s own test fixture lists these among the calls it expects found.
+
+    That fixture is ground truth we did not write: it enumerates thirteen
+    loader spellings and states in a comment which must be detected. Checking
+    against it found two we did not handle -- `xfun::pkg_attach` and
+    `pkg_attach2` -- which no amount of agreement with our own oracle would
+    have surfaced, because a shared blind spot looks like consensus.
+    """
+    assert {m.raw_name for m in extract('pkg_attach2("i", "j")').mentions} == {"i", "j"}
+
+
+def test_a_vector_of_names_inside_a_multi_loader_is_unpacked():
+    """`xfun::pkg_attach(c("g", "h"))` names two packages, not zero.
+
+    Positional arguments were read one node at a time, so a `c(...)` call was
+    neither a string nor an identifier and fell through silently.
+    """
+    result = extract('xfun::pkg_attach(c("g", "h"))')
+    assert {m.raw_name for m in result.mentions} == {"xfun", "g", "h"}
+
+
+def test_a_named_argument_in_a_multi_loader_is_still_not_a_package():
+    """The guard that makes the unpacking safe.
+
+    v1 split on commas and tallied `install`, `update` and `dependencies` as
+    CRAN packages; unpacking vectors must not reopen that.
+    """
+    result = extract("p_load(dplyr, ggplot2, install = FALSE, character.only = TRUE)")
+    assert {m.raw_name for m in result.mentions} == {"dplyr", "ggplot2"}
+
+
+def test_a_quoted_namespace_is_still_a_namespace():
+    """`"m"::baz()` is legal R and we were dropping it.
+
+    Found by R's own parser: renv's test fixture includes this line among the
+    cases it expects to be detected, and it was the single name our extractor
+    missed across 25,924 name-file pairs in the corpus.
+    """
+    result = extract('"m"::baz()')
+    assert [m.raw_name for m in result.mentions] == ["m"]
+    assert result.mentions[0].construct is Construct.NAMESPACE_OP
+
+
 def test_a_variable_passed_to_package_version_is_dynamic_not_a_package():
     """The same idiom one function along, and it was being missed.
 
@@ -263,3 +307,53 @@ def test_package_version_first_argument_is_a_package():
     """The other group: here the first positional genuinely is the package."""
     assert names('packageVersion("dplyr")') == ["dplyr"]
     assert names('citation("lme4")') == ["lme4"]
+
+
+#: Verbatim from `renv/tests/testthat/resources/code.R` (renv 1.2.3), which
+#: states its own expected answer in comments: every lower-case name must be
+#: detected, the upper-case one must not.
+RENV_FIXTURE = """
+# should be parsed as dependencies (use only lower-case letters for package names)
+library(a)
+library("b")
+base::library(c)
+base::library("d", character.only = TRUE)
+requireNamespace("e")
+base::requireNamespace("f", quietly = TRUE)
+xfun::pkg_attach(c("g", "h"))
+pkg_attach2("i", "j")
+k::foo()
+l:::bar()
+"m"::baz()
+
+# should NOT be parsed as dependencies (use only upper-case names for package names)
+library(A, character.only = TRUE)
+"""
+
+
+def test_against_renvs_own_expectations():
+    """Ground truth written by someone else, which is the point.
+
+    Agreement with our own oracle cannot find a blind spot the two share.
+    This fixture is renv's, its answer is stated in its comments, and checking
+    against it found two loader spellings we did not handle and one we
+    detected that we should not.
+    """
+    result = extract(RENV_FIXTURE)
+    static = {m.raw_name for m in result.mentions if not m.is_dynamic}
+
+    for expected in "abcdefghijklm":
+        assert expected in static, f"renv expects {expected!r} to be detected"
+
+    # `library(A, character.only = TRUE)` names a *variable* A, so the package
+    # is unknowable. Recorded as dynamic rather than dropped, which is a
+    # stronger claim than renv's fixture makes: it only requires that A not be
+    # reported as a package.
+    assert "A" not in static
+    assert any(
+        m.raw_name == "A" and m.is_dynamic for m in result.mentions
+    ), "the idiom should still be visible as dynamic, not silently dropped"
+
+    # `base::` and `xfun::` are real namespace mentions in this source, and
+    # resolution -- not extraction -- is what later marks `base` as base R.
+    assert static - set("abcdefghijklm") == {"base", "xfun"}

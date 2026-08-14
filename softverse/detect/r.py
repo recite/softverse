@@ -49,7 +49,18 @@ _LOADERS: dict[str, Construct] = {
 }
 
 #: pacman-style loaders, where *every* positional argument is a package.
-_MULTI_LOADERS = {"p_load", "p_load_gh", "p_load_current_gh", "shelf"}
+#: `pkg_attach`/`pkg_attach2` are xfun's. They were missing, and the gap was
+#: found by checking against renv's own test fixture rather than against our
+#: oracle -- a blind spot two implementations share looks exactly like
+#: agreement.
+_MULTI_LOADERS = {
+    "p_load",
+    "p_load_gh",
+    "p_load_current_gh",
+    "shelf",
+    "pkg_attach",
+    "pkg_attach2",
+}
 
 #: Installation, not use. Recorded separately so the headline tally can exclude
 #: it: installing a package is not evidence the analysis ran on it.
@@ -273,11 +284,31 @@ def _handle_multi(call: Node, source: bytes) -> list[Mention]:
         value = arg.child_by_field_name("value")
         if value is None:
             continue
-        if (literal := _string_value(value, source)) is not None:
-            out.append(_mention(literal, Construct.P_LOAD, value, source))
-        elif value.type == "identifier":
-            out.append(_mention(_text(value, source), Construct.P_LOAD, value, source))
+        out.extend(_multi_names(value, source))
     return out
+
+
+def _multi_names(value: Node, source: bytes) -> list[Mention]:
+    """One positional argument of a multi-loader, which may be a vector.
+
+    `xfun::pkg_attach(c("g", "h"))` names two packages. Reading arguments one
+    node at a time made a `c(...)` call neither a string nor an identifier, so
+    it fell through and named none.
+    """
+    if (literal := _string_value(value, source)) is not None:
+        return [_mention(literal, Construct.P_LOAD, value, source)]
+    if value.type == "identifier":
+        return [_mention(_text(value, source), Construct.P_LOAD, value, source)]
+    if value.type == "call" and _callee_name(value, source)[0] == "c":
+        out: list[Mention] = []
+        for arg in _arguments(value):
+            if arg.child_by_field_name("name") is not None:
+                continue
+            inner = arg.child_by_field_name("value")
+            if inner is not None:
+                out.extend(_multi_names(inner, source))
+        return out
+    return []
 
 
 def _handle_installer(call: Node, source: bytes, callee: str) -> list[Mention]:
@@ -359,18 +390,28 @@ def extract(source: str | bytes) -> ExtractResult:
         if node.type == "namespace_operator":
             lhs = node.child_by_field_name("lhs")
             operator = node.child_by_field_name("operator")
-            if lhs is not None and lhs.type == "identifier":
-                internal = operator is not None and _text(operator, data) == ":::"
-                mentions.append(
-                    _mention(
-                        _text(lhs, data),
-                        Construct.NAMESPACE_INTERNAL
-                        if internal
-                        else Construct.NAMESPACE_OP,
-                        lhs,
-                        data,
-                    )
+            if lhs is not None:
+                # `"m"::baz()` is legal R and the left operand may be a string
+                # as well as a symbol. Accepting only identifiers dropped it,
+                # which was the single name our extractor missed across 25,924
+                # name-file pairs when R's own parser was used as the oracle.
+                name = (
+                    _text(lhs, data)
+                    if lhs.type == "identifier"
+                    else _string_value(lhs, data)
                 )
+                if name:
+                    internal = operator is not None and _text(operator, data) == ":::"
+                    mentions.append(
+                        _mention(
+                            name,
+                            Construct.NAMESPACE_INTERNAL
+                            if internal
+                            else Construct.NAMESPACE_OP,
+                            lhs,
+                            data,
+                        )
+                    )
 
         elif node.type == "call":
             callee, _namespace = _callee_name(node, data)

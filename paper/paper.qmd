@@ -185,6 +185,29 @@ n_deposits_collected = len(_last) - len(_gaps)
 share_collected = n_deposits_collected / len(_last)
 n_spanned_deposits = sum(1 for _r in _last.values() if _r.get("n_spanned"))
 
+# Cross-tool agreement, read from the artifact `scripts_validate_renv.py`
+# writes. This paragraph used to carry a typed 0.998 that nothing in the
+# repository computed -- no script, no artifact, no recorded run. It was the
+# one number here with no provenance at all, and it was wrong by about a
+# tenth; the check that caught it is `tests/test_paper.py`, which fails on any
+# bare numeral left in the prose.
+# R's own parser as a true oracle for the syntactic task. Unlike the `renv`
+# comparison below this is not a peer agreement: R's parser defines the
+# answer, so disagreement is our error and the rate is exact.
+_oracle = json.loads(Path("../build/validation/r_oracle.json").read_text())
+n_oracle_files = _oracle["n_files_compared"]
+n_oracle_unparseable = _oracle["n_files_unparseable_by_r"]
+n_oracle_pairs = _oracle["true_positives"] + _oracle["false_negatives"]
+oracle_precision = _oracle["precision"]
+oracle_recall = _oracle["recall"]
+
+_renv = json.loads(Path("../build/validation/renv_agreement.json").read_text())
+n_renv_compared = _renv["n_deposits_compared"]
+renv_mean_jaccard = _renv["mean_jaccard"]
+renv_pooled_jaccard = _renv["pooled_jaccard"]
+renv_perfect_share = _renv["n_perfect_agreement"] / _renv["n_deposits_compared"]
+renv_version = _renv["renv_version"]
+
 # Named in Limitations. Computed so the claim cannot go stale silently.
 n_fastcd, n_wordy = (
     int(mentions[(mentions["language"] == "stata")
@@ -415,14 +438,66 @@ User's Guide and function manuals are excluded. Without that second filter the
 system variables `_n` and `_b` and the function `e()` are reported as official
 Stata commands.
 
-**Cross-tool agreement** with `renv::dependencies()` over corpus R deposits
-gives a Jaccard of 0.998. This is *convergent validity, not accuracy*: `renv`
-performs the same kind of static scan and shares the same blind spots, so
-agreement is biased upward by correlated error.
+**Cross-tool agreement** with `renv::dependencies()`
+(`{python} renv_version`) over
+`{python} f"{n_renv_compared:,}"` corpus R deposits gives a mean per-deposit
+Jaccard of `{python} f"{renv_mean_jaccard:.2f}"` and a pooled Jaccard of
+`{python} f"{renv_pooled_jaccard:.2f}"`;
+`{python} f"{renv_perfect_share:.0%}"` of deposits agree exactly. Both are
+reported because they answer different questions: the mean weights every
+deposit equally, the pooled figure every package-deposit pair, so a headline
+cannot be flattered by deposits with one obvious package in them.
 
-**Syntactic accuracy has a true oracle.** For "does this file contain
-`library(x)`", R's own parser and Python's `ast` are ground truth rather than
-peers, so extraction error on the syntactic task is measurable exactly.
+This is *convergent validity, not accuracy*. `renv` performs the same kind of
+static scan over the same files and shares the same blind spots — a package
+named only in a string, or loaded through a variable, is invisible to both —
+so agreement measures whether two implementations of one idea agree, not
+whether either is right. What it can catch is an implementation error on our
+side large enough to show against an independent codebase, which is why the
+per-deposit disagreements are written out rather than reduced to the
+headline.
+
+**Syntactic accuracy has a true oracle, and we use it.** For "does this file
+contain a call to `library` whose argument is `x`", R's own parser is not a
+peer but the definition of the answer, so disagreement is our error and the
+error rate is exact rather than indicative. Running R's parser over
+`{python} f"{n_oracle_files:,}"` corpus `.R` files and recursing its
+expression trees gives precision `{python} f"{oracle_precision:.4f}"` and
+recall `{python} f"{oracle_recall:.4f}"` across
+`{python} f"{n_oracle_pairs:,}"` name-file pairs.
+
+A further `{python} f"{n_oracle_unparseable:,}"` files R itself could not
+parse. Those are excluded rather than scored: an unparseable file is not a
+file with no dependencies, and counting it as one would credit us for finding
+nothing in it.
+
+**How that figure was reached matters as much as its value.** Perfect
+agreement is what a comparison looks like when the comparison is broken, so
+the working is worth stating. Five disagreements were adjudicated by consulting
+R's behaviour directly, and four of the five were the oracle's fault: it
+unboxed a one-element result into a bare string, so a lone `LearnBayes` was
+read as eight packages named after its letters; it skipped every
+`character.only = TRUE` call, though a string literal there is still a literal;
+it could not see through `base::library(c)`, because such a call's head is
+itself a call; and it never descended into a function's formals, hiding every
+`pkg::fun()` used as a default argument. One was ours: `"m"::baz()` is legal R
+and we dropped it. Where the two disagreed about `requireNamespace(pkg)` we
+ran R rather than reasoning: `library(pkg)` with `pkg <- "stats"` errors, so
+the symbol is the name, while `requireNamespace(pkg)` returns `TRUE`, so the
+symbol is a variable.
+
+A number tuned against the same data it scores is worth little, so the
+extractor is also checked against ground truth we did not write: `renv`'s own
+test fixture, which enumerates thirteen loader spellings and states in its
+comments which must be found. That check failed where the oracle had not,
+because a blind spot two implementations share is indistinguishable from
+agreement — it found `xfun::pkg_attach(c("g", "h"))` and `pkg_attach2("i",
+"j")` unhandled. Both now are, and the fixture is a test.
+
+This bounds one thing exactly — whether our tree-sitter walk sees what R sees
+— and nothing else. It says nothing about Stata, nothing about resolution
+against CRAN, and nothing about whether a `library()` call means the analysis
+used the package.
 
 **What we do not claim.** We have not hand-labelled a probability sample, so we
 report no human-validated precision or recall against research *use*. That is a

@@ -43,11 +43,15 @@ def test_the_paper_types_no_numbers_it_could_compute():
 
     text = (PAPER_DIR / "paper.qmd").read_text()
     prose = re.sub(r"^```\{python\}\n.*?^```", "", text, flags=re.M | re.S)
-    prose = re.sub(r"`\{python\}[^`]*`", "", prose)
+    # Inline code spans hold identifiers, not claims: `.7z.002` is a filename
+    # extension and `renv 1.2.3` a version. Stripping them keeps the check on
+    # prose, where a number is an assertion about the corpus.
+    prose = re.sub(r"`[^`\n]*`", "", prose)
     prose = re.sub(r"^\s*[-*]?\s*\[.*?\]\(.*?\)", "", prose, flags=re.M)
 
-    #: Facts about the world, not measurements of our corpus.
-    allowed = {"7.1", "2010", "1.0", "4559", "2007"}
+    #: Facts about the world rather than measurements of our corpus: Zenodo's
+    #: size, a year, a CVE, and another paper's deposit count.
+    allowed = {"7.1", "2010", "2,000", "200", "1.0", "4559", "2007"}
     found = {
         m.group(0)
         for m in re.finditer(r"\b\d[\d,.]{2,}\b", prose)
