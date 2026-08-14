@@ -39,6 +39,16 @@ logger = get_logger(__name__)
 
 _PEP503 = re.compile(r"[-_.]+")
 
+#: Stata constructs whose argument is a *package* name rather than a command:
+#: `ssc install X`, `net install X`, `which X`, Correia's `require X`.
+_STATA_PACKAGE_ARG = frozenset(
+    {
+        Construct.STATA_INSTALL,
+        Construct.STATA_WHICH,
+        Construct.STATA_REQUIRE,
+    }
+)
+
 
 def normalize_pypi(name: str) -> str:
     """PEP 503 normalization: lowercase, runs of ``-_.`` collapsed to ``-``."""
@@ -99,7 +109,14 @@ class Registry:
     julia: frozenset[str]
     stata_commands: dict[str, tuple[str, ...]]
     stata_builtins: frozenset[str]
-    lock_id: str
+    #: SSC *package* names, which are a different namespace from command
+    #: names and needed for a different question. `ssc install blindschemes`
+    #: names a package; `reghdfe y x` names a command. Some packages expose no
+    #: command of their own name at all -- `blindschemes` ships graph schemes,
+    #: `egenmore` ships `egen` functions -- so looking an install line up in
+    #: the command index reports a stated dependency as unidentifiable.
+    ssc_packages: frozenset[str] = frozenset()
+    lock_id: str = "unpinned"
 
     @cached_property
     def _pypi_normalized(self) -> dict[str, str]:
@@ -213,6 +230,12 @@ class Registry:
             return Resolved(Resolution.LOCAL_RELATIVE, None, None)
         if construct is Construct.DYNAMIC_UNRESOLVED:
             return Resolved(Resolution.DYNAMIC, None, None)
+        if construct in _STATA_PACKAGE_ARG and name.lower() in self.ssc_packages:
+            # A provisioning line names the package directly, which is better
+            # evidence than a command occurrence rather than worse -- but only
+            # if it is looked up in the package namespace instead of the
+            # command one.
+            return Resolved(Resolution.KNOWN_CURRENT, name.lower(), Ecosystem.SSC)
         if language is Language.R:
             return self.resolve_r(name)
         if language is Language.PYTHON:

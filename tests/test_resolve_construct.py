@@ -30,8 +30,9 @@ def registry() -> Registry:
         # is exactly why the confusion is not rare.
         pypi=frozenset({"pandas", "models", "results", "log", "stats"}),
         julia=frozenset(),
-        stata_commands={},
+        stata_commands={"esttab": ("estout",)},
         stata_builtins=frozenset(),
+        ssc_packages=frozenset({"blindschemes", "egenmore", "estout"}),
         lock_id="test",
     )
 
@@ -114,3 +115,39 @@ def test_resolution_without_a_construct_is_unchanged(registry):
     """The argument is optional, so every existing caller keeps working."""
     assert registry.resolve("pandas", Language.PYTHON).package == "pandas"
     assert registry.resolve("MASS", Language.R).package == "MASS"
+
+
+def test_an_install_line_names_a_package_not_a_command(registry):
+    """`ssc install blindschemes` was resolved against the *command* index.
+
+    The index maps commands to the packages providing them, which is the
+    right table for `reghdfe y x` and the wrong one for `ssc install
+    reghdfe`. A package need not expose a command of its own name -- and some
+    expose no commands at all: `blindschemes` ships graph schemes, `egenmore`
+    ships `egen` functions. Both were reported as unidentifiable when the
+    deposit had in fact named its dependency outright, which is better
+    evidence than a command occurrence, not worse.
+    """
+    resolved = registry.resolve(
+        "blindschemes", Language.STATA, construct=Construct.STATA_INSTALL
+    )
+    assert resolved.resolution is Resolution.KNOWN_CURRENT
+    assert resolved.package == "blindschemes"
+    assert resolved.ecosystem is Ecosystem.SSC
+
+
+def test_an_install_line_for_something_unknown_stays_unknown(registry):
+    resolved = registry.resolve(
+        "notapackage", Language.STATA, construct=Construct.STATA_INSTALL
+    )
+    assert resolved.resolution is Resolution.UNKNOWN
+
+
+def test_a_command_is_still_resolved_against_the_command_index(registry):
+    """The package table must not leak into ordinary command resolution.
+
+    `estout` the package provides `esttab`; a script saying `esttab` must
+    resolve through the command index as before.
+    """
+    resolved = registry.resolve("esttab", Language.STATA)
+    assert resolved.package == "estout"

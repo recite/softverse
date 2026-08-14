@@ -74,6 +74,12 @@ def load_registry() -> tuple[Registry, frozenset[str]]:
         r[0].lower()
         for r in con.execute(f"SELECT DISTINCT command FROM '{index}'").fetchall()
     )
+    # Package names, a different namespace from command names: `ssc install
+    # blindschemes` names a package that exposes no command of that name.
+    packages = frozenset(
+        r[0].lower()
+        for r in con.execute(f"SELECT DISTINCT package FROM '{index}'").fetchall()
+    )
     return (
         Registry(
             cran=names("cran"),
@@ -83,6 +89,7 @@ def load_registry() -> tuple[Registry, frozenset[str]]:
             julia=names("julia_general"),
             stata_commands={k: tuple(v) for k, v in commands.items()},
             stata_builtins=builtins(verified_snapshot=OFFICIAL_SNAPSHOT).forms,
+            ssc_packages=packages,
             lock_id=json.load(open("registries/registries.lock.json")).get("cran", "")[
                 :12
             ],
