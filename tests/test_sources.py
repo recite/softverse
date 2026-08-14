@@ -32,6 +32,20 @@ def serving(body: bytes) -> PoliteClient:
     return client
 
 
+def unlimited_disk():
+    """A disk budget that always says yes.
+
+    Tests that exercise the archive path must not depend on how full the
+    machine happens to be. Two of them silently started failing when this
+    laptop dropped below the 8 GB reserve -- not because the code broke, but
+    because an unrelated project filled the volume, and the assertion was
+    reading the disk rather than the collector.
+    """
+    from softverse.sources.zenodo import DiskBudget
+
+    return DiskBudget(free=lambda: 1 << 60, reserve=0)
+
+
 # -- rate headers ---------------------------------------------------------
 
 
@@ -357,7 +371,7 @@ def test_archive_is_removed_after_successful_extraction(tmp_path, monkeypatch):
         }
     )
     client = serving(buf.getvalue())
-    state, rows = zenodo.collect_record(client, record, tmp_path)
+    state, rows = zenodo.collect_record(client, record, tmp_path, disk=unlimited_disk())
     assert state.state == "complete"
     assert any(r["filename"] == "analysis.R" for r in rows), "code must survive"
     assert not (
@@ -389,7 +403,7 @@ def test_a_failed_archive_is_kept_for_diagnosis(tmp_path, monkeypatch):
         }
     )
     client = serving(b"not a zip")
-    state, _ = zenodo.collect_record(client, record, tmp_path)
+    state, _ = zenodo.collect_record(client, record, tmp_path, disk=unlimited_disk())
     assert state.needs_retry
     assert (tmp_path / "8" / "_archives" / "pkg.zip").exists()
     client.close()
@@ -514,7 +528,7 @@ def test_collect_runs_deposits_concurrently(tmp_path, monkeypatch):
     peak = 0
     guard = threading.Lock()
 
-    def slow_record(client, record, files_root, archive_cap=None):
+    def slow_record(client, record, files_root, archive_cap=None, disk=None):
         nonlocal inflight, peak
         with guard:
             inflight += 1
@@ -561,7 +575,7 @@ def test_a_failing_deposit_does_not_take_down_its_neighbours(tmp_path, monkeypat
         for i in range(4)
     ]
 
-    def sometimes_explode(client, record, files_root, archive_cap=None):
+    def sometimes_explode(client, record, files_root, archive_cap=None, disk=None):
         if record.record_id == "801":
             raise RuntimeError("boom")
         from softverse.acquire.state import DatasetRecord
@@ -578,3 +592,49 @@ def test_a_failing_deposit_does_not_take_down_its_neighbours(tmp_path, monkeypat
     states = {r.dataset_doi: r.state for r in ledger._records.values()}
     assert states["10.5281/zenodo.801"] == "failed"
     assert sum(1 for s in states.values() if s == "complete") == 3
+
+
+def test_workers_cannot_each_spend_the_last_of_the_disk(monkeypatch, tmp_path):
+    """The overcommit that concurrency introduced.
+
+    The free-space guard asks "is there room for this archive plus the
+    reserve" and each worker got the same answer, because none of them could
+    see what the others had already committed to. Three workers against a 5 GB
+    cap can therefore pass a check made with 12 GB free and then write 15 GB.
+
+    Observed live: 12 GB free with 6.8 GB of `.part` files already in flight.
+    An ENOSPC is the one failure the whole state design exists to prevent --
+    it can land between writing a file and recording it, which is the only
+    window where the ledger and the disk can disagree.
+    """
+    import threading
+
+    from softverse.sources.zenodo import DiskBudget
+
+    # 12 GB free, 8 GB reserve: room for exactly one 3 GB archive.
+    budget = DiskBudget(free=lambda: 12_000_000_000, reserve=8_000_000_000)
+    granted = []
+    barrier = threading.Barrier(3)
+
+    def ask():
+        barrier.wait()
+        granted.append(budget.reserve_bytes(3_000_000_000))
+
+    threads = [threading.Thread(target=ask) for _ in range(3)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert sum(granted) == 1, f"{sum(granted)} workers were each promised the disk"
+
+
+def test_a_reservation_is_returned_when_the_download_ends(tmp_path):
+    """Otherwise the first three archives permanently poison the budget."""
+    from softverse.sources.zenodo import DiskBudget
+
+    budget = DiskBudget(free=lambda: 12_000_000_000, reserve=8_000_000_000)
+    assert budget.reserve_bytes(3_000_000_000)
+    assert not budget.reserve_bytes(3_000_000_000)
+    budget.release(3_000_000_000)
+    assert budget.reserve_bytes(3_000_000_000), "space must come back"

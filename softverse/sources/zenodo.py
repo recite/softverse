@@ -272,18 +272,47 @@ def search(
     return records[:max_records] if max_records else records
 
 
-def _enough_free_space(root: Path, needed: int) -> bool:
-    """Whether ``needed`` bytes can be written and still leave the reserve.
+class DiskBudget:
+    """Free space, minus what other workers have already committed to.
+
+    Asking ``shutil.disk_usage`` directly is correct for one downloader and
+    wrong for several: each worker gets the same answer, because none of them
+    can see the bytes the others are about to write. Three workers against a
+    5 GB cap can all pass a check made with 12 GB free and then write 15 GB.
+    That was live -- 12 GB free with 6.8 GB of `.part` files already in
+    flight -- and an ENOSPC is the one failure the state design exists to
+    prevent: it can land between writing a file and recording it, the only
+    window where the ledger and the disk can disagree.
 
     Checked per download rather than once per run, because free space moves
-    while a collection runs -- both from what we write and from everything else
-    on the machine.
+    while a collection runs, from what we write and from everything else on
+    the machine.
     """
+
+    def __init__(self, free, reserve: int = MIN_FREE_BYTES) -> None:
+        self._free = free
+        self._reserve = reserve
+        self._committed = 0
+        self._lock = threading.Lock()
+
+    def reserve_bytes(self, needed: int) -> bool:
+        """Claim ``needed`` bytes, or refuse. Release them when finished."""
+        with self._lock:
+            if self._free() - self._committed - needed <= self._reserve:
+                return False
+            self._committed += needed
+            return True
+
+    def release(self, needed: int) -> None:
+        with self._lock:
+            self._committed = max(0, self._committed - needed)
+
+
+def _disk_budget_for(root: Path) -> DiskBudget:
     import shutil
 
     root.mkdir(parents=True, exist_ok=True)
-    free = shutil.disk_usage(root).free
-    return free - needed > MIN_FREE_BYTES
+    return DiskBudget(lambda: shutil.disk_usage(root).free)
 
 
 def collect_record(
@@ -291,8 +320,10 @@ def collect_record(
     record: ZenodoRecord,
     files_root: Path,
     archive_cap: int = ARCHIVE_CAP_BYTES,
+    disk: DiskBudget | None = None,
 ) -> tuple[DatasetRecord, list[dict]]:
     """Download one record's wanted files. Returns its state and file rows."""
+    disk = disk if disk is not None else _disk_budget_for(files_root)
     doi = record.doi or f"zenodo:{record.record_id}"
     state = DatasetRecord(dataset_doi=doi, state=CollectionState.FAILED.value)
     # Zenodo records are immutable and a revision gets a new id, so the id is
@@ -343,7 +374,7 @@ def collect_record(
             )
             continue
 
-        if item.is_archive and not _enough_free_space(files_root, item.size):
+        if item.is_archive and not disk.reserve_bytes(item.size):
             # Stop before the disk does. An ENOSPC can land between writing a
             # file and recording it, which is the one window where the ledger
             # and the disk can disagree -- the failure mode the whole state
@@ -367,7 +398,13 @@ def collect_record(
             # understates its size is abandoned after a chunk instead of after
             # the whole transfer.
             archive_path = target / "_archives" / item.key
-            outcome = client.download(item.link, archive_path, cap_bytes=archive_cap)
+            try:
+                outcome = client.download(
+                    item.link, archive_path, cap_bytes=archive_cap
+                )
+            except BaseException:
+                disk.release(item.size)
+                raise
             if not outcome.ok:
                 if "exceeds cap" in (outcome.error or ""):
                     # Metadata lied about the size. This is a coverage gap, not
@@ -384,6 +421,7 @@ def collect_record(
                 else:
                     state.n_failed += 1
                     state.error = outcome.error
+                disk.release(item.size)
                 continue
 
             state.bytes_fetched += archive_path.stat().st_size
@@ -408,7 +446,9 @@ def collect_record(
                 state.n_failed += 1
                 state.error = f"extract: {result.error}"
                 # Keep the archive: this deposit is retryable, and the archive
-                # is the evidence needed to work out why it failed.
+                # is the evidence needed to work out why it failed. The
+                # reservation is *not* released, because the bytes are still
+                # on the disk.
                 continue
 
             # Extraction succeeded, so drop the compressed original.
@@ -428,6 +468,7 @@ def collect_record(
             # and losing a quarter of the journals is a worse error than losing
             # a re-downloadable file.
             archive_path.unlink(missing_ok=True)
+            disk.release(item.size)
             for path in result.files:
                 rows.append(
                     _row(
@@ -570,9 +611,11 @@ def collect(
         extra={"records": len(records), "todo": len(todo), "workers": workers},
     )
 
+    disk = _disk_budget_for(files_root)
+
     def one(record: ZenodoRecord) -> tuple[DatasetRecord, list[dict]]:
         try:
-            return collect_record(client, record, files_root, archive_cap)
+            return collect_record(client, record, files_root, archive_cap, disk)
         except Exception as exc:  # noqa: BLE001 - one bad record must not end the run
             logger.exception("zenodo record failed", extra={"record": record.record_id})
             return (
