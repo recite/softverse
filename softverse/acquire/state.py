@@ -46,6 +46,13 @@ class DatasetRecord:
     n_skipped_over_cap: int = 0
     n_restricted: int = 0
     n_failed: int = 0
+    #: Passed over because the disk was too full to start, not because
+    #: anything went wrong. Counted apart from `n_failed` for the same reason
+    #: `n_skipped_over_cap` is: a condition of this machine at this moment is
+    #: not a property of the deposit, and conflating them made 279 deposits
+    #: look broken when the only fact was that an unrelated project had filled
+    #: the volume. Still retryable, and it costs nothing to retry.
+    n_deferred: int = 0
     #: Segments of a multi-part archive (`.z01`, `.7z.002`, `.part1.rar`).
     #: Counted apart from failures because they are neither: the download
     #: succeeded and the bytes are correct, but no segment can be opened
@@ -74,6 +81,7 @@ class DatasetRecord:
             + self.n_restricted
             + self.n_failed
             + self.n_spanned
+            + self.n_deferred
         )
 
     @property

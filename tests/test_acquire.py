@@ -490,3 +490,21 @@ def test_stale_lists_moved_deposits_without_acting(tmp_path):
         record.upstream_version = version
         ledger.finish(record)
     assert ledger.stale({"doi:a": "v2", "doi:b": "v1"}) == ["doi:a"]
+
+
+def test_a_deferred_deposit_is_not_a_failed_one():
+    """279 deposits were recorded as failures for a condition of the laptop.
+
+    They said `insufficient free disk; deferred`, all inside a 31-second
+    window, because an unrelated project had taken the volume to 4.6 GB. The
+    guard was right to refuse; the ledger was wrong to call it a failure.
+    `n_skipped_over_cap` and `n_spanned` already exist as separate counts for
+    exactly this distinction -- a coverage gap we chose is not a thing that
+    broke.
+    """
+    record = DatasetRecord(
+        dataset_doi="doi:a", state="partial", n_candidate=2, n_fetched=1, n_deferred=1
+    )
+    assert record.reconciles()
+    assert record.n_failed == 0
+    assert record.needs_retry, "a deferral must still be retried"

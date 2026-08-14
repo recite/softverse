@@ -23,6 +23,7 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -108,11 +109,25 @@ ARCHIVE_CAP_BYTES = 5 * 1024 * 1024 * 1024
 #: stays retryable.
 MIN_FREE_BYTES = 8 * 1024 * 1024 * 1024
 
-#: Deposits fetched at once. Three, not more, for two reasons that happen to
-#: agree: measured aggregate throughput is roughly linear to about this point
-#: and then flattens, and the free-disk guard admits one in-flight archive per
-#: worker, so N workers can commit N times the cap before any of them lands.
+#: Deposits fetched at once.
+#:
+#: An earlier comment here claimed throughput "flattens" around three. That
+#: was asserted, not measured, and it is wrong: three streams sustain 6 MB/s,
+#: and six *additional* streams added 5 MB/s on top -- about 11 MB/s across
+#: nine, sub-linear but still climbing. Raising this would genuinely go
+#: faster.
+#:
+#: It stays at three anyway, deliberately. The remaining work finishes
+#: unattended either way, Zenodo's load does not need to grow for our
+#: convenience, and each worker can hold an archive up to the cap, so N
+#: workers can commit N times 5 GB before any of them lands.
 DEFAULT_WORKERS = 3
+
+#: How long a worker waits for room before deferring, and how often it looks.
+#: Long enough for a sibling to finish extracting a large archive and delete
+#: it; short enough that a genuinely full volume does not stall the run.
+WAIT_FOR_DISK_S = 120.0
+_DISK_POLL_S = 5.0
 
 
 @dataclass
@@ -289,19 +304,41 @@ class DiskBudget:
     the machine.
     """
 
-    def __init__(self, free, reserve: int = MIN_FREE_BYTES) -> None:
+    def __init__(
+        self,
+        free,
+        reserve: int = MIN_FREE_BYTES,
+        wait_seconds: float = WAIT_FOR_DISK_S,
+    ) -> None:
         self._free = free
         self._reserve = reserve
+        self._wait = wait_seconds
         self._committed = 0
         self._lock = threading.Lock()
 
-    def reserve_bytes(self, needed: int) -> bool:
-        """Claim ``needed`` bytes, or refuse. Release them when finished."""
-        with self._lock:
-            if self._free() - self._committed - needed <= self._reserve:
+    def reserve_bytes(self, needed: int, wait_seconds: float | None = None) -> bool:
+        """Claim ``needed`` bytes, waiting a bounded time for room.
+
+        The wait is the point. A shortfall is usually a sibling worker holding
+        an archive it is seconds away from extracting and deleting, so
+        refusing the instant the disk looks tight throws away work that would
+        have succeeded shortly after. Refusing immediately is what turned one
+        transient squeeze into 279 deferred deposits inside 31 seconds.
+
+        Bounded, because the other cause is a genuinely full volume -- an
+        unrelated project, in the case that prompted this -- and then the
+        right answer is to defer and let a later run pick it up, not to hang.
+        """
+        wait = self._wait if wait_seconds is None else wait_seconds
+        deadline = time.monotonic() + max(0.0, wait)
+        while True:
+            with self._lock:
+                if self._free() - self._committed - needed > self._reserve:
+                    self._committed += needed
+                    return True
+            if time.monotonic() >= deadline:
                 return False
-            self._committed += needed
-            return True
+            time.sleep(min(_DISK_POLL_S, max(0.0, deadline - time.monotonic())))
 
     def release(self, needed: int) -> None:
         with self._lock:
@@ -379,7 +416,7 @@ def collect_record(
             # file and recording it, which is the one window where the ledger
             # and the disk can disagree -- the failure mode the whole state
             # design exists to prevent.
-            state.n_failed += 1
+            state.n_deferred += 1
             state.error = "insufficient free disk; deferred"
             logger.warning(
                 "deferring download, low disk",
@@ -525,9 +562,13 @@ def collect_record(
         )
         state.n_fetched += 1
 
+    # A deferral must keep the deposit retryable. Moving deferrals out of
+    # `n_failed` silently made a wholly-deferred deposit read as `complete`,
+    # which is worse than the accounting bug it fixed: it would never have
+    # been collected at all. Caught by a test, not by inspection.
     state.state = (
         CollectionState.PARTIAL.value
-        if state.n_failed
+        if (state.n_failed or state.n_deferred)
         else CollectionState.COMPLETE.value
     )
     return state, rows
@@ -631,19 +672,42 @@ def collect(
     # whose corruption is unrecoverable, so writes to it are serialized rather
     # than trusted to be atomic.
     write_lock = threading.Lock()
-    done = 0
-    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
-        futures = {pool.submit(one, record): record for record in todo}
-        for future in as_completed(futures):
-            state, record_rows = future.result()
-            with write_lock:
-                ledger.finish(state)
-                rows.extend(record_rows)
-                done += 1
-                if done % 25 == 0 or done == len(todo):
-                    logger.info(
-                        "zenodo progress", extra={"done": done, "of": len(todo)}
-                    )
+
+    def run(batch: list[ZenodoRecord]) -> list[ZenodoRecord]:
+        """Collect a batch; return the deposits deferred for want of disk."""
+        deferred: list[ZenodoRecord] = []
+        done = 0
+        with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+            futures = {pool.submit(one, record): record for record in batch}
+            for future in as_completed(futures):
+                state, record_rows = future.result()
+                with write_lock:
+                    ledger.finish(state)
+                    rows.extend(record_rows)
+                    if state.n_deferred and not state.n_fetched:
+                        deferred.append(futures[future])
+                    done += 1
+                    if done % 25 == 0 or done == len(batch):
+                        logger.info(
+                            "zenodo progress", extra={"done": done, "of": len(batch)}
+                        )
+        return deferred
+
+    deferred = run(todo)
+    if deferred:
+        # Disk frees continuously as workers extract and delete, so a deposit
+        # refused early in a run usually fits later in the same one. Leaving
+        # them to a future run is what stranded 279 deposits for a day: they
+        # were all refused inside 31 seconds while the volume was briefly
+        # full, and nothing looked at them again. One more pass is bounded and
+        # costs nothing when there is nothing to retry.
+        logger.info("retrying deferred deposits", extra={"n": len(deferred)})
+        still = run(deferred)
+        if still:
+            logger.warning(
+                "still deferred after a retry; the disk is genuinely full",
+                extra={"n": len(still)},
+            )
     return rows
 
 

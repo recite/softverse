@@ -611,8 +611,12 @@ def test_workers_cannot_each_spend_the_last_of_the_disk(monkeypatch, tmp_path):
 
     from softverse.sources.zenodo import DiskBudget
 
-    # 12 GB free, 8 GB reserve: room for exactly one 3 GB archive.
-    budget = DiskBudget(free=lambda: 12_000_000_000, reserve=8_000_000_000)
+    # 12 GB free, 8 GB reserve: room for exactly one 3 GB archive. No wait:
+    # this is about the arithmetic being shared between workers, and the
+    # bounded wait has its own test.
+    budget = DiskBudget(
+        free=lambda: 12_000_000_000, reserve=8_000_000_000, wait_seconds=0
+    )
     granted = []
     barrier = threading.Barrier(3)
 
@@ -633,8 +637,135 @@ def test_a_reservation_is_returned_when_the_download_ends(tmp_path):
     """Otherwise the first three archives permanently poison the budget."""
     from softverse.sources.zenodo import DiskBudget
 
-    budget = DiskBudget(free=lambda: 12_000_000_000, reserve=8_000_000_000)
+    budget = DiskBudget(
+        free=lambda: 12_000_000_000, reserve=8_000_000_000, wait_seconds=0
+    )
     assert budget.reserve_bytes(3_000_000_000)
     assert not budget.reserve_bytes(3_000_000_000)
     budget.release(3_000_000_000)
     assert budget.reserve_bytes(3_000_000_000), "space must come back"
+
+
+def test_the_disk_budget_waits_for_a_sibling_worker_before_refusing():
+    """The usual shortfall is temporary and clears itself.
+
+    A worker holding a 3 GB archive is about to extract it and delete it, so
+    a refusal issued the instant the disk looks tight throws away work that
+    would have succeeded a minute later. Refusing immediately is what turned
+    a transient squeeze into 279 deferred deposits in 31 seconds.
+    """
+    import threading
+
+    from softverse.sources.zenodo import DiskBudget
+
+    budget = DiskBudget(free=lambda: 12_000_000_000, reserve=8_000_000_000)
+    assert budget.reserve_bytes(3_000_000_000)
+
+    # A second claim cannot fit yet. Release from another thread shortly, and
+    # the waiter should get it rather than give up.
+    threading.Timer(0.2, lambda: budget.release(3_000_000_000)).start()
+    assert budget.reserve_bytes(3_000_000_000, wait_seconds=5.0)
+
+
+def test_the_wait_is_bounded_so_a_full_disk_does_not_hang():
+    """An externally full volume must still degrade to a deferral."""
+    import time
+
+    from softverse.sources.zenodo import DiskBudget
+
+    budget = DiskBudget(free=lambda: 1_000, reserve=8_000_000_000)
+    start = time.monotonic()
+    assert not budget.reserve_bytes(3_000_000_000, wait_seconds=0.5)
+    assert time.monotonic() - start < 5.0, "the wait must be bounded"
+
+
+def test_a_low_disk_deferral_is_counted_as_such(tmp_path):
+    """Not `n_failed`. The download never started; nothing broke."""
+    from softverse.sources.zenodo import DiskBudget
+
+    record = zenodo.parse_record(
+        {
+            "id": 4242,
+            "metadata": {
+                "doi": "10.5281/zenodo.4242",
+                "title": "t",
+                "publication_date": "2024-01-01",
+                "communities": [],
+            },
+            "files": [
+                {
+                    "key": "big.zip",
+                    "size": 1_000_000,
+                    "checksum": "md5:x",
+                    "links": {"self": "https://zenodo.org/f/big.zip"},
+                }
+            ],
+        }
+    )
+    full = DiskBudget(free=lambda: 1_000, reserve=8_000_000_000, wait_seconds=0)
+    client = serving(b"")
+    state, _ = zenodo.collect_record(client, record, tmp_path, disk=full)
+    client.close()
+
+    assert state.n_deferred == 1
+    assert state.n_failed == 0
+    assert state.reconciles()
+    assert state.needs_retry
+
+
+def test_deposits_deferred_during_a_run_are_retried_before_it_ends(tmp_path):
+    """Disk frees continuously as workers extract and delete.
+
+    A deposit refused at minute three often fits at minute ten, so leaving it
+    for a later run wastes a day. All 279 would have been caught by one more
+    pass.
+    """
+    records = [
+        zenodo.parse_record(
+            {
+                "id": 700 + i,
+                "metadata": {
+                    "doi": f"10.5281/zenodo.{700 + i}",
+                    "title": "t",
+                    "publication_date": "2024-01-01",
+                    "communities": [],
+                },
+                "files": [
+                    {
+                        "key": "a.zip",
+                        "size": 10,
+                        "checksum": "md5:x",
+                        "links": {"self": "https://zenodo.org/f/a.zip"},
+                    }
+                ],
+            }
+        )
+        for i in range(3)
+    ]
+
+    from softverse.acquire.state import DatasetRecord
+
+    seen: list[str] = []
+
+    def defer_once(client, record, files_root, archive_cap=None, disk=None):
+        seen.append(record.doi)
+        if seen.count(record.doi) == 1:
+            return DatasetRecord(
+                dataset_doi=record.doi, state="partial", n_candidate=1, n_deferred=1
+            ), []
+        return DatasetRecord(
+            dataset_doi=record.doi, state="complete", n_candidate=1, n_fetched=1
+        ), []
+
+    import pytest as _pytest
+
+    monkeypatch = _pytest.MonkeyPatch()
+    monkeypatch.setattr(zenodo, "collect_record", defer_once)
+    ledger = Ledger(tmp_path / "ledger.jsonl")
+    client = serving(b"")
+    zenodo.collect(records, tmp_path, ledger, client, workers=2)
+    client.close()
+    monkeypatch.undo()
+
+    states = {r.dataset_doi: r.state for r in ledger._records.values()}
+    assert all(s == "complete" for s in states.values()), states
