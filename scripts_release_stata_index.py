@@ -92,7 +92,7 @@ assigned to a winner. Forcing a choice would bury classification error.
 | `stata_command_index.parquet` | the index (authoritative) |
 | `stata_command_index.csv` | identical, as text |
 | `ambiguous.json` | commands claimed by more than one package |
-| `builtins.json` | curated official commands, with abbreviation expansion |
+| `builtins.json` | official Stata commands, each verified against StataCorp's help server |
 | `datapackage.json` | frictionless schema |
 
 ### Columns
@@ -130,9 +130,15 @@ classify("reghdfe")   # -> 'reghdfe'
 classify("regress")   # -> 'builtin'
 ```
 
-The builtin list is curated and incomplete. That costs *recall*, never
-*precision*, because resolution is inclusive: a command counts as a package only
-if the index has it. A missing builtin lands in `unknown`, never in a package.
+Every name in `builtins.json` was checked against StataCorp's public help
+server rather than curated from memory, which is the difference between "we
+believe these are official" and "we asked". Pages from the `[U]` and `[FN]`
+manuals are excluded: they document system variables and functions such as
+`_n` and `e()`, which are not commands.
+
+The list is still incomplete, and that costs *recall*, never *precision*,
+because resolution is inclusive: a command counts as a package only if the
+index has it. A missing builtin lands in `unknown`, never in a package.
 
 ## Licence
 

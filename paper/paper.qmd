@@ -26,6 +26,8 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
+from softverse.stata.builtins import curated
+
 TALLY = Path("../build/tally")
 con = duckdb.connect()
 mentions = con.execute(f"SELECT * FROM '{TALLY}/mentions.parquet'").df()
@@ -75,6 +77,75 @@ n_ssc_packages, n_ssc_commands = con.execute(
     f"SELECT count(DISTINCT package), count(DISTINCT command) "
     f"FROM '{INDEX}' WHERE NOT is_helper"
 ).fetchone()
+# Quoted in Validation, so computed rather than typed.
+n_stata_builtin_calls = int(
+    (mentions["language"].eq("stata") & mentions["resolution"].eq("builtin")).sum()
+)
+# How much of the builtin list came from asking StataCorp rather than from
+# curation. Read from the snapshot so it cannot drift from the artifact.
+_verified = json.loads(
+    Path("../registries/snapshots/stata_official/official.json").read_text()
+)
+# Against the *curated* list, not the shipped builtins.json -- that file is
+# the merged set and already contains these names, so comparing to it returns
+# zero and silently understates the whole point. This equals the official
+# count because the crawl only asked about names that were unresolved or
+# SSC-attributed; anything the curated list already knew was never queried.
+n_verified_added = len(
+    {n for n, ok in _verified["commands"].items() if ok} - set(curated().forms)
+)
+# The counterfactual quoted in Validation: what the unresolved rate would be
+# with the curated list alone. It cannot be read off the tally -- it needs
+# re-resolving -- so it is reconstructed rather than typed, which is the only
+# way a comparison like this stays true after the next rebuild.
+#
+# Commands that are builtin only because the help server confirmed them rejoin
+# the candidate pool. Those the SSC index also claims would have been credited
+# to a package (the precision error); the rest would have read as unresolved.
+_ssc_commands = {
+    r[0]
+    for r in con.execute(
+        f"SELECT DISTINCT lower(command) FROM '{INDEX}' WHERE NOT is_helper"
+    ).fetchall()
+}
+_readded = mentions[
+    mentions["language"].eq("stata")
+    & mentions["resolution"].eq("builtin")
+    & ~mentions["normalized_name"].isin(set(curated().forms))
+]
+n_misattributed = int(_readded["normalized_name"].isin(_ssc_commands).sum())
+curated_only_share = (
+    candidates["resolution"].eq("unknown").sum() + len(_readded) - n_misattributed
+) / (len(candidates) + len(_readded))
+
+# Evidence for the archive-cap limitation: do bigger archives just hold more
+# data, or more code too? Joined from the ledger, because the archives
+# themselves are deleted after extraction.
+#
+# This was carried as a typed literal ("21 files to 221") measured on an
+# earlier, smaller corpus. Recomputed here it is 13 to 41 -- the direction
+# survives, the magnitude did not, which is the argument for computing it.
+_ledger = {}
+for _line in Path("../corpus/zenodo/ledger.jsonl").read_text().splitlines():
+    if _line.strip():
+        _r = json.loads(_line)
+        _ledger["zenodo:" + _r["dataset_doi"].rsplit(".", 1)[-1]] = _r
+_per_deposit = files.groupby("dataset_doi").size()
+_sized = sorted(
+    (_ledger[d]["bytes_fetched"], n)
+    for d, n in _per_deposit.items()
+    if d in _ledger and (_ledger[d].get("bytes_fetched") or 0) > 0
+)
+_q = max(1, len(_sized) // 4)
+code_files_smallest = int(pd.Series([n for _, n in _sized[:_q]]).median())
+code_files_largest = int(pd.Series([n for _, n in _sized[3 * _q :]]).median())
+
+# Named in Limitations. Computed so the claim cannot go stale silently.
+n_fastcd, n_wordy = (
+    int(mentions[(mentions["language"] == "stata")
+                 & (mentions["resolved_package"] == pkg)]["dataset_doi"].nunique())
+    for pkg in ("fastcd", "wordy")
+)
 stata_builtin_share = (
     mentions[mentions["language"] == "stata"]["resolution"].eq("builtin").mean()
 )
@@ -243,21 +314,49 @@ third-party-candidate mentions resolve to no registry, and every such name is
 enumerated rather than dropped.
 
 The denominator matters more than the rate. Against *all* mentions the same
-figure is `{python} f"{naive_unknown_share:.1%}"`, which would be a
-flattering way to describe the identical data:
-it divides by 1.7 million Stata builtin calls that were never candidates for
-registry resolution and could not have been unresolved. We report the rate
-against mentions that could name a package, which is
+figure is `{python} f"{naive_unknown_share:.1%}"`, which would be a flattering
+way to describe the identical data: it divides by
+`{python} f"{n_stata_builtin_calls:,}"` Stata builtin calls that were never
+candidates for registry resolution and could not have been unresolved. We
+report the rate against mentions that could name a package, which is
 `{python} f"{unknown_share / naive_unknown_share:.0f}"` times larger and is the
 number a reader should use to discount our coverage.
 
 The rate also differs by language in a way a pooled figure hides, and the
-reasons differ with it. Stata's unresolved names are dominated by official
-commands our builtin list omits and by packages distributed outside SSC
-(`grc1leg`); Python's by relative and dynamically constructed imports and by
-commercial libraries with no public registry entry (`arcpy`, `sfi`); R's, much
-the lowest, by the `library(pkg)`-inside-a-loop idiom, where the package name
-is a variable and is not knowable statically.
+reasons differ with it. Stata's unresolved names are now mostly packages
+distributed outside SSC — `grc1leg`, the single most common, comes from
+StataCorp's own site rather than the archive we index — together with package
+names appearing in `ssc install` lines rather than as commands. Python's are
+relative and dynamically constructed imports and commercial libraries with no
+public registry entry (`arcpy`, `sfi`). R's, much the lowest, are the
+`library(pkg)`-inside-a-loop idiom, where the package name is a variable and
+is not knowable statically.
+
+**The official-command list is measured, not curated.** Stata's builtin list
+is the one place where an omission is not neutral: a command that official
+Stata provides but our list lacks falls through to the SSC index, and if some
+package happens to ship a file of that name, it is attributed there. Rather
+than curate from memory we checked every command in the corpus against
+StataCorp's public help server, which is authoritative in the only way that
+matters — it is the vendor's own answer.
+
+This mattered more than expected. It moved
+`{python} f"{n_verified_added}"` commands out of "resolves to nothing",
+including `ds`, `pca` and `testparm`, and it removed every case where a
+command claimed by both official Stata and an SSC package had been credited to
+the package. With the curated list alone the unresolved rate on this same
+corpus is `{python} f"{curated_only_share:.1%}"` rather than
+`{python} f"{unknown_share:.1%}"`, and
+`{python} f"{n_misattributed:,}"` mentions would have been credited to an SSC
+package that merely ships a file of the same name. Much of what looked like a
+coverage gap was our own ignorance of Stata, not a limit of the method.
+
+The check is not a status code. Every query returns HTTP 200, including for
+names that do not exist, so existence is read from the body text; and the
+server documents concepts and functions as well as commands, so pages from the
+User's Guide and function manuals are excluded. Without that second filter the
+system variables `_n` and `_b` and the function `e()` are reported as official
+Stata commands.
 
 **Cross-tool agreement** with `renv::dependencies()` over corpus R deposits
 gives a Jaccard of 0.998. This is *convergent validity, not accuracy*: `renv`
@@ -277,12 +376,21 @@ deliberate deferral; the labelling frame is designed and can be run.
 - **Static reference is not execution.** Bounded, not eliminated, by the
   reachability analysis.
 - **Archive size cap.** Deposits whose only content exceeds the cap yield no
-  code. Measured: code files scale with archive size (smallest quartile 21 files,
-  largest 221), so the excluded tail is not data-without-code and the gap is
-  biased toward large, code-heavy projects.
+  code. Measured: code files scale with archive size — median
+  `{python} f"{code_files_smallest}"` code files in the smallest quartile of
+  archives against `{python} f"{code_files_largest}"` in the largest — so the
+  excluded tail is not data-without-code, and the gap is biased toward large,
+  code-heavy projects rather than toward large datasets.
 - **Stata resolution is current, not historical.** A command that was
   user-written in 2010 and became official later would be classified against
   today's status, which can manufacture a trend.
+- **Known residual false positives, enumerated.** Two SSC packages whose only
+  command is a single common token still attract stray matches: `fastcd`
+  (command `c`) in `{python} f"{n_fastcd}"` deposits and `wordy` (command
+  `word`) in `{python} f"{n_wordy}"`. Both come from Mata-style bare
+  assignments outside a `mata:` block, which the lexer cannot recognise as
+  Mata. We report them rather than suppressing single-letter commands by rule,
+  because such a rule would hide the next instance instead of surfacing it.
 - **MATLAB, SAS and SPSS are reported as language presence only.** MATLAB has no
   import statement and no resolvable registry; attributing toolboxes would be
   unbounded error.
