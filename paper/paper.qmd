@@ -140,6 +140,51 @@ _q = max(1, len(_sized) // 4)
 code_files_smallest = int(pd.Series([n for _, n in _sized[:_q]]).median())
 code_files_largest = int(pd.Series([n for _, n in _sized[3 * _q :]]).median())
 
+# Deposit-level coverage, by reason. A deposit that yielded nothing is not a
+# finding about the deposit until you can say why, and the reasons are not
+# interchangeable: an over-cap archive is a policy choice we made, a spanned
+# archive is a format we declined to reassemble, and a failure is a bug or an
+# outage. Reported as a table rather than one "coverage" number, because
+# collapsing them lets a bug hide inside a stated limitation.
+#
+# Read from the ledger alone. The first version of this asked which deposits
+# were absent from `files.parquet` and labelled the remainder "no code files
+# in the deposit" -- which quietly counted 99 deposits collected after the
+# tally was last built, plus 136 records that are not outcomes at all but
+# requeue markers left by an earlier cap raise, carrying no counts and only
+# surviving because the ledger takes the last write for a DOI. Comparing two
+# artifacts built at different times measures the interval between them; the
+# ledger is internally consistent, so it is the one to ask.
+_last = {}
+for _line in Path("../corpus/zenodo/ledger.jsonl").read_text().splitlines():
+    if _line.strip():
+        _r = json.loads(_line)
+        _last[_r["dataset_doi"]] = _r
+_reason_of = (
+    ("n_skipped_over_cap", "archive over the size cap"),
+    ("n_spanned", "multi-part archive, not reassembled"),
+    ("n_failed", "download or extraction failed"),
+)
+_gaps = []
+for _r in _last.values():
+    if "n_candidate" not in _r:
+        _gaps.append("awaiting re-collection")
+        continue
+    if _r["n_fetched"]:
+        continue
+    _why = next(
+        (label for key, label in _reason_of if _r.get(key)),
+        "deposit contains no code files",
+    )
+    _gaps.append(_why)
+coverage = (
+    pd.Series(_gaps).value_counts().rename_axis("reason").reset_index(name="deposits")
+)
+n_deposits_declared = len(_last)
+n_deposits_collected = len(_last) - len(_gaps)
+share_collected = n_deposits_collected / len(_last)
+n_spanned_deposits = sum(1 for _r in _last.values() if _r.get("n_spanned"))
+
 # Named in Limitations. Computed so the claim cannot go stale silently.
 n_fastcd, n_wordy = (
     int(mentions[(mentions["language"] == "stata")
@@ -238,6 +283,18 @@ unmeasurable, which is why prior work has omitted the language social science
 uses most.
 
 ## Results
+
+Of `{python} f"{n_deposits_declared:,}"` deposits attempted,
+`{python} f"{n_deposits_collected:,}"`
+(`{python} f"{share_collected:.0%}"`) yielded files. The rest are itemised
+rather than summarised, because the reasons are not interchangeable — a size
+cap is a choice we made, an unreassembled multi-part archive is a format we
+declined to handle, and a failure is a bug or an outage:
+
+```{python}
+#| label: coverage
+coverage.to_markdown(index=False)
+```
 
 ```{python}
 #| label: presence
@@ -381,6 +438,13 @@ deliberate deferral; the labelling frame is designed and can be run.
   archives against `{python} f"{code_files_largest}"` in the largest — so the
   excluded tail is not data-without-code, and the gap is biased toward large,
   code-heavy projects rather than toward large datasets.
+- **Multi-part archives are not reassembled.**
+  `{python} f"{n_spanned_deposits}"` deposits split a package across `.z01`,
+  `.7z.002` or `.partN.rar` segments. Only the tail segment carries the
+  central directory, so it downloads at exactly the size the repository
+  states, lists every member, and fails on the first read — a gap that looks
+  like a corrupt download and is not one. We count these rather than retrying
+  them, because no number of retries can assemble one segment.
 - **Stata resolution is current, not historical.** A command that was
   user-written in 2010 and became official later would be classified against
   today's status, which can manufacture a trend.

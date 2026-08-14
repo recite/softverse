@@ -95,6 +95,44 @@ def test_character_only_records_dynamic_rather_than_the_loop_variable():
     assert mention.construct is Construct.DYNAMIC_UNRESOLVED
 
 
+def test_a_variable_passed_to_package_version_is_dynamic_not_a_package():
+    """The same idiom one function along, and it was being missed.
+
+    `library(pkg, character.only = TRUE)` was already handled. But
+    `packageVersion(pkg)` and `requireNamespace(pkg)` took the same fallback
+    -- "if it is not a string, use the identifier's text" -- and emitted the
+    *variable name* as a package. `pkg` (90 mentions) and `package` (28) were
+    the two largest unresolved R names in the corpus for this reason alone,
+    which reads as poor registry coverage rather than as a helper function.
+    """
+    for source in (
+        "v <- packageVersion(pkg)",
+        "requireNamespace(pkg, quietly = TRUE)",
+        "if (system.file(package = pkg) == '') stop()",
+    ):
+        (mention,) = extract(source).mentions
+        assert mention.raw_name == "pkg", source
+        assert mention.construct is Construct.DYNAMIC_UNRESOLVED, source
+        assert mention.is_dynamic, source
+
+
+def test_a_string_passed_to_package_version_is_still_a_package():
+    """The guard keys on the node type, not the name.
+
+    1,316 of these mentions do resolve -- `plm` 144 times, `Matrix` 62,
+    `lme4` 58 -- and they are written as string literals. A fix that
+    suppressed the construct entirely would trade 177 false positives for
+    1,316 false negatives.
+    """
+    for source, expected in (
+        ('v <- packageVersion("plm")', "plm"),
+        ('requireNamespace("dplyr", quietly = TRUE)', "dplyr"),
+    ):
+        (mention,) = extract(source).mentions
+        assert mention.raw_name == expected
+        assert not mention.is_dynamic, source
+
+
 def test_character_only_false_is_a_normal_load():
     result = extract("library(dplyr, character.only = FALSE)")
     assert [m.raw_name for m in result.mentions] == ["dplyr"]

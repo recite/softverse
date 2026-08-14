@@ -227,7 +227,15 @@ def _handle_loader(
         # *variable* holding the name, and the real package is unknowable here.
         # v1 emitted the variable (`pkg`, `p`, `lib`) as a package and lost the
         # actual list; we record the mention as dynamic and resolve nothing.
-        if _is_truthy(_named_arg(args, source, "character.only"), source):
+        #
+        # `requireNamespace` and friends have no such evaluation to begin
+        # with: their `package` argument is documented as a character string,
+        # so `requireNamespace(pkg)` is a variable every time and no
+        # `character.only` is needed to say so. Only `library` and `require`
+        # take a symbol.
+        if construct is Construct.NAMESPACE_CHECK or _is_truthy(
+            _named_arg(args, source, "character.only"), source
+        ):
             return [
                 _mention(
                     _text(first, source),
@@ -305,11 +313,28 @@ def _handle_package_arg(call: Node, source: bytes, callee: str) -> list[Mention]
     if value is None:
         return []
     literal = _string_value(value, source)
-    if literal is None and value.type == "identifier":
-        literal = _text(value, source)
-    if not literal:
-        return []
-    return [_mention(literal, Construct.PACKAGE_ARG, value, source)]
+    if literal is not None:
+        return [_mention(literal, Construct.PACKAGE_ARG, value, source)]
+    if value.type == "identifier":
+        # A bare symbol here is a variable, not a package. These functions
+        # take a character scalar, so `packageVersion(pkg)` inside a helper is
+        # the parameter, and recording its name as a package made `pkg` (90
+        # mentions) and `package` (28) the two largest unresolved R names in
+        # the corpus -- which reads as thin registry coverage rather than as
+        # somebody's install-if-missing loop. Same treatment as
+        # `library(pkg, character.only = TRUE)`, which was already handled;
+        # the mention is kept, because dropping it would hide the idiom
+        # instead of naming it.
+        return [
+            _mention(
+                _text(value, source),
+                Construct.DYNAMIC_UNRESOLVED,
+                value,
+                source,
+                dynamic=True,
+            )
+        ]
+    return []
 
 
 def extract(source: str | bytes) -> ExtractResult:

@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from functools import cached_property
 
 from softverse.logging_setup import get_logger
-from softverse.model.enums import Ecosystem, Language, Resolution
+from softverse.model.enums import Construct, Ecosystem, Language, Resolution
 from softverse.registries.fetch import (
     BASE_R,
     PYPI_IMPORT_ALIASES,
@@ -43,6 +43,34 @@ _PEP503 = re.compile(r"[-_.]+")
 def normalize_pypi(name: str) -> str:
     """PEP 503 normalization: lowercase, runs of ``-_.`` collapsed to ``-``."""
     return _PEP503.sub("-", name).lower()
+
+
+def normalize(name: str, language: Language) -> str:
+    """The canonical matching key for ``name`` in ``language``.
+
+    There is no language-independent normal form, and pretending otherwise is
+    what the previous rule -- ``raw_name.lower()`` for everything -- got
+    wrong in two directions at once.
+
+    Python has a specification: PEP 503 folds case *and* collapses runs of
+    ``-_.`` to a single hyphen, so ``scikit_learn`` and ``scikit-learn`` are
+    one distribution. Lowercasing alone left them as two keys, and anything
+    grouping by this column counted one package twice.
+
+    R has no normal form at all: package names are case-sensitive, ``MASS``
+    is the package and ``mass`` is nothing. Lowercasing happened to be safe --
+    none of CRAN's 24,719 names collide under it -- but it produced a value
+    that cannot be looked up anywhere without first being undone. Julia is the
+    same. For both, the identity is the honest answer.
+
+    Stata is the one case the old rule fitted: commands are matched
+    case-insensitively and the SSC index is lowercase throughout.
+    """
+    if language is Language.PYTHON:
+        return normalize_pypi(name)
+    if language is Language.STATA:
+        return name.lower()
+    return name
 
 
 @dataclass(frozen=True)
@@ -163,8 +191,28 @@ class Registry:
         name: str,
         language: Language,
         local_programs: frozenset[str] = frozenset(),
+        construct: Construct | None = None,
     ) -> Resolved:
-        """Resolve ``name`` in ``language``."""
+        """Resolve ``name`` in ``language``.
+
+        Some constructs settle the question before any registry is consulted,
+        and both were being missed because the construct never arrived here.
+        A relative import names a module inside the deposit; a dynamic name is
+        a variable that happened to be spelled like an identifier. Neither is
+        a package, whatever the registries say about the string.
+
+        Without this, `from .models import Constants` was indistinguishable
+        from `import models` by the time it reached the resolver, and 292
+        mentions of a deposit's own modules -- `models`, `results`, `log`,
+        `context` -- were credited to same-named distributions, while 621 more
+        were reported as unresolved third-party names. Both errors point the
+        same way: they make the corpus look like it uses more packages, less
+        identifiably, than it does.
+        """
+        if construct is Construct.LOCAL_RELATIVE:
+            return Resolved(Resolution.LOCAL_RELATIVE, None, None)
+        if construct is Construct.DYNAMIC_UNRESOLVED:
+            return Resolved(Resolution.DYNAMIC, None, None)
         if language is Language.R:
             return self.resolve_r(name)
         if language is Language.PYTHON:
