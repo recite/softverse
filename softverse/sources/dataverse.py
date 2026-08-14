@@ -154,6 +154,78 @@ def walk_collection(
     return datasets, visited
 
 
+#: Datasets per search page. Small enough that each request is quick and
+#: cheap for the server, which is the point of using search at all.
+SEARCH_PAGE_SIZE = 100
+
+
+def search_collection(
+    client, alias: str, base_url: str = DATAVERSE_BASE_URL
+) -> list[dict]:
+    """List a collection's datasets by paging the search API.
+
+    The fallback for collections `/api/dataverses/{alias}/contents` cannot
+    serve. That endpoint returns the whole collection in one response, and
+    the server gives up on the largest one: measured, `jop` came back with
+    466 KB after 87 s while `restat` returned nothing after 73 s -- failing
+    *faster* than the one that worked, so not a timeout on either side.
+
+    Paging is also the lighter request. Seventeen 150 KB pages at ten seconds
+    each is easier on their infrastructure than one response big enough to
+    fall over, which matters given the terms speak to impairment.
+
+    Returns rows shaped like `/contents` entries so the two paths merge, and
+    returns nothing at all on a failed page: a short read would silently
+    shrink a journal in the frame, and a truncated collection is
+    indistinguishable from a small one.
+    """
+    rows: list[dict] = []
+    start = 0
+    total: int | None = None
+    while total is None or start < total:
+        url = (
+            f"{base_url}/api/search?q=*&subtree={alias}&type=dataset"
+            f"&per_page={SEARCH_PAGE_SIZE}&start={start}"
+        )
+        outcome = client.get(url)
+        if not outcome.ok or outcome.content is None:
+            logger.warning(
+                "search page failed; abandoning the collection",
+                extra={"alias": alias, "start": start, "err": outcome.error},
+            )
+            return []
+        try:
+            data = json.loads(outcome.content)["data"]
+        except (json.JSONDecodeError, KeyError) as exc:
+            logger.warning(
+                "search page unparseable", extra={"alias": alias, "err": str(exc)}
+            )
+            return []
+        total = data.get("total_count", 0)
+        items = data.get("items") or []
+        if not items:
+            break
+        for item in items:
+            # `doi:10.7910/DVN/24195` -> protocol, authority, identifier, so
+            # the row matches what `/contents` would have produced.
+            global_id = item.get("global_id") or ""
+            protocol, _, rest = global_id.partition(":")
+            authority, _, identifier = rest.partition("/")
+            rows.append(
+                {
+                    "id": item.get("entity_id"),
+                    "identifier": identifier,
+                    "persistentUrl": f"https://doi.org/{rest}" if rest else "",
+                    "protocol": protocol,
+                    "authority": authority,
+                    "publicationDate": (item.get("published_at") or "")[:10],
+                    "type": "dataset",
+                }
+            )
+        start += SEARCH_PAGE_SIZE
+    return rows
+
+
 # ---------------------------------------------------------------------------
 # Stage 2: manifest
 # ---------------------------------------------------------------------------

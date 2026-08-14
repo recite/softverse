@@ -20,11 +20,20 @@ shape of the v1 disaster (8,953 deposits marked "success", holding nothing),
 arrived at by a different route. Detecting it is ours, it is tested, and it must
 not regress.
 
-We do not attempt to satisfy the challenge. It expects a JS-solved
-`aws-waf-token` cookie; producing one would be circumventing an access control,
-and Harvard's API Terms of Use ask users not to impair the service. The correct
-response to a closed door is to knock more slowly, which is what
-:mod:`softverse.acquire.watch` does.
+This client does not satisfy the challenge, because it cannot: the challenge
+wants JavaScript run and there is no JavaScript here.
+:mod:`softverse.acquire.browser` does that, and returns the same
+:class:`FetchOutcome` so callers need no change.
+
+An earlier version of this note said producing an `aws-waf-token` "would be
+circumventing an access control, and Harvard's API Terms of Use ask users not
+to impair the service". The second half was true and the first half was an
+inference presented as their position. Read directly, the terms prohibit
+concealing or misrepresenting your identity or your application's identity,
+using an unreasonable amount of bandwidth, and impairing the functionality,
+stability or operation of the servers. Automated access is not prohibited,
+and neither is executing a challenge. What matters is being identifiable and
+being light, which is what the browser client is built to be.
 """
 
 from __future__ import annotations
