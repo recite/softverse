@@ -28,7 +28,11 @@ from pathlib import Path
 
 from softverse.acquire.http import PoliteClient
 from softverse.acquire.state import DatasetRecord, Ledger, atomic_write_bytes
-from softverse.acquire.unpack import extract, relative_member_path
+from softverse.acquire.unpack import (
+    extract,
+    relative_member_path,
+    spanned_segments,
+)
 from softverse.config import (
     ARCHIVE_EXTENSIONS,
     MANIFEST_FILENAMES,
@@ -74,10 +78,12 @@ WHOLE_REPOSITORY_THRESHOLD = 1_000_000
 #: 1-2 GB, 54 in 2-5 GB, 60 above 5 GB).
 #:
 #: What settles it is that **code scales with archive size**, measured across
-#: 907 deposits: the smallest quartile averages 0.5 MB and 21 code files, the
-#: largest 200 MB and 221. So the skipped tail is not data-without-code, and
-#: dropping 19% of deposits drops considerably more than 19% of the code, biased
-#: toward large code-heavy projects.
+#: 1,390 deposits: median 13 code files in the smallest size quartile (0.4 MB
+#: median) against 41 in the largest (163 MB median). So the skipped tail is not
+#: data-without-code, and dropping 19% of deposits drops more than 19% of the
+#: code, biased toward large code-heavy projects. (An earlier note here said 21
+#: against 221; that was measured on a corpus a third the size and did not
+#: survive recomputation. The direction held, the factor went from 10.5 to 3.2.)
 #:
 #: Disk is not the constraint it looked like: archives are deleted after
 #: successful extraction, so peak usage is one archive at a time, not the
@@ -295,8 +301,28 @@ def collect_record(
 
     target = files_root / record.record_id
     now = datetime.now(tz=UTC)
+    # Recognised from the deposit's whole file list, not just the candidates:
+    # a `.z01` segment is not itself a candidate, so the tail `.zip` is the
+    # only piece we would otherwise see -- and it is the piece that looks fine.
+    spanned = spanned_segments(f.key for f in record.files)
 
     for item in wanted:
+        if item.key in spanned:
+            # Downloading this succeeds and extracting it cannot. Counted
+            # separately from a failure so it is not retried forever, and so
+            # the coverage gap is a number in the ledger rather than an
+            # anomaly someone has to notice.
+            state.n_spanned += 1
+            state.skipped_archives.append(
+                {
+                    "filename": item.key,
+                    "size_bytes": item.size,
+                    "file_id": None,
+                    "reason": "multi-part archive segment",
+                }
+            )
+            continue
+
         # The cap check must come first. It is a policy decision about what we
         # collect and belongs in the coverage statistic; the disk check is a
         # transient condition of this machine. Testing disk first would record

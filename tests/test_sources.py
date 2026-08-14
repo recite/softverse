@@ -395,6 +395,51 @@ def test_a_failed_archive_is_kept_for_diagnosis(tmp_path, monkeypatch):
     client.close()
 
 
+def test_a_multipart_archive_is_a_coverage_gap_not_a_failure(tmp_path):
+    """Zenodo record 11202896, as a test.
+
+    A 6.4 GB package split into `.z01`, `.z02` and a 130 MB `.zip`. Only the
+    `.zip` is a candidate -- `.z01` is not an archive extension -- and it is
+    the segment holding the central directory, so it downloaded byte-for-byte
+    against Zenodo's stated size, listed 165 members, and produced "Bad magic
+    number for file header" on the first read. Recorded as `n_failed`, that
+    is a deposit retried forever with no possible outcome; recorded as
+    `n_spanned`, it is a number in the coverage statistic.
+    """
+    record = zenodo.parse_record(
+        {
+            "id": 11202896,
+            "metadata": {
+                "doi": "10.5281/zenodo.11202896",
+                "title": "t",
+                "publication_date": "2024-01-01",
+                "communities": [],
+            },
+            "files": [
+                {
+                    "key": f"3-replication-package{ext}",
+                    "size": size,
+                    "checksum": "md5:x",
+                    "links": {"self": f"https://zenodo.org/f/pkg{ext}"},
+                }
+                for ext, size in (
+                    (".z01", 3145728000),
+                    (".z02", 3145728000),
+                    (".zip", 130173841),
+                )
+            ],
+        }
+    )
+    client = serving(b"never requested")
+    state, rows = zenodo.collect_record(client, record, tmp_path)
+    assert state.n_spanned == 1
+    assert state.n_failed == 0, "a complete download is not a transport failure"
+    assert state.reconciles()
+    assert not state.needs_retry, "no number of retries can assemble one segment"
+    assert rows == []
+    client.close()
+
+
 def test_collect_honours_fresh(tmp_path, monkeypatch):
     """`fresh` must reach the filter, not just the signature.
 

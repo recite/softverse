@@ -318,6 +318,39 @@ def test_archive_detection():
     assert not CandidateFile(1, "x.R", 1, None, False, None).is_archive
 
 
+@pytest.mark.parametrize(
+    "keys,spanned",
+    [
+        # The real case: a 6.4 GB replication package split across three
+        # Zenodo files. The `.zip` is the *last* segment, so it holds the
+        # central directory and lists 165 members -- and every attempt to read
+        # one fails, because the bytes live in siblings we never fetched. Our
+        # 130,173,841-byte download matched Zenodo's stated size exactly, which
+        # is why nothing upstream of extraction noticed.
+        (["3-replication-package.z01", "3-replication-package.zip"], True),
+        (["pkg.7z.001", "pkg.7z.002"], True),
+        (["data.part1.rar", "data.part2.rar"], True),
+        (["archive.zip", "archive.z09"], True),
+        # Not spanned: a lone archive, or several unrelated ones.
+        (["replication.zip"], False),
+        (["code.zip", "data.zip"], False),
+        (["notes.z01.txt"], False),
+    ],
+)
+def test_spanned_archive_sets_are_recognised(keys, spanned):
+    from softverse.acquire.unpack import spanned_segments
+
+    assert bool(spanned_segments(keys)) is spanned
+
+
+def test_a_spanned_set_names_every_segment_including_the_last():
+    """The `.zip` tail must be flagged too, or it is downloaded and fails."""
+    from softverse.acquire.unpack import spanned_segments
+
+    keys = ["p.z01", "p.z02", "p.zip", "readme.txt"]
+    assert spanned_segments(keys) == {"p.z01", "p.z02", "p.zip"}
+
+
 def test_empty_202_is_treated_as_throttling_not_success(monkeypatch):
     """Measured Harvard Dataverse behaviour, not spec.
 

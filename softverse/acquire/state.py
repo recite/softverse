@@ -46,6 +46,12 @@ class DatasetRecord:
     n_skipped_over_cap: int = 0
     n_restricted: int = 0
     n_failed: int = 0
+    #: Segments of a multi-part archive (`.z01`, `.7z.002`, `.part1.rar`).
+    #: Counted apart from failures because they are neither: the download
+    #: succeeded and the bytes are correct, but no segment can be opened
+    #: without its siblings, so the deposit is a coverage gap rather than a
+    #: transport problem to retry.
+    n_spanned: int = 0
     bytes_fetched: int = 0
     version_number: int | None = None
     version_minor: int | None = None
@@ -63,7 +69,11 @@ class DatasetRecord:
     def reconciles(self) -> bool:
         """Whether the parts account for every candidate file."""
         return self.n_candidate == (
-            self.n_fetched + self.n_skipped_over_cap + self.n_restricted + self.n_failed
+            self.n_fetched
+            + self.n_skipped_over_cap
+            + self.n_restricted
+            + self.n_failed
+            + self.n_spanned
         )
 
     @property

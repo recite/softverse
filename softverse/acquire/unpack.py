@@ -15,8 +15,10 @@ bounds the damage a malicious or merely enormous archive can do.
 from __future__ import annotations
 
 import os
+import re
 import tarfile
 import zipfile
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -24,36 +26,39 @@ from softverse.logging_setup import get_logger
 
 logger = get_logger(__name__)
 
-#: Refuse an archive claiming to expand beyond this. A zip bomb is small on the
-#: wire and unbounded on disk.
-#:
-#: **Calibrated against the corpus, not against an imagined attacker.** The
-#: first limits (2 GB, 50,000 members) were picked for safety without checking
-#: what real research archives look like, and they rejected 6 of the first 100
-#: Zenodo deposits: economics replication packages declaring 3.0, 5.1, 6.2 and
-#: 6.6 GB uncompressed, and one with 140,219 members. None was an attack; that
-#: is simply what a replication package with a large panel dataset looks like.
-#: A guard that excludes 6% of the corpus is not protecting the analysis, it is
-#: biasing it -- and toward exactly the data-heavy work we least want to lose.
-#:
-#: These bounds still stop a real bomb (the classic 42.zip expands to petabytes)
-#: while admitting genuine deposits. The guards that matter for *safety* --
-#: zip-slip, symlink and device rejection -- are unchanged and have cost
-#: nothing, because no legitimate archive needs them.
-MAX_UNCOMPRESSED_BYTES = 20 * 1024**3
+#: Cheap ceiling on how many members we will iterate. Unlike a size limit this
+#: costs nothing to check and bounds the work of merely listing a hostile
+#: archive. Calibrated against the corpus: one real deposit has 140,219
+#: members.
 MAX_MEMBERS = 500_000
 #: Nested archives are extracted this many levels deep, then left alone.
 MAX_NESTING = 3
 
 #: Ceiling on what one archive may write to disk, across all nesting levels.
 #:
-#: The download cap bounds the *transfer*; this bounds the *expansion*, and they
-#: are not the same constraint. A 2 GB deposit made of nested data archives can
-#: write far more than 2 GB before the caller's delete fires, so without this a
-#: single pathological deposit can still fill the disk no matter how the
-#: download cap is set. Generous enough that no legitimate replication package
-#: has hit it -- the point is to bound the worst case, not to filter.
+#: **This is the only size guard, and it is the only one that was ever
+#: measuring the right thing.** There used to be a second, checked first: the
+#: archive's *declared* uncompressed size. It rejected 6 of the first 100
+#: deposits at 2 GB, was raised to 20 GB, and then rejected 12 more once the
+#: corpus reached 1,394 -- economics replication packages declaring 21 to 103
+#: GB. Between them those twelve held 26.5 MB of `.do` and `.R`. Extraction
+#: keeps only source and drops the panel data that is the other 99.994%, so
+#: the declared total is three orders of magnitude away from what we write:
+#: not a safety margin, a filter, and one that selects against the largest
+#: empirical packages -- a bias correlated with the very thing being measured.
+#: Needing to raise the number twice was the tell that the quantity was wrong.
+#:
+#: What remains bounds bytes *written*, which is the resource actually at risk,
+#: and it is now spent incrementally rather than totalled at the end: the check
+#: fires on the member that would exceed it, so the limit constrains the disk
+#: and not just the report.
 MAX_EXTRACTED_BYTES = 10 * 1024**3
+
+#: Copy granularity. Also the accuracy of the budget: a member is stopped
+#: within one chunk of the ceiling rather than after being read whole, which
+#: matters because `ZipFile.read()` would otherwise pull a 4 GB member into
+#: memory before anything got a chance to object.
+_CHUNK = 1 << 20
 
 
 class UnsafeArchive(Exception):
@@ -95,14 +100,47 @@ def is_safe_member(name: str, root: Path) -> bool:
     return True
 
 
-def _reject_bomb(total_uncompressed: int, n_members: int, label: str) -> None:
-    if total_uncompressed > MAX_UNCOMPRESSED_BYTES:
-        raise UnsafeArchive(
-            f"{label}: declares {total_uncompressed / 1e9:.1f} GB uncompressed "
-            f"(limit {MAX_UNCOMPRESSED_BYTES / 1e9:.0f} GB)"
-        )
+def _reject_bomb(n_members: int, label: str) -> None:
     if n_members > MAX_MEMBERS:
         raise UnsafeArchive(f"{label}: {n_members:,} members (limit {MAX_MEMBERS:,})")
+
+
+@dataclass
+class Budget:
+    """Bytes one deposit may write, shared across every nesting level.
+
+    A per-call limit would hand each nested archive a fresh allowance, so an
+    archive of archives could write an unbounded multiple of the ceiling while
+    every individual extraction stayed within it.
+    """
+
+    remaining: int
+
+    def spend(self, n: int, label: str) -> None:
+        self.remaining -= n
+        if self.remaining < 0:
+            raise UnsafeArchive(
+                f"{label}: expanded past the "
+                f"{MAX_EXTRACTED_BYTES / 1e9:.0f} GB write budget; "
+                f"stopped extracting"
+            )
+
+
+def _copy_within_budget(src, target: Path, budget: Budget, label: str) -> None:
+    """Stream one member to disk, charging the budget as it goes.
+
+    Chunked rather than `read()`-then-`write()` so that neither memory nor disk
+    can be committed before the budget has a chance to refuse.
+    """
+    with open(target, "wb") as out:
+        while chunk := src.read(_CHUNK):
+            try:
+                budget.spend(len(chunk), label)
+            except UnsafeArchive:
+                out.close()
+                target.unlink(missing_ok=True)
+                raise
+            out.write(chunk)
 
 
 def _wanted(
@@ -123,14 +161,16 @@ def extract_zip(
     dest: Path,
     keep_suffixes: frozenset[str],
     keep_names: frozenset[str] = frozenset(),
+    budget: Budget | None = None,
 ) -> Extracted:
     """Extract wanted members of a zip, preserving their in-archive paths."""
     result = Extracted()
+    budget = budget or Budget(MAX_EXTRACTED_BYTES)
     dest.mkdir(parents=True, exist_ok=True)
     try:
         with zipfile.ZipFile(archive) as zf:
             infos = zf.infolist()
-            _reject_bomb(sum(i.file_size for i in infos), len(infos), archive.name)
+            _reject_bomb(len(infos), archive.name)
             for info in infos:
                 if info.is_dir():
                     continue
@@ -143,8 +183,8 @@ def extract_zip(
                     continue
                 target = dest / name
                 target.parent.mkdir(parents=True, exist_ok=True)
-                with zf.open(info) as src, open(target, "wb") as out:
-                    out.write(src.read())
+                with zf.open(info) as src:
+                    _copy_within_budget(src, target, budget, archive.name)
                 result.files.append(target)
     except UnsafeArchive as exc:
         result.error = str(exc)
@@ -164,6 +204,7 @@ def extract_7z(
     dest: Path,
     keep_suffixes: frozenset[str],
     keep_names: frozenset[str] = frozenset(),
+    budget: Budget | None = None,
 ) -> Extracted:
     """Extract wanted members of a .7z.
 
@@ -171,28 +212,100 @@ def extract_7z(
     downloaded, could not be opened, and was recorded as an unsupported format
     -- a real deposit lost to a missing branch, which is how v1 lost every
     ``.tar``.
+
+    Symlink members are refused here as they are in the tar path. This one is
+    not theoretical the way most hardening is: unlike zip and tar, where we do
+    the writing, py7zr writes the members itself, so nothing in this file
+    stopped it creating a link. A member named ``code/x.R`` pointing at
+    ``/etc/passwd`` passes ``is_safe_member`` -- the *name* stays inside the
+    root -- and a later write goes through it. The gap surfaced when a
+    macOS-made archive mislabelled three ordinary files as links and py7zr
+    tried to use each one's contents as a link target, which is also why the
+    filter is on the flag rather than on any attempt to tell a real link from
+    a mislabelled one.
     """
     result = Extracted()
+    budget = budget or Budget(MAX_EXTRACTED_BYTES)
     dest.mkdir(parents=True, exist_ok=True)
     try:
         import py7zr
 
         with py7zr.SevenZipFile(archive, "r") as sz:
-            names = sz.getnames()
+            infos = sz.list()
+            names = [i.filename for i in infos]
             if len(names) > MAX_MEMBERS:
                 raise UnsafeArchive(f"{archive.name}: {len(names):,} members")
+            links = {i.filename for i in infos if i.is_symlink}
             wanted = [
                 n
                 for n in names
-                if is_safe_member(n, dest) and _wanted(n, keep_suffixes, keep_names)
+                if n not in links
+                and is_safe_member(n, dest)
+                and _wanted(n, keep_suffixes, keep_names)
             ]
-            result.skipped_unsafe = [n for n in names if not is_safe_member(n, dest)]
+            result.skipped_unsafe = [
+                n for n in names if n in links or not is_safe_member(n, dest)
+            ]
             if wanted:
                 sz.extract(path=dest, targets=wanted)
                 result.files = [dest / n for n in wanted if (dest / n).is_file()]
+                # py7zr has no streaming member API, so the budget is charged
+                # after the fact here. The archive-level member cap and the
+                # `wanted` filter are what bound it in the meantime.
+                budget.spend(sum(p.stat().st_size for p in result.files), archive.name)
     except UnsafeArchive as exc:
         result.error = str(exc)
     except Exception as exc:  # noqa: BLE001 - py7zr raises a wide variety
+        result.error = f"{type(exc).__name__}: {exc}"
+    return result
+
+
+def extract_rar(
+    archive: Path,
+    dest: Path,
+    keep_suffixes: frozenset[str],
+    keep_names: frozenset[str] = frozenset(),
+    budget: Budget | None = None,
+) -> Extracted:
+    """Extract wanted members of a .rar.
+
+    Five deposits in the frame ship one, and until now each was recorded as an
+    unsupported type -- the same way a `.7z` and, in v1, every `.tar` was lost.
+
+    `rarfile` (4.5, August 2026) is the only maintained reader, and RAR3+ is
+    patent-encumbered enough that it has no pure-Python decompressor: it shells
+    out to `unar`, `bsdtar` or `unrar`. That external dependency is why the
+    absence of a backend is reported as an ordinary extraction error rather
+    than raised -- a machine without one should record a coverage gap and carry
+    on, not stop collecting.
+    """
+    result = Extracted()
+    budget = budget or Budget(MAX_EXTRACTED_BYTES)
+    dest.mkdir(parents=True, exist_ok=True)
+    try:
+        import rarfile
+
+        with rarfile.RarFile(archive) as rf:
+            infos = rf.infolist()
+            _reject_bomb(len(infos), archive.name)
+            for info in infos:
+                if info.is_dir():
+                    continue
+                name = info.filename
+                if not is_safe_member(name, dest):
+                    result.skipped_unsafe.append(name)
+                    continue
+                if not _wanted(name, keep_suffixes, keep_names):
+                    result.skipped_other.append(name)
+                    continue
+                target = dest / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with rf.open(info) as src:
+                    _copy_within_budget(src, target, budget, archive.name)
+                result.files.append(target)
+    except UnsafeArchive as exc:
+        result.error = str(exc)
+    except Exception as exc:  # noqa: BLE001 - rarfile wraps varied backend errors
         result.error = f"{type(exc).__name__}: {exc}"
     return result
 
@@ -202,6 +315,7 @@ def extract_tar(
     dest: Path,
     keep_suffixes: frozenset[str],
     keep_names: frozenset[str] = frozenset(),
+    budget: Budget | None = None,
 ) -> Extracted:
     """Extract wanted members of a tar (optionally compressed), safely.
 
@@ -209,11 +323,12 @@ def extract_tar(
     anywhere and turn a later write into an arbitrary-file overwrite.
     """
     result = Extracted()
+    budget = budget or Budget(MAX_EXTRACTED_BYTES)
     dest.mkdir(parents=True, exist_ok=True)
     try:
         with tarfile.open(archive, "r:*") as tf:
             members = tf.getmembers()
-            _reject_bomb(sum(m.size for m in members), len(members), archive.name)
+            _reject_bomb(len(members), archive.name)
             for member in members:
                 if not member.isfile():
                     if member.issym() or member.islnk() or member.isdev():
@@ -230,8 +345,8 @@ def extract_tar(
                     continue
                 target = dest / member.name
                 target.parent.mkdir(parents=True, exist_ok=True)
-                with extracted, open(target, "wb") as out:
-                    out.write(extracted.read())
+                with extracted:
+                    _copy_within_budget(extracted, target, budget, archive.name)
                 result.files.append(target)
     except UnsafeArchive as exc:
         result.error = str(exc)
@@ -241,7 +356,111 @@ def extract_tar(
 
 
 #: Suffixes we recurse into when found inside an archive.
-_ARCHIVE_SUFFIXES = {".zip", ".tar", ".tgz", ".gz", ".bz2", ".xz", ".7z"}
+_ARCHIVE_SUFFIXES = {".zip", ".tar", ".tgz", ".gz", ".bz2", ".xz", ".7z", ".rar"}
+
+#: Leading bytes to format. Read in preference to the extension, because one
+#: deposit shipped a 7z named `.zip`: `zipfile` reported "File is not a zip
+#: file", which the collector could only record as a transport failure --
+#: indistinguishable in the ledger from a timeout, so it would have been
+#: retried forever and never worked.
+_MAGIC: tuple[tuple[bytes, str], ...] = (
+    (b"PK\x03\x04", "zip"),
+    (b"PK\x05\x06", "zip"),
+    (b"PK\x07\x08", "zip"),
+    (b"7z\xbc\xaf\x27\x1c", "7z"),
+    (b"Rar!\x1a\x07", "rar"),
+    (b"\x1f\x8b", "gz"),
+    (b"BZh", "tar"),
+    (b"\xfd7zXZ\x00", "tar"),
+)
+
+
+#: Segment name -> the archive it belongs to. `pkg.z01` is part of `pkg.zip`;
+#: `pkg.7z.002` part of `pkg.7z`; `pkg.r00` part of `pkg.rar`; and a
+#: `pkg.partN.rar` set names itself.
+_SEGMENT_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^(.+?)\.z\d{2}$", re.I), "{}.zip"),
+    (re.compile(r"^(.+?\.7z)\.\d{3}$", re.I), "{}"),
+    (re.compile(r"^(.+?)\.r\d{2}$", re.I), "{}.rar"),
+    (re.compile(r"^(.+?)\.part\d+\.rar$", re.I), "{}.part1.rar"),
+)
+
+
+def _segment_of(key: str) -> str | None:
+    """The archive ``key`` is a segment of, or None if it stands alone."""
+    for pattern, template in _SEGMENT_PATTERNS:
+        match = pattern.match(key)
+        if match:
+            return template.format(match.group(1))
+    return None
+
+
+def spanned_segments(keys: Iterable[str]) -> set[str]:
+    """Which of ``keys`` belong to a multi-part archive set.
+
+    A multi-part archive cannot be opened one segment at a time, and it fails
+    in the worst possible way: the *last* segment carries the central
+    directory, so it lists every member and errors only once one is read. A
+    deposit split 6.4 GB across `.z01`, `.z02` and a 130 MB `.zip`; the `.zip`
+    downloaded byte-for-byte against Zenodo's stated size, listed 165 members,
+    and yielded nothing. Nothing upstream of extraction could notice, and the
+    resulting error was indistinguishable from a corrupt download -- so it
+    looked retryable, and no number of retries would ever have worked.
+
+    Reassembly is deliberately not attempted: it means fetching every segment
+    regardless of the size cap, which is a policy decision for the caller.
+    """
+    keys = list(keys)
+    present = {k.lower(): k for k in keys}
+    by_archive: dict[str, set[str]] = {}
+    for key in keys:
+        archive = _segment_of(key)
+        if archive:
+            by_archive.setdefault(archive.lower(), set()).add(key)
+
+    found: set[str] = set()
+    for archive, segments in by_archive.items():
+        if archive in present:
+            found |= segments | {present[archive]}
+        elif len(segments) > 1:
+            found |= segments
+    return found
+
+
+def archive_format(archive: Path) -> str | None:
+    """Format of ``archive`` from its header, falling back to its extension.
+
+    The fallback matters: a self-extracting zip begins with an executable stub
+    (one deposit's starts ``d2 75 6f 7f``) and still opens, because a zip's
+    directory is at the end of the file. Sniffing must not turn a working case
+    into a failure.
+    """
+    try:
+        with open(archive, "rb") as handle:
+            head = handle.read(262)
+    except OSError:
+        head = b""
+    for signature, fmt in _MAGIC:
+        if head.startswith(signature):
+            return fmt
+    if head[257:262] == b"ustar":
+        return "tar"
+
+    suffix = archive.suffix.lower()
+    name = archive.name.lower()
+    if suffix == ".zip":
+        return "zip"
+    if suffix == ".7z":
+        return "7z"
+    if suffix == ".rar":
+        return "rar"
+    if suffix == ".gz":
+        return "gz"
+    if suffix in {".tar", ".tgz", ".bz2", ".xz"} or name.endswith(
+        (".tar.gz", ".tar.bz2", ".tar.xz")
+    ):
+        return "tar"
+    return None
 
 
 def extract(
@@ -250,6 +469,7 @@ def extract(
     keep_suffixes: frozenset[str],
     keep_names: frozenset[str] = frozenset(),
     depth: int = 0,
+    budget: Budget | None = None,
 ) -> Extracted:
     """Extract an archive by type, recursing into nested archives.
 
@@ -258,31 +478,25 @@ def extract(
     all, so that code was invisible; its Zenodo path recursed but double-counted
     the results.
     """
-    suffix = archive.suffix.lower()
-    name = archive.name.lower()
-    if suffix == ".zip":
-        result = extract_zip(archive, dest, keep_suffixes, keep_names)
-    elif suffix == ".7z":
-        result = extract_7z(archive, dest, keep_suffixes, keep_names)
-    elif suffix in {".tar", ".tgz", ".bz2", ".xz"} or name.endswith(
-        (".tar.gz", ".tar.bz2", ".tar.xz")
-    ):
-        result = extract_tar(archive, dest, keep_suffixes, keep_names)
-    elif suffix == ".gz":
-        result = extract_tar(archive, dest, keep_suffixes, keep_names)
+    budget = budget or Budget(MAX_EXTRACTED_BYTES)
+    fmt = archive_format(archive)
+    if fmt == "zip":
+        result = extract_zip(archive, dest, keep_suffixes, keep_names, budget)
+    elif fmt == "7z":
+        result = extract_7z(archive, dest, keep_suffixes, keep_names, budget)
+    elif fmt == "rar":
+        result = extract_rar(archive, dest, keep_suffixes, keep_names, budget)
+    elif fmt == "tar":
+        result = extract_tar(archive, dest, keep_suffixes, keep_names, budget)
+    elif fmt == "gz":
+        result = extract_tar(archive, dest, keep_suffixes, keep_names, budget)
         if result.error:
             # A bare .gz is a single compressed file, not a tar.
-            result = _extract_gz(archive, dest, keep_suffixes, keep_names)
+            result = _extract_gz(archive, dest, keep_suffixes, keep_names, budget)
     else:
         return Extracted(error=f"unsupported archive type: {archive.name}")
 
-    written = sum(p.stat().st_size for p in result.files if p.exists())
-    if written > MAX_EXTRACTED_BYTES:
-        result.error = (
-            f"{archive.name}: expanded to {written / 1e9:.1f} GB on disk "
-            f"(limit {MAX_EXTRACTED_BYTES / 1e9:.0f} GB); stopped extracting"
-        )
-        logger.warning("extraction budget exceeded", extra={"archive": archive.name})
+    if result.error:
         return result
 
     if depth < MAX_NESTING:
@@ -294,7 +508,11 @@ def extract(
                     keep_suffixes,
                     keep_names,
                     depth + 1,
+                    budget,
                 )
+                if inner.error and "write budget" in inner.error:
+                    result.error = inner.error
+                    return result
                 result.files.extend(inner.files)
                 result.skipped_unsafe.extend(inner.skipped_unsafe)
                 result.nested_archives.append(path)
@@ -318,11 +536,16 @@ def extract(
 
 
 def _extract_gz(
-    archive: Path, dest: Path, keep_suffixes: frozenset[str], keep_names: frozenset[str]
+    archive: Path,
+    dest: Path,
+    keep_suffixes: frozenset[str],
+    keep_names: frozenset[str],
+    budget: Budget | None = None,
 ) -> Extracted:
     import gzip
 
     result = Extracted()
+    budget = budget or Budget(MAX_EXTRACTED_BYTES)
     inner_name = (
         archive.name[:-3] if archive.name.lower().endswith(".gz") else archive.stem
     )
@@ -332,13 +555,8 @@ def _extract_gz(
     dest.mkdir(parents=True, exist_ok=True)
     target = dest / inner_name
     try:
-        with gzip.open(archive, "rb") as src, open(target, "wb") as out:
-            written = 0
-            while chunk := src.read(1 << 20):
-                written += len(chunk)
-                if written > MAX_UNCOMPRESSED_BYTES:
-                    raise UnsafeArchive(f"{archive.name}: gz expands past limit")
-                out.write(chunk)
+        with gzip.open(archive, "rb") as src:
+            _copy_within_budget(src, target, budget, archive.name)
         result.files.append(target)
     except UnsafeArchive as exc:
         target.unlink(missing_ok=True)
