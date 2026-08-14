@@ -47,6 +47,13 @@ PREFIX_COMMANDS = frozenset(
         "noisi",
         "nois",
         "noi",
+        # `n` is the shortest abbreviation of `noisily`, and it was the one
+        # missing: `cap n estadd ysumm` recorded `n` as the command and lost
+        # `estadd` with it. 750 mentions across 14 deposits, the second-largest
+        # unresolved Stata name in the corpus. Safe because there is no Stata
+        # command `n` -- StataCorp's help server answers for it with
+        # `[U] 13.4 System variables`, the page documenting `_n`.
+        "n",
         "capture",
         "captur",
         "captu",

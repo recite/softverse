@@ -46,11 +46,29 @@ def test_v1_false_positives_are_gone(source, expected):
         ("by id year: reghdfe y x", "reghdfe"),
         ("qui bysort id: reghdfe y x", "reghdfe"),
         ("cap noi reghdfe y x", "reghdfe"),
+        # `n` is the shortest abbreviation of `noisily`, and it was missing
+        # from the prefix list while `noi` through `noisily` were all present.
+        ("cap n reghdfe y x", "reghdfe"),
+        ("n reghdfe y x", "reghdfe"),
+        ("qui n reghdfe y x", "reghdfe"),
     ],
 )
 def test_prefix_commands_are_peeled(source, expected):
     """v1 missed reghdfe entirely; a stacked prefix must not hide it."""
     assert expected in commands(source)
+
+
+def test_the_noisily_abbreviation_is_not_mistaken_for_a_command():
+    """`cap n estadd ysumm` is capture-noisily-estadd, and cost twice over.
+
+    `n` was recorded as the command -- 750 mentions across 14 deposits, the
+    second-largest unresolved Stata name in the corpus -- *and* the real
+    command was lost with it. There is no Stata command `n`: StataCorp's help
+    server answers for it with `[U] 13.4 System variables`, the page for `_n`.
+    """
+    found = commands("cap n estadd ysumm")
+    assert "estadd" in found
+    assert "n" not in found
 
 
 def test_trailing_punctuation_is_stripped():
