@@ -50,11 +50,16 @@ def test_the_paper_types_no_numbers_it_could_compute():
     prose = re.sub(r"^\s*[-*]?\s*\[.*?\]\(.*?\)", "", prose, flags=re.M)
 
     #: Facts about the world rather than measurements of our corpus: Zenodo's
-    #: size, a year, a CVE, and another paper's deposit count.
-    allowed = {"7.1", "2010", "2,000", "200", "1.0", "4559", "2007"}
+    #: size, a CVE, and another paper's deposit count.
+    allowed = {"7.1", "2,000", "200", "1.0", "4559"}
+    #: A four-digit year is a date, never a measurement of this corpus, so it
+    #: is admitted by rule rather than by adding each one to the list above as
+    #: it appears -- which is how an allowlist quietly becomes a way of
+    #: silencing the check it belongs to.
+    year = re.compile(r"^(19|20)\d\d$")
     found = {
         m.group(0)
         for m in re.finditer(r"\b\d[\d,.]{2,}\b", prose)
-        if m.group(0) not in allowed
+        if m.group(0) not in allowed and not year.match(m.group(0))
     }
     assert not found, f"literal numbers in the prose: {sorted(found)}"
