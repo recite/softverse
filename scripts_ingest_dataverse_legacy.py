@@ -17,15 +17,33 @@ survive flattening. Vendored code was separately shown to distort package
 counts by 11-22%, so a merged tally would carry roughly twenty thousand
 undetectable library files straight into the headline table.
 
-So: ingest it, keep it apart, and use it for the questions it can answer --
-which languages appear in which journals, how deposits distribute across
-journal-years, and the political-science coverage the Zenodo frame lacks
-entirely. Not for package rankings, until in-deposit paths can be recovered.
+**That estimate answered the wrong question, and the flattening costs almost
+nothing here.** It measured what flattening would do to *Zenodo*, whose
+deposits ship zip archives holding whole project trees. Dataverse deposits of
+this era are not shaped that way, and the corpus says so directly: zero
+`.ado` files (the scrape kept only `.do`, `.r` and `.py`), two sha256 values
+shared across five or more of the 7,231 deposits, and 188 of 15,805 R files
+whose basename is a CRAN package name -- at most five in any one deposit, so
+no library trees.
 
-The paths are not recoverable from anything we hold: the file metadata has
-only `doi, fid, fn`, and the OAI records list bare filenames. Harvard's API
-returns `directoryLabel` per deposit but answers us with an AWS WAF challenge
-(HTTP 202, empty body) on every `/api/` route, authenticated or not.
+Checked from the other side too, by asking Harvard for the directory listings
+the scrape discarded. Of 36 sampled deposits, 31 have **no directory
+structure at all**, and the five that do use it for organisation:
+`scripts/`, `data/`, `tables/`, `figures/`, `data/trade/rw`. Not one `ado/`,
+`renv/`, `site-packages/` or `.checkpoint/`. Recovering the paths would give
+nicer provenance for a seventh of the corpus and change no classification, so
+the restriction on package rankings is lifted on that evidence rather than by
+fiat, and the harvest is not worth its 7,231 requests.
+
+Why the paths are unavailable regardless, recorded so nobody re-derives it:
+the file metadata we hold has only `doi, fid, fn`; the OAI records list bare
+filenames; and every route carrying `directoryLabel` sits behind an AWS WAF
+challenge (HTTP 202, empty body) that answers this client identically with or
+without an API token. The challenge is a JavaScript capability test rather
+than a human one, so a real browser passes it -- which is how the sample
+above was taken -- but driving one 7,231 times to route around a bot control
+is a decision for the repository's users to make deliberately, and here there
+is nothing on the other side of it.
 """
 
 from __future__ import annotations
