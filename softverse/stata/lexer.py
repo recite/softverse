@@ -65,7 +65,6 @@ PREFIX_COMMANDS = frozenset(
         "xi",
         "svy",
         "mi",
-        "fvset",
         "bootstrap",
         "bs",
         "jackknife",
@@ -83,6 +82,12 @@ PREFIX_COMMANDS = frozenset(
     }
 )
 
+#: `fvset` was here and is not a prefix. Its syntax is `fvset base base_spec
+#: varlist` -- a subcommand, no colon, and nothing following it that could be
+#: a command -- so peeling it off recorded `base` as the command in 17 places
+#: and never counted `fvset` at all. A prefix is one that stands *before*
+#: another command.
+#:
 #: Prefixes taking a colon-terminated argument list (`bysort id year:`).
 _COLON_PREFIXES = frozenset(
     {
@@ -403,7 +408,12 @@ def _strip_prefixes(tokens: list[str]) -> tuple[list[str], list[str]]:
     prefixes: list[str] = []
     i = 0
     while i < len(tokens):
-        token = tokens[i].lower().rstrip(":")
+        # A colon prefix may carry its own options before the colon --
+        # `statsby, by(id): regress y x` -- so the comma has to come off the
+        # token before it is looked up, exactly as it does for `program
+        # mycmd, rclass`. Without this the whole line resolved to `statsby`
+        # and the command it wrapped was never seen.
+        token = tokens[i].lower().rstrip(":").rstrip(",")
         if token not in PREFIX_COMMANDS:
             break
         prefixes.append(token)

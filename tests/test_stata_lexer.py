@@ -304,3 +304,29 @@ def test_commands_that_merely_start_with_pr_do_not_define_programs():
     assert local_programs("predict yhat") == set()
     assert local_programs("probit y x") == set()
     assert local_programs("preserve") == set()
+
+
+def test_fvset_is_a_command_not_a_prefix():
+    """`fvset base default treatarm` sets a factor-variable base level.
+
+    It was in the prefix list, so the lexer peeled it off and recorded `base`
+    as the command -- 17 mentions of a "package" called `base`, and `fvset`
+    itself never counted. StataCorp's syntax is `fvset base base_spec
+    varlist`: a subcommand, no colon, and nothing following that could be a
+    command. Prefixes are the ones that stand *before* another command.
+    """
+    found = commands("fvset base default treatarm")
+    assert "fvset" in found
+    assert "base" not in found
+
+
+def test_the_real_prefixes_still_peel():
+    """The guard against over-correcting: these do stand before a command."""
+    for source in (
+        "xi: regress y i.group",
+        "svy: mean income",
+        "mi estimate: regress y x",
+        "version 13: regress y x",
+        "statsby, by(id): regress y x",
+    ):
+        assert "regress" in commands(source) or "mean" in commands(source), source
