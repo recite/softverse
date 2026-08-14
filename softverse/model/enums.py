@@ -186,6 +186,11 @@ class VendorRule(StrEnum):
     """Which rule marked a file as vendored. Recorded so exclusions are auditable."""
 
     V1_PATH = "v1_path"  # renv/, packrat/, site-packages/, .checkpoint/
+    #: Stata's library layout: `ado/base`, `ado/plus`, or the bare `ado/` a
+    #: replication package uses to ship its dependencies. Recorded apart from
+    #: V1_PATH because it was added late and its exclusions are worth being
+    #: able to count on their own.
+    V1_STATA_ADO = "v1_stata_ado"
     V2_MARKER = "v2_marker"  # DESCRIPTION+NAMESPACE, pyproject+__init__
     V3_CROSS_DATASET = "v3_cross_dataset"  # same sha256 in >=5 deposits
     V4_NAME_SHAPE = "v4_name_shape"  # basename listed in an SSC .pkg

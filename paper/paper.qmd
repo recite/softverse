@@ -228,6 +228,25 @@ _found_makers = [p for p in _top_stata["package"] if p in TABLE_MAKERS]
 n_table_makers = len(_found_makers)
 table_makers_list = ", ".join(f"`{p}`" for p in _found_makers)
 
+# The unresolved rate per *deposit*, which is the unit this paper argues for
+# everywhere else and then quietly abandoned here. Pooling over mentions lets
+# one deposit speak for the corpus, and one does: a deposit that vendors
+# Stata's own `ado/base` tree contributes 46% of all unresolved Stata
+# mentions by itself.
+_per_deposit = (
+    candidates.assign(unresolved=candidates["resolution"].eq("unknown"))
+    .groupby("dataset_doi")["unresolved"]
+    .agg(["size", "sum"])
+)
+_per_deposit["rate"] = _per_deposit["sum"] / _per_deposit["size"]
+median_deposit_unresolved = float(_per_deposit["rate"].median())
+p90_deposit_unresolved = float(_per_deposit["rate"].quantile(0.9))
+share_deposits_fully_resolved = float((_per_deposit["sum"] == 0).mean())
+_worst = _per_deposit["sum"].idxmax()
+worst_deposit_share = float(
+    _per_deposit.loc[_worst, "sum"] / _per_deposit["sum"].sum()
+)
+
 # Named in Validation. The most *widespread* unresolved Stata name, ranked by
 # deposits rather than mentions: one deposit calling something six hundred
 # times is one user of it, and a mention-ranked list is a ranking of whichever
@@ -544,6 +563,27 @@ candidates for registry resolution and could not have been unresolved. We
 report the rate against mentions that could name a package, which is
 `{python} f"{unknown_share / naive_unknown_share:.0f}"` times larger and is the
 number a reader should use to discount our coverage.
+
+**So does the unit, and here it changes the picture rather than the decimal.**
+Pooled over mentions, one deposit can speak for the corpus, and one does: the
+single worst contributes `{python} f"{worst_deposit_share:.0%}"` of all
+unresolved mentions on its own, because it vendors a copy of Stata's `ado`
+tree and calls into it thousands of times. Per deposit — the unit this paper
+uses everywhere else, for the reason it gives for package rankings — the
+distribution is not centred anywhere near
+`{python} f"{unknown_share:.1%}"`:
+
+| statistic | unresolved share |
+|---|---:|
+| pooled over mentions | `{python} f"{unknown_share:.1%}"` |
+| median deposit | `{python} f"{median_deposit_unresolved:.1%}"` |
+| 90th-percentile deposit | `{python} f"{p90_deposit_unresolved:.1%}"` |
+| deposits fully resolved | `{python} f"{share_deposits_fully_resolved:.0%}"` |
+
+`{python} f"{share_deposits_fully_resolved:.0%}"` of deposits have **every**
+candidate mention resolved. The pooled figure is not wrong, but it describes a
+minority of deposits and should be read as an upper bound on how much of a
+typical deposit we cannot name — not as a typical value.
 
 The rate differs by language in a way a pooled figure hides, and the reasons
 differ with it.

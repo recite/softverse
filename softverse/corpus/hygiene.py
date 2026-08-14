@@ -60,6 +60,21 @@ def vendored_by_path(relative_path: str) -> VendorRule | None:
     parts = {p.lower() for p in Path(relative_path).parts}
     if parts & VENDOR_PATH_MARKERS:
         return VendorRule.V1_PATH
+    if "ado" in parts:
+        # Stata's library layout, which the marker set had no entry for --
+        # `renv/`, `packrat/` and `site-packages/` were all there, and the
+        # equivalent for the language this corpus uses most was missing.
+        # Stata installs into `ado/base`, `ado/plus` and `ado/personal`, each
+        # with single-letter subdirectories, and replication packages ship
+        # their dependencies in a bare `ado/` for the same reason.
+        #
+        # Matched on the component rather than the sysdir names because the
+        # bare form is just as common: ten randomly sampled files under one
+        # were ten third-party packages (`reghdfe`, `eststo`, `gegen`,
+        # `flevelsof`, `parallel_map`). 12,231 corpus files sit under such a
+        # tree, contributing 14% of all mentions and 45% of the unresolved
+        # ones.
+        return VendorRule.V1_STATA_ADO
     if any(p.startswith("._") for p in Path(relative_path).parts):
         return VendorRule.APPLEDOUBLE
     return None
@@ -117,7 +132,7 @@ def classify(
     relative_path: str,
     sha256: str,
     *,
-    siblings: set[str] = frozenset(),
+    siblings: Iterable[str] = (),
     ssc_shipped: frozenset[str] = frozenset(),
     shared_hashes: frozenset[str] = frozenset(),
     seen_in_dataset: dict[str, str] | None = None,
