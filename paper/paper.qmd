@@ -185,12 +185,69 @@ n_deposits_collected = len(_last) - len(_gaps)
 share_collected = n_deposits_collected / len(_last)
 n_spanned_deposits = sum(1 for _r in _last.values() if _r.get("n_spanned"))
 
-# Cross-tool agreement, read from the artifact `scripts_validate_renv.py`
-# writes. This paragraph used to carry a typed 0.998 that nothing in the
-# repository computed -- no script, no artifact, no recorded run. It was the
-# one number here with no provenance at all, and it was wrong by about a
-# tenth; the check that caught it is `tests/test_paper.py`, which fails on any
-# bare numeral left in the prose.
+# The findings paragraphs. Every claim there is a computation here, including
+# the qualitative one: which of the top Stata packages are output formatters
+# is a fixed, checkable list of names, not a judgement made at writing time.
+_at_risk = dict(zip(presence["language"], presence["n_deposits"], strict=True))
+n_stata_deposits = int(_at_risk.get("stata", 0))
+n_r_deposits = int(_at_risk.get("r", 0))
+n_python_deposits = int(_at_risk.get("python", 0))
+stata_to_r_ratio = n_stata_deposits / max(1, n_r_deposits)
+
+
+def _top(language: str, n: int = 10):
+    return usage[usage["language"] == language].nlargest(n, "n_deposits")
+
+
+_top_stata = _top("stata")
+n_top_stata = len(_top_stata)
+top_stata_package = f"`{_top_stata.iloc[0]['package']}`"
+top_stata_share = float(_top_stata.iloc[0]["share_of_deposits"])
+_top_python = _top("python")
+top_python_package = f"`{_top_python.iloc[0]['package']}`"
+top_python_share = float(_top_python.iloc[0]["share_of_deposits"])
+
+#: Stata packages whose purpose is formatting results for publication rather
+#: than estimating anything. Named explicitly so the claim is falsifiable: a
+#: reader can disagree with the membership of this set and recompute.
+TABLE_MAKERS = {
+    "estout",
+    "outreg2",
+    "coefplot",
+    "tabout",
+    "asdoc",
+    "outtable",
+    "esttab",
+    "mktab",
+    "xml_tab",
+    "logout",
+    "putexcel",
+    "outreg",
+}
+_found_makers = [p for p in _top_stata["package"] if p in TABLE_MAKERS]
+n_table_makers = len(_found_makers)
+table_makers_list = ", ".join(f"`{p}`" for p in _found_makers)
+
+# Named in Validation. The most *widespread* unresolved Stata name, ranked by
+# deposits rather than mentions: one deposit calling something six hundred
+# times is one user of it, and a mention-ranked list is a ranking of whichever
+# deposits are largest.
+_stata_unknown = mentions[
+    (mentions["language"] == "stata") & (mentions["resolution"] == "unknown")
+]
+_by_deposits = _stata_unknown.groupby("normalized_name")["dataset_doi"].nunique()
+top_unresolved_stata = f"`{_by_deposits.idxmax()}`"
+n_grc1leg_deposits = int(_by_deposits.max())
+stata_unknown_share_of_all = len(_stata_unknown) / max(
+    1, int(candidates["resolution"].eq("unknown").sum())
+)
+
+# The two categories that exist so that "we cannot name a package" is not
+# confused with "there is no package here". Both were folded into `unknown`
+# until the construct was allowed to reach the resolver.
+n_local_relative = int(mentions["resolution"].eq("local_relative").sum())
+n_dynamic = int(mentions["resolution"].eq("dynamic").sum())
+
 # R's own parser as a true oracle for the syntactic task. Unlike the `renv`
 # comparison below this is not a peer agreement: R's parser defines the
 # answer, so disagreement is our error and the rate is exact.
@@ -201,12 +258,27 @@ n_oracle_pairs = _oracle["true_positives"] + _oracle["false_negatives"]
 oracle_precision = _oracle["precision"]
 oracle_recall = _oracle["recall"]
 
+# Cross-tool agreement, read from the artifact `scripts_validate_renv.py`
+# writes. This paragraph used to carry a typed 0.998 that nothing in the
+# repository computed -- no script, no artifact, no recorded run. It was the
+# one number here with no provenance at all, and it was wrong by about a
+# tenth; the check that caught it is `tests/test_paper.py`, which fails on any
+# bare numeral left in the prose.
 _renv = json.loads(Path("../build/validation/renv_agreement.json").read_text())
 n_renv_compared = _renv["n_deposits_compared"]
 renv_mean_jaccard = _renv["mean_jaccard"]
 renv_pooled_jaccard = _renv["pooled_jaccard"]
 renv_perfect_share = _renv["n_perfect_agreement"] / _renv["n_deposits_compared"]
 renv_version = _renv["renv_version"]
+
+# Named in Limitations: Stata keywords reaching command position. Computed,
+# so that closing one of the gaps shows up here rather than leaving a stale
+# boast in the prose.
+_keyword_noise = _stata_unknown[_stata_unknown["normalized_name"].isin(
+    {"in", "using", "str"}
+)]
+n_keyword_noise = len(_keyword_noise)
+n_keyword_noise_deposits = int(_keyword_noise["dataset_doi"].nunique())
 
 # Named in Limitations. Computed so the claim cannot go stale silently.
 n_fastcd, n_wordy = (
@@ -218,6 +290,44 @@ stata_builtin_share = (
     mentions[mentions["language"] == "stata"]["resolution"].eq("builtin").mean()
 )
 ```
+
+## Abstract {.unnumbered}
+
+Research software is infrastructure that scholarship depends on and rarely
+credits, and what we know about which software gets used comes mostly from
+what authors *wrote about* rather than what their code *loaded*. Replication
+code is the more direct record. We parse it.
+
+From `{python} f"{n_deposits:,}"` replication deposits at journals whose
+data-and-code policies are actively verified by the Social Science Data
+Editors, we extract `{python} f"{n_files:,}"` code files and
+`{python} f"{len(candidates):,}"` references that could name a third-party
+package, and resolve each against pinned registry snapshots.
+
+The obstacle is Stata, which is both the most common language in this corpus
+— `{python} f"{n_stata_deposits:,}"` deposits against
+`{python} f"{n_r_deposits:,}"` for R — and the one that studies of research
+software routinely omit, because R has CRAN and Python has PyPI while Stata
+has no public mapping from a command to the package providing it. We build
+one, from the SSC archive's own distribution manifests
+(`{python} f"{n_ssc_commands:,}"` commands across
+`{python} f"{n_ssc_packages:,}"` packages), and release it separately, since
+its usefulness does not depend on our corpus.
+
+Two findings survive the measurement. Third-party software use in this corpus
+is dominated not by estimation but by *presentation*:
+`{python} f"{n_table_makers}"` of the ten most widely used Stata packages
+exist to format output, and the single most common is
+`{python} top_stata_package`, in `{python} f"{top_stata_share:.0%}"` of Stata
+deposits. And the languages are not comparable on any raw count — a "mention"
+is an import in R and Python but a command occurrence in Stata, so the only
+denominator that travels is references that *could* have named a package.
+
+Extraction is validated against R's own parser as a true oracle rather than
+against a peer tool: precision `{python} f"{oracle_precision:.4f}"` and recall
+`{python} f"{oracle_recall:.4f}"` over
+`{python} f"{n_oracle_pairs:,}"` name-file pairs. Every number in this paper
+is computed from the released tables; none is typed.
 
 ## What this measures, and what it does not
 
@@ -369,6 +479,39 @@ The unit is the deposit, not the mention. A deposit calling `ggplot2` two
 hundred times is one user of `ggplot2`; a mention-weighted ranking would be a
 ranking of whichever deposits happen to be largest.
 
+### Three things the table shows
+
+**Stata is the majority language, by a margin that explains why it keeps being
+left out.** `{python} f"{n_stata_deposits:,}"` deposits contain analyzable
+Stata against `{python} f"{n_r_deposits:,}"` with R and
+`{python} f"{n_python_deposits:,}"` with Python — roughly
+`{python} f"{stata_to_r_ratio:.1f}"` Stata deposits for every R one. Studies of
+research software have generally covered R and Python, the two languages with
+public registries, and that omission is not a random sample of the field: it
+removes the language most of this literature is written in. Building the
+command→package index was the precondition for counting it at all.
+
+**What gets loaded most is not what computes the results.** Of the top
+`{python} f"{n_top_stata}"` Stata packages by deposit share,
+`{python} f"{n_table_makers}"` exist to format output rather than to estimate
+anything: `{python} table_makers_list`. The most widely used piece of
+third-party Stata software in this corpus is
+`{python} top_stata_package`, in `{python} f"{top_stata_share:.0%}"` of Stata
+deposits — a table generator. Whatever we mean by research software
+dependency, in practice a large part of it is the machinery for turning
+estimates into a publishable exhibit.
+
+**Concentration differs sharply by language, and denominators are why.**
+Python's usage is near-universal within its deposits —
+`{python} top_python_package` appears in
+`{python} f"{top_python_share:.0%}"` of Python deposits — because Python in a
+replication package almost always means a dataframe pipeline. Stata's most
+common package reaches `{python} f"{top_stata_share:.0%}"`, and its
+distribution has a much longer tail, because Stata does natively what a Python
+deposit must import a library to do. Reading these two numbers as "Python
+users are more consistent" would be a mistake: they are shares of different
+kinds of deposit, and the languages are not substitutes for one another here.
+
 ## Validation {#sec-baseline}
 
 ```{python}
@@ -402,15 +545,31 @@ report the rate against mentions that could name a package, which is
 `{python} f"{unknown_share / naive_unknown_share:.0f}"` times larger and is the
 number a reader should use to discount our coverage.
 
-The rate also differs by language in a way a pooled figure hides, and the
-reasons differ with it. Stata's unresolved names are now mostly packages
-distributed outside SSC — `grc1leg`, the single most common, comes from
-StataCorp's own site rather than the archive we index — together with package
-names appearing in `ssc install` lines rather than as commands. Python's are
-relative and dynamically constructed imports and commercial libraries with no
-public registry entry (`arcpy`, `sfi`). R's, much the lowest, are the
-`library(pkg)`-inside-a-loop idiom, where the package name is a variable and
-is not knowable statically.
+The rate differs by language in a way a pooled figure hides, and the reasons
+differ with it.
+
+**Stata carries almost all of it** —
+`{python} f"{stata_unknown_share_of_all:.0%}"` of unresolved mentions — and
+three things are mixed together there. Some are real packages distributed
+outside SSC: `{python} top_unresolved_stata` is the most widespread,
+appearing in `{python} f"{n_grc1leg_deposits}"` deposits, and comes from
+StataCorp's own site rather than the archive we index. Some are internal
+subroutines from `.ado` files vendored into a deposit, which are code we
+correctly see and correctly decline to attribute. The rest are lexer error,
+enumerated in the limitations below rather than netted out.
+
+**Names that no package could ever have.** A mention is unresolved when we
+cannot name a package for it, which is not the same as there being one. Two
+constructs make that distinction explicit rather than letting it inflate the
+rate: `{python} f"{n_local_relative:,}"` Python relative imports
+(`from .models import Constants` names a module in the deposit, not a
+distribution) and `{python} f"{n_dynamic:,}"` names built at run time
+(`library(pkg, character.only = TRUE)`, where the package is a variable and
+no static analysis can know it). Both are reported in their own categories.
+Folding them into `unknown` — which an earlier version of this pipeline did —
+overstates the unresolved rate and, worse, credits some of them to real
+packages that happen to share the name: `models`, `results` and `log` are all
+distributions on PyPI as well as things people call their own files.
 
 **The official-command list is measured, not curated.** Stata's builtin list
 is the one place where an omission is not neutral: a command that official
@@ -530,6 +689,17 @@ deliberate deferral; the labelling frame is designed and can be run.
   assignments outside a `mata:` block, which the lexer cannot recognise as
   Mata. We report them rather than suppressing single-letter commands by rule,
   because such a rule would hide the next instance instead of surfacing it.
+- **Three lexer gaps we can name and have not closed.** Stata keywords are
+  reaching command position in contexts the lexer does not model: `in` and
+  `using` after an old-style `/* */` line continuation, and `str` inside an
+  `infile dictionary` block, where lines such as `str FACT_ID 5-12` declare
+  storage types rather than call anything. Together
+  `{python} f"{n_keyword_noise:,}"` mentions in
+  `{python} f"{n_keyword_noise_deposits}"` deposits. They inflate the
+  unresolved rate and nothing else: a keyword cannot collide with an SSC
+  package name, so none is misattributed. Reporting the number is worth more
+  than a keyword blocklist, which would suppress the symptom and leave the
+  contexts unmodelled.
 - **MATLAB, SAS and SPSS are reported as language presence only.** MATLAB has no
   import statement and no resolvable registry; attributing toolboxes would be
   unbounded error.
