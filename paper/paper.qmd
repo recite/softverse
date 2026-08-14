@@ -230,9 +230,9 @@ table_makers_list = ", ".join(f"`{p}`" for p in _found_makers)
 
 # The unresolved rate per *deposit*, which is the unit this paper argues for
 # everywhere else and then quietly abandoned here. Pooling over mentions lets
-# one deposit speak for the corpus, and one does: a deposit that vendors
-# Stata's own `ado/base` tree contributes 46% of all unresolved Stata
-# mentions by itself.
+# one deposit speak for the corpus, and one did until vendored library trees
+# stopped being read as research code -- a deposit shipping a copy of Stata's
+# `ado/base` contributed 46% of all unresolved Stata mentions by itself.
 _per_deposit = (
     candidates.assign(unresolved=candidates["resolution"].eq("unknown"))
     .groupby("dataset_doi")["unresolved"]
@@ -242,10 +242,6 @@ _per_deposit["rate"] = _per_deposit["sum"] / _per_deposit["size"]
 median_deposit_unresolved = float(_per_deposit["rate"].median())
 p90_deposit_unresolved = float(_per_deposit["rate"].quantile(0.9))
 share_deposits_fully_resolved = float((_per_deposit["sum"] == 0).mean())
-_worst = _per_deposit["sum"].idxmax()
-worst_deposit_share = float(
-    _per_deposit.loc[_worst, "sum"] / _per_deposit["sum"].sum()
-)
 
 # Named in Validation. The most *widespread* unresolved Stata name, ranked by
 # deposits rather than mentions: one deposit calling something six hundred
@@ -367,6 +363,26 @@ package is a curated artifact, not a forensic copy of the author's environment
 [@trisovic2022]. We report reachability from master scripts as a sensitivity
 analysis, which bounds dead-code contamination without pretending to observe
 execution.
+
+**Reference means direct reference, not the dependency closure.** A deposit
+loading `fixest` also runs `Rcpp`, `sandwich` and a dozen others, and none of
+them is counted here. That is deliberate: what an author *chose* and what
+their choice *pulled in* are different quantities, answering different
+questions, and conflating them would make the most-used packages an artifact
+of whichever popular package depends on them. Expanding the closure is a
+separate exercise, and a feasible one in two of our three languages — R
+declares dependencies in `DESCRIPTION`'s `Depends`, `Imports` and `LinkingTo`
+fields, and Python in a distribution's `requires_dist`, so both can be walked
+mechanically.
+
+Stata cannot. An SSC `.pkg` manifest records dependencies, when it records
+them at all, as prose inside its free-text description: `reghdfe` says
+`Requires: Stata version 11.2 and ftools from SSC (q.v.)` and `ivreghdfe` says
+`Requires: Stata version 13, reghdfe, ivreg2 and ranktest from SSC (q.v.)`.
+Extracting a graph from that means parsing English. This is the same gap as
+the missing command→package mapping, one level up, and worth naming because
+it bounds what anyone can currently measure about Stata rather than only what
+we chose to.
 
 ## Why measure this at all
 
@@ -564,14 +580,9 @@ report the rate against mentions that could name a package, which is
 `{python} f"{unknown_share / naive_unknown_share:.0f}"` times larger and is the
 number a reader should use to discount our coverage.
 
-**So does the unit, and here it changes the picture rather than the decimal.**
-Pooled over mentions, one deposit can speak for the corpus, and one does: the
-single worst contributes `{python} f"{worst_deposit_share:.0%}"` of all
-unresolved mentions on its own, because it vendors a copy of Stata's `ado`
-tree and calls into it thousands of times. Per deposit — the unit this paper
-uses everywhere else, for the reason it gives for package rankings — the
-distribution is not centred anywhere near
-`{python} f"{unknown_share:.1%}"`:
+**So does the unit.** Per deposit -- the unit this paper uses everywhere
+else, for the reason it gives for package rankings -- the distribution is not
+centred anywhere near the pooled figure:
 
 | statistic | unresolved share |
 |---|---:|
