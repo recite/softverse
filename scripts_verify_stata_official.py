@@ -31,7 +31,19 @@ from softverse.config import PATHS
 from softverse.stata.official import verify
 
 SNAPSHOT = PATHS.root / "registries" / "snapshots" / "stata_official" / "official.json"
-MENTIONS = PATHS.root / "build" / "tally" / "mentions.parquet"
+
+#: Every tally we hold, because a builtin list crawled against one corpus is
+#: shaped by that corpus. Verified against Zenodo alone, the list missed
+#: `xtpcse` (2,313 mentions), `stsplit`, `xtmelogit`, `menbreg` and `heckprob`
+#: -- all official Stata -- because they barely appear in economics deposits
+#: from the 2020s and are common in political science from the 2010s.
+#: `xtmelogit` predates Stata 13 renaming it `melogit`. Asking about the union
+#: costs one crawl and stops the answer depending on which corpus was built
+#: most recently.
+MENTIONS = [
+    PATHS.root / "build" / "tally" / "mentions.parquet",
+    PATHS.root / "build" / "tally_dataverse_legacy" / "mentions.parquet",
+]
 
 #: Names seen in only one deposit are a long tail of typos, macro fragments and
 #: one-off local programs. Checking all 1,951 of them would quadruple the crawl
@@ -41,28 +53,36 @@ MIN_DEPOSITS = 2
 
 
 def main() -> int:
-    if not MENTIONS.exists():
-        print(f"no tally at {MENTIONS}; run scripts_build_tally.py first")
+    present = [p for p in MENTIONS if p.exists()]
+    if not present:
+        print("no tally found; run scripts_build_tally.py first")
         return 1
+    for path in present:
+        print(f"  reading {path.parent.name}/{path.name}")
 
     con = duckdb.connect()
+    # A deposit count has to be summed across corpora, not taken from one, or
+    # a name common in political science and rare in economics falls under the
+    # threshold in both and is never asked about.
+    sources = ", ".join(f"'{p}'" for p in present)
     attributed = {
         r[0]
         for r in con.execute(
-            f"""SELECT DISTINCT normalized_name FROM '{MENTIONS}'
+            f"""SELECT DISTINCT normalized_name FROM read_parquet([{sources}])
                 WHERE language='stata' AND resolution IN ('known_current','ambiguous')"""
         ).fetchall()
     }
     unknown = {
         r[0]: r[1]
         for r in con.execute(
-            f"""SELECT normalized_name, count(DISTINCT dataset_doi) FROM '{MENTIONS}'
+            f"""SELECT normalized_name, count(DISTINCT dataset_doi)
+                FROM read_parquet([{sources}])
                 WHERE language='stata' AND resolution='unknown'
                 GROUP BY 1 HAVING count(DISTINCT dataset_doi) >= {MIN_DEPOSITS}"""
         ).fetchall()
     }
     n_unknown_total = con.execute(
-        f"""SELECT count(DISTINCT normalized_name) FROM '{MENTIONS}'
+        f"""SELECT count(DISTINCT normalized_name) FROM read_parquet([{sources}])
             WHERE language='stata' AND resolution='unknown'"""
     ).fetchone()[0]
 
@@ -85,7 +105,7 @@ def main() -> int:
     if collisions:
         rows = con.execute(
             f"""SELECT normalized_name, any_value(resolved_package),
-                       count(DISTINCT dataset_doi) FROM '{MENTIONS}'
+                       count(DISTINCT dataset_doi) FROM read_parquet([{sources}])
                 WHERE language='stata' AND normalized_name IN ({
                 ",".join("?" * len(collisions))
             })
