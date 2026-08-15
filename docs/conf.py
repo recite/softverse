@@ -27,12 +27,13 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
-templates_path = ["_templates"]
 exclude_patterns = ["_build", "_extra", "Thumbs.db", ".DS_Store"]
 
 html_theme = "furo"
 html_title = "Softverse"
-html_static_path = ["_static"]
+# No `html_static_path`: there are no custom assets, and the empty `_static`
+# it used to point at does not survive a clone, because git does not track
+# empty directories. That is a warning locally and a failed build in CI.
 
 # Copied into the output root untouched. The lookup page is a complete
 # document with its own design and its own dark mode, so wrapping it in the
