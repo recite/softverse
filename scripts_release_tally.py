@@ -284,6 +284,7 @@ def main() -> int:
             },
             indent=1,
         )
+        + "\n"
     )
 
     return report(summary)

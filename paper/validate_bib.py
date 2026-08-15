@@ -226,7 +226,7 @@ def main() -> int:
         "n_verified": len(results) - len(failures),
         "results": [asdict(r) for r in results],
     }
-    Path("paper/bib_validation.json").write_text(json.dumps(report, indent=2))
+    Path("paper/bib_validation.json").write_text(json.dumps(report, indent=2) + "\n")
 
     print(f"{len(results) - len(failures)}/{len(entries)} entries verified")
     for failure in failures:

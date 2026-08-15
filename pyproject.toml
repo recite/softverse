@@ -5,21 +5,15 @@ build-backend = "uv_build"
 [project]
 name = "softverse"
 version = "2.0.0.dev0"
-description = "Auto-compute Citations to Software From Replication Files"
-authors = [
-    {name = "Gaurav Sood", email = "gsood07@gmail.com"},
-    {name = "Daniel Weitzel"}
-]
+description = "Measure which software social science replication code loads"
+authors = [{name = "Gaurav Sood", email = "gsood07@gmail.com"}]
 readme = "readme.md"
-license = {text = "MIT"}
-homepage = "https://github.com/recite/softverse"
-repository = "https://github.com/recite/softverse"
-documentation = "https://recite.github.io/softverse/"
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["research", "software", "citations", "replication", "dataverse", "zenodo"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
@@ -27,29 +21,33 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]
+
 requires-python = ">=3.11"
 dependencies = [
     "pyarrow>=18.0.0",
     "duckdb>=1.1.0",
     "pandas>=2.2.0",
     "httpx>=0.28.0",
-    "tenacity>=9.0.0",
     "tree-sitter>=0.25.0",
     "tree-sitter-language-pack>=1.14.0",
-    "nbformat>=5.10.0",
     "charset-normalizer>=3.4.0",
-    "pyyaml>=6.0",
-    "click>=8.1.0",
     "python-dotenv>=1.0.0",
-    "tomli-w>=1.0.0",
     "stamina>=26.1.0",
     "pyrate-limiter>=4.4.0",
-    "zenodo-client>=0.4.2",
-    "pydataverse>=0.3.5",
     "py7zr>=1.1.3",
-    "tabulate>=0.10.0",
     "rarfile>=4.5",
 ]
+
+# A PEP 621 table. The bare `homepage`/`repository`/`documentation` keys that
+# used to sit under [project] are not part of the standard, so the backend
+# dropped them and the built wheel carried no Project-URL at all: the PyPI
+# page linked to nothing.
+[project.urls]
+Homepage = "https://github.com/recite/softverse"
+Documentation = "https://recite.github.io/softverse/"
+Repository = "https://github.com/recite/softverse"
+Issues = "https://github.com/recite/softverse/issues"
+Data = "https://recite.github.io/softverse/data/"
 
 [project.optional-dependencies]
 dev = [
@@ -61,9 +59,6 @@ dev = [
     "furo>=2022.6.21",
     "myst-parser>=4.0.0",
 ]
-
-[project.scripts]
-softverse = "softverse.cli:cli"
 
 [dependency-groups]
 dev = [

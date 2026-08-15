@@ -2,7 +2,7 @@ name: Documentation
 
 on:
   push:
-    branches: [main, v2-rebuild]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -16,9 +16,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # The branches that publish. A pull request builds the site and checks it,
-  # and deploys nothing.
-  DEPLOY: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/v2-rebuild' }}
+  # Only main publishes. A pull request builds the site and checks it, and
+  # deploys nothing. v2-rebuild was here while it was the live branch and is
+  # redundant now that it has merged.
+  DEPLOY: ${{ github.ref == 'refs/heads/main' }}
 
 jobs:
   build-docs:
@@ -56,7 +57,7 @@ jobs:
           path: docs/_build/html
 
   deploy-docs:
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/v2-rebuild'
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -7,10 +7,11 @@ Science Data Editors record as *actively verified*.
 **3,223 packages · 8,349 deposits with analyzable
 code · 8,685 deposits collected · built 2026-08-15**
 
-A count here is the number of deposits whose code loads the package. The
-[project page](https://recite.github.io/softverse/) explains why that is
-worth counting; this file documents what is in the tables and how to read
-them.
+A count here is the number of deposits whose code loads the package. Adding
+one to it takes a paper published at a journal that checks its authors' code,
+which is what makes these counts harder to inflate than download counts. The
+[project page](https://recite.github.io/softverse/) makes that case; this
+file documents what is in the tables and how to read them.
 
 ## Scope
 

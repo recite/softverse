@@ -56,7 +56,42 @@ documents is under-counted on that side. That is checked rather than
 asserted: `scripts_release_tally.py` recomputes the whole ranking restricted
 to the file types both halves collected, and fails if the ordering moves.
 
-## Quick start
+## Using it as a library
+
+`pip install softverse` gives you the two pieces worth reusing: an extractor
+that reads a file and reports what it loads, and a resolver that maps a name
+to the package providing it.
+
+```python
+from pathlib import Path
+from softverse.detect.dispatch import extract_file
+
+result, _decoded, language = extract_file(Path("analysis.do"))
+print(language)                    # Language.STATA
+for m in result.mentions:
+    print(m.raw_name, m.construct, m.line)
+# use      stata_command 1
+# reghdfe  stata_command 2
+# esttab   stata_command 3
+print(result.report.status)        # ParseStatus.OK
+```
+
+Resolution needs the registry snapshots, which the quick start below builds:
+
+```python
+from scripts_build_tally import load_registry
+from softverse.model.enums import Language
+
+registry, _shipped = load_registry()
+registry.resolve("esttab", Language.STATA).package    # 'estout'
+registry.resolve("regress", Language.STATA).resolution  # builtin, so no package
+registry.resolve("grc1leg", Language.STATA).resolution  # unknown: in no registry
+```
+
+`esttab` resolving to `estout` is the case a package-name list cannot handle,
+and the reason the Stata index exists: one package ships many commands.
+
+## Reproducing the corpus
 
 ```bash
 uv sync --all-extras
