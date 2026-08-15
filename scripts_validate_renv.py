@@ -205,7 +205,7 @@ def main() -> int:
         "disagreements": disagreements[:50],
     }
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "renv_agreement.json").write_text(json.dumps(report, indent=1))
+    (OUT / "renv_agreement.json").write_text(json.dumps(report, indent=1) + "\n")
 
     print(f"compared      : {len(rows):,} deposits ({skipped} skipped)")
     print(f"renv read none: {len(unreadable):,} deposits excluded, see the JSON")

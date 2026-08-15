@@ -1,0 +1,1269 @@
+{
+ "by_source": {
+  "dataverse_legacy": {
+   "n_deposits_compared": 2967,
+   "mean_jaccard": 0.9672543089676019,
+   "pooled_jaccard": 0.9651741293532339,
+   "n_perfect_agreement": 2258
+  },
+  "zenodo": {
+   "n_deposits_compared": 369,
+   "mean_jaccard": 0.9115419547042476,
+   "pooled_jaccard": 0.8575830195138651,
+   "n_perfect_agreement": 199
+  }
+ },
+ "n_renv_read_nothing": 63,
+ "renv_read_nothing": [
+  {
+   "dataset_doi": "doi:10.7910/DVN/TRLSJA",
+   "n_ours": 9
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/MZUOWG",
+   "n_ours": 13
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/VW1HUF",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/84NYFE",
+   "n_ours": 8
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/VTA5OA",
+   "n_ours": 8
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/2RORMS",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/IRUDXK",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/H6RZA7",
+   "n_ours": 16
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/PG4UGE",
+   "n_ours": 13
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/5TTZRQ",
+   "n_ours": 4
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SREUHV",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "zenodo:7064906",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "zenodo:14929025",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FRPRDP",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SJ4IMB",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "zenodo:13981874",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/95LWQN",
+   "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FAA9EA",
+   "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZH5YFY",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/RYUUB9",
+   "n_ours": 9
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/HRLHA4",
+   "n_ours": 14
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OJWRWM",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SCXPHI",
+   "n_ours": 10
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FEQSC7",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OKZOUX",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/W8TQHB",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/DDOFPS",
+   "n_ours": 14
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZCLECH",
+   "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/WKR2KV",
+   "n_ours": 27
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OXBYO7",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/RTB1IG",
+   "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/4NUQE3",
+   "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/6MRVOM",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "zenodo:14427583",
+   "n_ours": 15
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/5DEGYP",
+   "n_ours": 4
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/L8YEDW",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/08RCPK",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/RLXYCJ",
+   "n_ours": 13
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/1CCXS9",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/TRIEF2",
+   "n_ours": 24
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/VWPPVQ",
+   "n_ours": 10
+  },
+  {
+   "dataset_doi": "zenodo:7554744",
+   "n_ours": 4
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/DAGL4S",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/KGIBK5",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZMZDHG",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/BE99YA",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "zenodo:5748084",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/DO43V5",
+   "n_ours": 13
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/O6L4UX",
+   "n_ours": 40
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SJI4IA",
+   "n_ours": 22
+  }
+ ],
+ "n_deposits_compared": 3336,
+ "n_skipped": 0,
+ "mean_jaccard": 0.9610918812927886,
+ "pooled_jaccard": 0.947998360431753,
+ "n_perfect_agreement": 2457,
+ "renv_version": "1.2.3",
+ "disagreements": [
+  {
+   "dataset_doi": "zenodo:19866751",
+   "jaccard": 0.0,
+   "ours_only": [
+    "dplyr",
+    "foreign",
+    "ggplot2",
+    "haven",
+    "ivreg",
+    "lmtest",
+    "renv",
+    "rstudioapi",
+    "sandwich",
+    "tidyr"
+   ],
+   "renv_only": [
+    "utils"
+   ],
+   "n_ours": 10,
+   "n_renv": 1,
+   "n_shared": 0,
+   "n_union": 11,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "zenodo:14871772",
+   "jaccard": 0.0,
+   "ours_only": [
+    "DescTools",
+    "Hmisc",
+    "KernSmooth",
+    "MatchIt",
+    "Rcpp",
+    "broom",
+    "bunching",
+    "cowplot",
+    "devtools",
+    "digest",
+    "discSurv",
+    "dplyr",
+    "fixest",
+    "ggrepel",
+    "glmnet",
+    "gtools",
+    "haven",
+    "hdm",
+    "lfe",
+    "lmtest",
+    "lubridate",
+    "magrittr",
+    "matrixStats",
+    "multiwayvcov",
+    "numDeriv",
+    "openxlsx",
+    "quantmod",
+    "rdd",
+    "rdrobust",
+    "readstata13",
+    "readxl",
+    "rlang",
+    "scales",
+    "stargazer",
+    "tidyverse",
+    "uniReg",
+    "vtable",
+    "xtable"
+   ],
+   "renv_only": [
+    "renv"
+   ],
+   "n_ours": 38,
+   "n_renv": 1,
+   "n_shared": 0,
+   "n_union": 39,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "zenodo:10145562",
+   "jaccard": 0.034482758620689655,
+   "ours_only": [
+    "Hmisc",
+    "RColorBrewer",
+    "Rfast",
+    "acs",
+    "binsmooth",
+    "cobalt",
+    "digest",
+    "dplyr",
+    "glmnet",
+    "gtools",
+    "haven",
+    "lfe",
+    "lubridate",
+    "magrittr",
+    "openxlsx",
+    "polynom",
+    "quantmod",
+    "rdd",
+    "rdrobust",
+    "readstata13",
+    "readxl",
+    "rlang",
+    "santoku",
+    "tidyverse",
+    "tigris",
+    "vtable",
+    "xtable",
+    "zipcode"
+   ],
+   "renv_only": [],
+   "n_ours": 29,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 29,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/VAOEHQ",
+   "jaccard": 0.041666666666666664,
+   "ours_only": [
+    "MASS",
+    "MatrixModels",
+    "car",
+    "conquer",
+    "cowplot",
+    "doParallel",
+    "foreach",
+    "foreign",
+    "gbm",
+    "ggplot2",
+    "glmnet",
+    "lfe",
+    "matrixStats",
+    "nnet",
+    "randomForest",
+    "readstata13",
+    "rpart",
+    "sandwich",
+    "xtable",
+    "~/SparseM_1.81.zip",
+    "~/fansi_0.5.0.zip",
+    "~/multcomp_1.4-17.zip",
+    "~/quantreg_5.85.zip"
+   ],
+   "renv_only": [],
+   "n_ours": 24,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 24,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:14927953",
+   "jaccard": 0.041666666666666664,
+   "ours_only": [
+    "Hmisc",
+    "RSQLite",
+    "bizdays",
+    "broom",
+    "data.table",
+    "doBy",
+    "dplyr",
+    "ggplot2",
+    "ggrepel",
+    "latex2exp",
+    "lfe",
+    "lubridate",
+    "moments",
+    "plyr",
+    "sandwich",
+    "scales",
+    "sqldf",
+    "stargazer",
+    "statar",
+    "stringr",
+    "tidyr",
+    "xtable",
+    "zoo"
+   ],
+   "renv_only": [],
+   "n_ours": 24,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 24,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/T5DKRO",
+   "jaccard": 0.14285714285714285,
+   "ours_only": [
+    "Amelia",
+    "Zelig",
+    "car",
+    "lmtest",
+    "pBrackets",
+    "sandwich"
+   ],
+   "renv_only": [],
+   "n_ours": 7,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 7,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/R9PGXI",
+   "jaccard": 0.16666666666666666,
+   "ours_only": [
+    "MASS",
+    "lmtest",
+    "readstata13",
+    "sandwich",
+    "stargazer"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 6,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:15191154",
+   "jaccard": 0.175,
+   "ours_only": [
+    "FNN",
+    "KernSmooth",
+    "MASS",
+    "RColorBrewer",
+    "Rcpp",
+    "RhpcBLASctl",
+    "arrow",
+    "chron",
+    "colorRamps",
+    "cowplot",
+    "devtools",
+    "dplyr",
+    "evd",
+    "gam",
+    "ggmap",
+    "ggpattern",
+    "ggplot2",
+    "gridExtra",
+    "inline",
+    "lfe",
+    "ranger",
+    "rbenchmark",
+    "readr",
+    "rgeos",
+    "rjson",
+    "sandwich",
+    "scales",
+    "stargazer",
+    "terra",
+    "tidyverse",
+    "ucminf",
+    "viridis",
+    "weights"
+   ],
+   "renv_only": [],
+   "n_ours": 40,
+   "n_renv": 7,
+   "n_shared": 7,
+   "n_union": 40,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/STXADQ",
+   "jaccard": 0.2,
+   "ours_only": [
+    "arm",
+    "gee",
+    "stargazer",
+    "zeligverse"
+   ],
+   "renv_only": [],
+   "n_ours": 5,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 5,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/UBRKHO",
+   "jaccard": 0.25,
+   "ours_only": [
+    "amen",
+    "ergm.count",
+    "ergm_3.10.4.tar.gz"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 4,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/CXA8GR",
+   "jaccard": 0.25,
+   "ours_only": [
+    "fastplm",
+    "fect",
+    "panelview"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 4,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:7217640",
+   "jaccard": 0.25,
+   "ours_only": [
+    "Rcpp",
+    "rgdal",
+    "sf"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 4,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/1DB0FT",
+   "jaccard": 0.25,
+   "ours_only": [],
+   "renv_only": [
+    "base",
+    "tools",
+    "utils"
+   ],
+   "n_ours": 1,
+   "n_renv": 4,
+   "n_shared": 1,
+   "n_union": 4,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/T17S0X",
+   "jaccard": 0.25,
+   "ours_only": [
+    "Hmisc",
+    "QuantPsyc",
+    "Zelig",
+    "ZeligChoice",
+    "gridExtra",
+    "nnet",
+    "plyr",
+    "psych",
+    "survey"
+   ],
+   "renv_only": [],
+   "n_ours": 12,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 12,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/UODSVV",
+   "jaccard": 0.2727272727272727,
+   "ours_only": [
+    "car",
+    "dataverse",
+    "ggplot2",
+    "ggpubr",
+    "ggthemes",
+    "plyr",
+    "readtext",
+    "stargazer"
+   ],
+   "renv_only": [],
+   "n_ours": 11,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 11,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/JAAPYA",
+   "jaccard": 0.3333333333333333,
+   "ours_only": [],
+   "renv_only": [
+    "base",
+    "renv",
+    "tools",
+    "utils"
+   ],
+   "n_ours": 2,
+   "n_renv": 6,
+   "n_shared": 2,
+   "n_union": 6,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/GKVNDS",
+   "jaccard": 0.35,
+   "ours_only": [
+    "car",
+    "cjoint",
+    "gridExtra",
+    "haven",
+    "interplot",
+    "labelled",
+    "lmtest",
+    "miceadds",
+    "multiwaycov",
+    "openxlsx",
+    "plm",
+    "plyr",
+    "tidyr"
+   ],
+   "renv_only": [],
+   "n_ours": 20,
+   "n_renv": 7,
+   "n_shared": 7,
+   "n_union": 20,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/UMP7YP",
+   "jaccard": 0.38461538461538464,
+   "ours_only": [
+    "foreign",
+    "lfe",
+    "lmtest",
+    "multiwayvcov",
+    "plm",
+    "rdd",
+    "rdrobust",
+    "tidyr"
+   ],
+   "renv_only": [],
+   "n_ours": 13,
+   "n_renv": 5,
+   "n_shared": 5,
+   "n_union": 13,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/J4WZGT",
+   "jaccard": 0.4,
+   "ours_only": [
+    "ggplot",
+    "readstata13",
+    "readxl"
+   ],
+   "renv_only": [],
+   "n_ours": 5,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 5,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/0DE35E",
+   "jaccard": 0.4,
+   "ours_only": [
+    "MASS",
+    "car",
+    "foreign",
+    "gridExtra",
+    "ri",
+    "texreg"
+   ],
+   "renv_only": [],
+   "n_ours": 10,
+   "n_renv": 4,
+   "n_shared": 4,
+   "n_union": 10,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/29911",
+   "jaccard": 0.42857142857142855,
+   "ours_only": [
+    "MASS",
+    "calibrate",
+    "car",
+    "list",
+    "lme4",
+    "rr",
+    "stargazer",
+    "xtable"
+   ],
+   "renv_only": [],
+   "n_ours": 14,
+   "n_renv": 6,
+   "n_shared": 6,
+   "n_union": 14,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:20422371",
+   "jaccard": 0.42857142857142855,
+   "ours_only": [],
+   "renv_only": [
+    "parallel",
+    "renv",
+    "splines",
+    "stats"
+   ],
+   "n_ours": 3,
+   "n_renv": 7,
+   "n_shared": 3,
+   "n_union": 7,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "zenodo:11386106",
+   "jaccard": 0.4334763948497854,
+   "ours_only": [
+    "3-replication-package/add-ons/r/BMisc_1.4.6.zip",
+    "3-replication-package/add-ons/r/CVXR_1.0-12.zip",
+    "3-replication-package/add-ons/r/ECOSolveR_0.5.5.zip",
+    "3-replication-package/add-ons/r/Formula_1.2-5.zip",
+    "3-replication-package/add-ons/r/HonestDiD",
+    "3-replication-package/add-ons/r/R6_2.5.1.zip",
+    "3-replication-package/add-ons/r/Rcpp_1.0.12.zip",
+    "3-replication-package/add-ons/r/Rglpk_0.6-5.1.zip",
+    "3-replication-package/add-ons/r/Rmpfr_0.9-5.zip",
+    "3-replication-package/add-ons/r/TruncatedNormal_2.2.2.zip",
+    "3-replication-package/add-ons/r/abind_1.4-5.zip",
+    "3-replication-package/add-ons/r/alabama_2023.1.0.zip",
+    "3-replication-package/add-ons/r/backports_1.4.1.zip",
+    "3-replication-package/add-ons/r/bit64_4.0.5.zip",
+    "3-replication-package/add-ons/r/bit_4.0.5.zip",
+    "3-replication-package/add-ons/r/broom_1.0.6.zip",
+    "3-replication-package/add-ons/r/carData_3.0-5.zip",
+    "3-replication-package/add-ons/r/car_3.1-2.zip",
+    "3-replication-package/add-ons/r/cli_3.6.2.zip",
+    "3-replication-package/add-ons/r/colorspace_2.1-0.zip",
+    "3-replication-package/add-ons/r/data.table_1.15.4.zip",
+    "3-replication-package/add-ons/r/did_2.1.2.zip",
+    "3-replication-package/add-ons/r/dplyr_1.1.4.zip",
+    "3-replication-package/add-ons/r/dreamerr_1.4.0.zip",
+    "3-replication-package/add-ons/r/f1dataR_1.5.3.zip",
+    "3-replication-package/add-ons/r/fansi_1.0.6.zip",
+    "3-replication-package/add-ons/r/farver_2.1.2.zip",
+    "3-replication-package/add-ons/r/fixest_0.12.0.zip",
+    "3-replication-package/add-ons/r/forcats_1.0.0.zip",
+    "3-replication-package/add-ons/r/foreach_1.5.2.zip",
+    "3-replication-package/add-ons/r/generics_0.1.3.zip",
+    "3-replication-package/add-ons/r/ggplot2_3.5.1.zip",
+    "3-replication-package/add-ons/r/ggpubr_0.6.0.zip",
+    "3-replication-package/add-ons/r/ggsignif_0.6.4.zip",
+    "3-replication-package/add-ons/r/glue_1.7.0.zip",
+    "3-replication-package/add-ons/r/gmp_0.7-4.zip",
+    "3-replication-package/add-ons/r/gtable_0.3.5.zip",
+    "3-replication-package/add-ons/r/haven_2.5.4.zip",
+    "3-replication-package/add-ons/r/here_1.0.1.zip",
+    "3-replication-package/add-ons/r/hms_1.1.3.zip",
+    "3-replication-package/add-ons/r/iterators_1.0.14.zip",
+    "3-replication-package/add-ons/r/labeling_0.4.3.zip",
+    "3-replication-package/add-ons/r/latex2exp_0.9.6.zip",
+    "3-replication-package/add-ons/r/lifecycle_1.0.4.zip",
+    "3-replication-package/add-ons/r/lpSolveAPI_5.5.2.0-17.11.zip",
+    "3-replication-package/add-ons/r/magrittr_2.0.3.zip",
+    "3-replication-package/add-ons/r/matrixStats_1.3.0.zip",
+    "3-replication-package/add-ons/r/munsell_0.5.1.zip",
+    "3-replication-package/add-ons/r/mvtnorm_1.2-5.zip",
+    "3-replication-package/add-ons/r/nleqslv_3.3.5.zip",
+    "3-replication-package/add-ons/r/numDeriv_2016.8-1.1.zip",
+    "3-replication-package/add-ons/r/osqp_0.6.3.2.zip",
+    "3-replication-package/add-ons/r/pillar_1.9.0.zip",
+    "3-replication-package/add-ons/r/pkgconfig_2.0.3.zip",
+    "3-replication-package/add-ons/r/pracma_2.4.4.zip",
+    "3-replication-package/add-ons/r/purrr_1.0.2.zip",
+    "3-replication-package/add-ons/r/randtoolbox_2.0.4.zip",
+    "3-replication-package/add-ons/r/readr_2.1.5.zip",
+    "3-replication-package/add-ons/r/rlang_1.1.3.zip",
+    "3-replication-package/add-ons/r/rngWELL_0.10-9.zip",
+    "3-replication-package/add-ons/r/rprojroot_2.0.4.zip",
+    "3-replication-package/add-ons/r/rstatix_0.7.2.zip",
+    "3-replication-package/add-ons/r/sandwich_3.1-0.zip",
+    "3-replication-package/add-ons/r/scales_1.3.0.zip",
+    "3-replication-package/add-ons/r/stringmagic_1.1.2.zip",
+    "3-replication-package/add-ons/r/tibble_3.2.1.zip",
+    "3-replication-package/add-ons/r/tidyr_1.3.1.zip",
+    "3-replication-package/add-ons/r/tidyselect_1.2.1.zip",
+    "3-replication-package/add-ons/r/tzdb_0.4.0.zip",
+    "3-replication-package/add-ons/r/utf8_1.2.4.zip",
+    "3-replication-package/add-ons/r/vctrs_0.6.5.zip",
+    "3-replication-package/add-ons/r/withr_3.0.0.zip",
+    "3-replication-package/add-ons/r/zoo_1.8-12.zip",
+    "BMisc",
+    "tidymodels"
+   ],
+   "renv_only": [
+    "AER",
+    "Formula",
+    "KernSmooth",
+    "RColorBrewer",
+    "RcppArmadillo",
+    "RcppGSL",
+    "async",
+    "base",
+    "betareg",
+    "bit",
+    "chron",
+    "cliapp",
+    "colorspace",
+    "compiler",
+    "copula",
+    "countreg",
+    "datasets",
+    "fansi",
+    "ff",
+    "foo",
+    "fooRostream",
+    "grDevices",
+    "graphics",
+    "grid",
+    "inline",
+    "iterators",
+    "jpeg",
+    "kernlab",
+    "markdown",
+    "methods",
+    "microbenchmark",
+    "parallel",
+    "pkgcache",
+    "pkgsearch",
+    "png",
+    "randomForest",
+    "rbenchmark",
+    "rcartocolor",
+    "rmarkdown",
+    "scatterplot3d",
+    "scico",
+    "shiny",
+    "shinyjs",
+    "stats",
+    "strucchange",
+    "testRcppClass",
+    "testRcppInterfaceExporter",
+    "testRcppInterfaceUser",
+    "testRcppModule",
+    "timeDate",
+    "timeSeries",
+    "tools",
+    "tseries",
+    "utils",
+    "vcd",
+    "viridis",
+    "zoo"
+   ],
+   "n_ours": 176,
+   "n_renv": 158,
+   "n_shared": 101,
+   "n_union": 233,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/LJPHFR",
+   "jaccard": 0.45,
+   "ours_only": [
+    "MASS",
+    "RColorBrewer",
+    "broom",
+    "did",
+    "dplyr",
+    "fixest",
+    "ggplot2",
+    "haven",
+    "plm",
+    "rdrobust"
+   ],
+   "renv_only": [
+    "grid"
+   ],
+   "n_ours": 19,
+   "n_renv": 10,
+   "n_shared": 9,
+   "n_union": 20,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/CGHTPZ",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "methods"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/UFZTYU",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "compiler"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/1YG7BI",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "base",
+    "datasets",
+    "grDevices",
+    "graphics",
+    "methods",
+    "stats",
+    "utils"
+   ],
+   "n_ours": 7,
+   "n_renv": 14,
+   "n_shared": 7,
+   "n_union": 14,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/28575",
+   "jaccard": 0.5,
+   "ours_only": [
+    "R2jags"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/27455",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "methods"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/35M5CV",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "stats"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/NEC17Z",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "hexbin"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/RQNVFW",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/U4NUKT",
+   "jaccard": 0.5,
+   "ours_only": [
+    "XML",
+    "plyr",
+    "tm"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:21773058",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "methods",
+    "parallel",
+    "stats"
+   ],
+   "n_ours": 3,
+   "n_renv": 6,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/JJMCTA",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "methods"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZNOX0G",
+   "jaccard": 0.5,
+   "ours_only": [
+    "textables"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:14792036",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "rmarkdown"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/S73SLI",
+   "jaccard": 0.5,
+   "ours_only": [
+    "RSiena_1.1-276.zip"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/28158",
+   "jaccard": 0.5,
+   "ours_only": [
+    "apsrtable",
+    "erer",
+    "memisc",
+    "xtable"
+   ],
+   "renv_only": [],
+   "n_ours": 8,
+   "n_renv": 4,
+   "n_shared": 4,
+   "n_union": 8,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/4XQUKB",
+   "jaccard": 0.5,
+   "ours_only": [
+    "MatchIt",
+    "Matching",
+    "optmatch"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/59F366",
+   "jaccard": 0.5,
+   "ours_only": [
+    "RcppArmadillo",
+    "optmatch"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 4,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/P2RD03",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:14156677",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/TLPMVI",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/N5IF8R",
+   "jaccard": 0.5,
+   "ours_only": [
+    "SPDDD_0.14.tar.gz",
+    "corpcor"
+   ],
+   "renv_only": [
+    "grid"
+   ],
+   "n_ours": 5,
+   "n_renv": 4,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/QKCICV",
+   "jaccard": 0.5,
+   "ours_only": [
+    "packages"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/MX5NIV",
+   "jaccard": 0.5,
+   "ours_only": [
+    "https://sites.google.com/a/stonybrook.edu/mperess/research/mnlresp_0.1.0.tar.gz"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:8380044",
+   "jaccard": 0.5,
+   "ours_only": [
+    "Rcpp",
+    "rgdal",
+    "sf"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/2IO3DL",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "grid"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/RGIMXH",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "grid",
+    "splines"
+   ],
+   "n_ours": 2,
+   "n_renv": 4,
+   "n_shared": 2,
+   "n_union": 4,
+   "source": "dataverse_legacy"
+  }
+ ]
+}

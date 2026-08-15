@@ -205,6 +205,14 @@ def main() -> int:
     for name in TABLES:
         shutil.copyfile(TALLY / name, OUT / name)
 
+    # The validation artefacts ship with the tables they vouch for. The paper
+    # cites precision, recall and Jaccard; a reader who wants to check those
+    # rather than take the PDF's word needs the numbers, and they are 28 KB.
+    validation = PATHS.root / "build" / "validation"
+    for name in ("r_oracle.json", "renv_agreement.json"):
+        if (validation / name).exists():
+            shutil.copyfile(validation / name, OUT / name)
+
     summary = summarize()
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
 

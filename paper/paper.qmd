@@ -428,6 +428,13 @@ renv_mean_jaccard = _renv["mean_jaccard"]
 renv_pooled_jaccard = _renv["pooled_jaccard"]
 renv_perfect_share = _renv["n_perfect_agreement"] / _renv["n_deposits_compared"]
 renv_version = _renv["renv_version"]
+n_renv_unreadable = _renv["n_renv_read_nothing"]
+# The direction of the residual disagreement, which says more than its size:
+# where the two differ, it is mostly because this extractor found a package
+# renv did not.
+_dis = _renv["disagreements"]
+n_renv_ours_only = sum(len(r["ours_only"]) for r in _dis)
+n_renv_theirs_only = sum(len(r["renv_only"]) for r in _dis)
 
 # Named in Limitations: Stata keywords reaching command position. Computed,
 # so that closing one of the gaps shows up here rather than leaving a stale
@@ -1032,6 +1039,21 @@ Jaccard of `{python} f"{renv_mean_jaccard:.2f}"` and a pooled Jaccard of
 reported because they answer different questions: the mean weights every
 deposit equally, the pooled figure every package-deposit pair, so a headline
 cannot be flattered by deposits with one obvious package in them.
+
+A further `{python} f"{n_renv_unreadable:,}"` deposits are excluded, because
+renv returned nothing at all for them. It runs with `errors = "ignored"` and
+drops a file it cannot decode in silence, so those are files one side never
+read, and scoring them would measure a decoding difference as a
+disagreement. This is the treatment the oracle already gives files R cannot
+parse.
+
+Where the two do disagree, the direction is one-sided: across the worst
+cases this extractor found `{python} f"{n_renv_ours_only:,}"` packages renv
+did not, against `{python} f"{n_renv_theirs_only:,}"` the other way. The
+pattern behind them is the same decoding problem, partially masked: in the
+worst Zenodo deposit renv reports a single package, and every one of its
+twenty-three R files carries bytes outside ASCII. Read that way, the figures
+above bound agreement from below.
 
 This is convergent validity, and it is weaker than accuracy. `renv` performs
 the same kind of static scan over the same files and shares the same blind

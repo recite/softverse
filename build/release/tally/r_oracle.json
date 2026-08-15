@@ -1,0 +1,32 @@
+{
+ "by_source": {
+  "dataverse_legacy": {
+   "n_files_compared": 15560,
+   "n_files_unparseable_by_r": 250,
+   "true_positives": 64249,
+   "false_positives": 0,
+   "false_negatives": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  "zenodo": {
+   "n_files_compared": 19910,
+   "n_files_unparseable_by_r": 1183,
+   "true_positives": 30515,
+   "false_positives": 0,
+   "false_negatives": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  }
+ },
+ "n_files_compared": 35470,
+ "n_files_unparseable_by_r": 1433,
+ "true_positives": 94764,
+ "false_positives": 0,
+ "false_negatives": 0,
+ "precision": 1.0,
+ "recall": 1.0,
+ "top_missed": [],
+ "top_spurious": [],
+ "examples": []
+}

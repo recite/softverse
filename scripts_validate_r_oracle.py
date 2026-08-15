@@ -322,7 +322,7 @@ def main() -> int:
         "top_spurious": sorted(spurious.items(), key=lambda kv: -kv[1])[:25],
         "examples": examples,
     }
-    (OUT / "r_oracle.json").write_text(json.dumps(report, indent=1))
+    (OUT / "r_oracle.json").write_text(json.dumps(report, indent=1) + "\n")
 
     print(f"files compared      : {compared:,} ({unparseable} unparseable by R)")
     print(f"name-file pairs     : tp {tp:,}  fp {fp:,}  fn {fn:,}")
