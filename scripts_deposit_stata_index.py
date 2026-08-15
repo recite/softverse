@@ -19,11 +19,9 @@ from __future__ import annotations
 
 import sys
 
-import httpx
-
 from softverse.config import PATHS, credential
+from softverse.release.zenodo_deposit import Deposit, run
 
-API = "https://zenodo.org/api"
 BUNDLE = PATHS.root / "build" / "release" / "stata-index"
 
 TITLE = (
@@ -112,41 +110,6 @@ METADATA = {
 }
 
 
-def find_draft(client: httpx.Client, token: str) -> dict | None:
-    """An existing unpublished deposit with this title, if there is one."""
-    response = client.get(
-        f"{API}/deposit/depositions", params={"access_token": token, "size": 50}
-    )
-    response.raise_for_status()
-    for deposit in response.json():
-        if deposit["title"] == TITLE and not deposit["submitted"]:
-            return deposit
-    return None
-
-
-def show(deposit: dict) -> None:
-    print(f"  title   {deposit['title'][:70]}")
-    print(f"  state   {deposit['state']} (submitted={deposit['submitted']})")
-    print(f"  edit    {deposit['links']['html']}")
-    print(f"  DOI     {deposit['metadata'].get('prereserve_doi', {}).get('doi', '-')}")
-
-
-def publish(client: httpx.Client, token: str, deposit: dict) -> int:
-    """Mint the DOI. There is no undo."""
-    response = client.post(
-        f"{API}/deposit/depositions/{deposit['id']}/actions/publish",
-        params={"access_token": token},
-    )
-    if response.status_code >= 400:
-        print(f"publish failed ({response.status_code}): {response.text[:500]}")
-        return 1
-    published = response.json()
-    print("PUBLISHED")
-    print(f"  DOI  {published.get('doi')}")
-    print(f"  URL  {published['links'].get('record_html', published['links']['html'])}")
-    return 0
-
-
 def main() -> int:
     token = credential("ZENODO_API_TOKEN")
     if not token:
@@ -155,91 +118,7 @@ def main() -> int:
     if not BUNDLE.exists():
         print(f"no bundle at {BUNDLE}; run scripts_release_stata_index.py first")
         return 1
-
-    files = sorted(p for p in BUNDLE.iterdir() if p.is_file())
-    with httpx.Client(timeout=300.0) as client:
-        existing = find_draft(client, token)
-
-        if "--show" in sys.argv:
-            if existing is None:
-                print("no draft exists")
-                return 0
-            show(existing)
-            return 0
-
-        if "--publish" in sys.argv:
-            if existing is None:
-                print("no draft to publish; run without --publish first")
-                return 1
-            show(existing)
-            print()
-            return publish(client, token, existing)
-
-        if existing is None:
-            created = client.post(
-                f"{API}/deposit/depositions",
-                params={"access_token": token},
-                json=METADATA,
-            )
-            created.raise_for_status()
-            deposit = created.json()
-            print(f"created draft {deposit['id']}")
-        else:
-            deposit = existing
-            print(f"reusing draft {deposit['id']}")
-            updated = client.put(
-                f"{API}/deposit/depositions/{deposit['id']}",
-                params={"access_token": token},
-                json=METADATA,
-            )
-            updated.raise_for_status()
-            deposit = updated.json()
-
-        bucket = deposit["links"]["bucket"]
-        already = {
-            f["filename"]
-            for f in client.get(
-                f"{API}/deposit/depositions/{deposit['id']}/files",
-                params={"access_token": token},
-            ).json()
-        }
-        for path in files:
-            if path.name in already:
-                # Replace rather than skip: the point of re-running is that the
-                # bundle changed.
-                client.delete(
-                    f"{API}/deposit/depositions/{deposit['id']}/files/"
-                    + next(
-                        f["id"]
-                        for f in client.get(
-                            f"{API}/deposit/depositions/{deposit['id']}/files",
-                            params={"access_token": token},
-                        ).json()
-                        if f["filename"] == path.name
-                    ),
-                    params={"access_token": token},
-                )
-            with path.open("rb") as handle:
-                put = client.put(
-                    f"{bucket}/{path.name}",
-                    params={"access_token": token},
-                    content=handle,
-                )
-            put.raise_for_status()
-            print(f"  uploaded {path.name:<32} {path.stat().st_size:>9,} bytes")
-
-        final = client.get(
-            f"{API}/deposit/depositions/{deposit['id']}",
-            params={"access_token": token},
-        ).json()
-
-    print("\nDRAFT ONLY -- nothing has been published.")
-    show(final)
-    print(
-        "\nReview it at the link above. Publishing mints a permanent public "
-        "DOI\nand is yours to do; this script will not."
-    )
-    return 0
+    return run(Deposit(TITLE, BUNDLE, METADATA), token, sys.argv)
 
 
 if __name__ == "__main__":
