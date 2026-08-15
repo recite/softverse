@@ -81,31 +81,31 @@ accusation in a letter.
 >
 > Hello,
 >
-> I'm Gaurav Sood. With Daniel Weitzel I'm doing a study of which software
+> I'm Gaurav Sood, and I'm doing a study of which software
 > research actually runs on, by parsing the code in replication deposits
 > across R, Python and Stata. Harvard Dataverse is the main home for social
 > science replication material, so it matters a great deal to the work.
 >
-> I wanted to tell you what we're doing and ask whether you'd prefer we did
+> I wanted to tell you what I'm doing and ask whether you'd prefer I did
 > it differently.
 >
 > We need two things from the API. First, the dataset listing for each
 > journal dataverse — `/api/dataverses/{alias}/contents`, roughly seventy-five
-> requests in total, one per journal, which we have now run. Second, and only
+> requests in total, one per journal, which I have now run. Second, and only
 > if you're comfortable with it, the file listings and public file downloads
 > for those deposits, which is the larger ask.
 >
 > Requests are authenticated with my API token, carry the user-agent
 > `softverse/2.0 (research; github.com/recite/softverse)` so they are
 > identifiable in your logs, and are rate-limited to one every two seconds.
-> We stop on any 429 and would stop immediately if you asked.
+> I stop on any 429 and would stop immediately if you asked.
 >
 > One practical note: your bot-mitigation layer returns HTTP 202 with an
 > empty body to any client that does not execute JavaScript, on every route,
 > and it sits ahead of authentication so an API token makes no difference.
 > That makes the documented API unusable from ordinary HTTP clients. If
 > there's an allowlist for research use, or a bulk metadata export you'd
-> rather we used, we'd much prefer either to working around it.
+> rather I used, I would much prefer either to working around it.
 >
 > Happy to describe the project in more detail, share what we build, or
 > schedule the work for whenever suits your infrastructure.

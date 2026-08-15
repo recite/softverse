@@ -11,19 +11,27 @@ BIB   := paper/references.bib
 # since both failures are silent and neither shows up in the rendered output.
 paper: $(PDF)
 
-$(PDF): $(MD) $(BIB)
+FIGS  := paper/figures/languages.pdf paper/figures/credit.pdf
+
+$(FIGS): build/tally/files.parquet paper/figures.py
+	uv run python paper/figures.py
+
+$(PDF): $(MD) $(BIB) $(FIGS) paper/preamble.tex
 	uv run python paper/validate_bib.py
 	uv run pytest tests/test_paper.py -q --no-cov
 	cd paper && pandoc paper.md -o softverse.pdf \
 		--citeproc --bibliography=references.bib \
 		--pdf-engine=xelatex \
+		--include-in-header=preamble.tex \
+		--number-sections \
+		--shift-heading-level-by=-1 \
 		--toc --toc-depth=2 \
 		-V geometry:margin=1.15in \
 		-V fontsize=11pt \
 		-V linkcolor=RoyalBlue \
 		-V title="What software does social science run on?" \
 		-V subtitle="Measuring validated use in replication code" \
-		-V author="Gaurav Sood and Daniel Weitzel"
+		-V author="Gaurav Sood"
 	@echo "built $(PDF)"
 
 # Regenerated from the tally every time: the chunks run, the inline values are

@@ -312,7 +312,7 @@ def main() -> int:
 <header class="masthead">
   <div class="eyebrow">Working paper &middot; measurement</div>
   <h1 class="title">What software does social science run on?</h1>
-  <div class="byline">Gaurav Sood and Daniel Weitzel &middot; measuring library use in replication code</div>
+  <div class="byline">Gaurav Sood &middot; measuring validated use in replication code</div>
 </header>
 {html_body}
 <footer class="colophon">

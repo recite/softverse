@@ -1,0 +1,26 @@
+% Conventional table formatting: booktabs rules, numbered floats, captions
+% above and a standalone note beneath. A table a reader cannot understand
+% without hunting through the prose for what a column means is a table that
+% will be misread.
+% pandoc loads graphicx only when it sees a markdown image, and the figures
+% here are raw LaTeX floats, so it has to be asked for explicitly.
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[labelfont=bf,skip=6pt]{caption}
+\usepackage{threeparttable}
+% cleveref insists on loading after hyperref, and pandoc emits hyperref
+% after this file. Defer it to the end of the preamble so the order holds
+% whatever the template does.
+\usepackage{etoolbox}
+\AtEndPreamble{\usepackage[capitalise,nameinlink]{cleveref}}
+
+% Digits line up in columns, everywhere, without asking per table.
+\sisetup{group-separator={,}, group-minimum-digits=4}
+
+% Room to breathe around the rules; the default is cramped.
+\setlength{\aboverulesep}{0.4ex}
+\setlength{\belowrulesep}{0.6ex}
+\renewcommand{\arraystretch}{1.08}
+
+\captionsetup[table]{position=top}

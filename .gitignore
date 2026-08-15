@@ -104,3 +104,4 @@ monitor_collection.py
 paper/paper.md
 paper/paper.html
 paper/softverse.pdf
+paper/figures/*.png

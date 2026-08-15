@@ -2,7 +2,6 @@
 title: "What software does social science run on? Measuring library use in replication code"
 author:
   - name: Gaurav Sood
-  - name: Daniel Weitzel
 date: today
 bibliography: references.bib
 format:
@@ -21,12 +20,16 @@ execute:
 # the same operation, which is the only version of reproducibility that survives
 # a revision.
 import json
+import sys
 from pathlib import Path
 
 import duckdb
 import pandas as pd
 
 from softverse.stata.builtins import curated
+
+sys.path.insert(0, str(Path(__file__).parent if "__file__" in dir() else "."))
+from exhibits import figure, table  # noqa: E402
 
 TALLY = Path("../build/tally")
 con = duckdb.connect()
@@ -404,7 +407,21 @@ for lang in ("stata", "r", "python"):
             "of": int(r["n_deposits_at_risk"]),
             "share": f"{r['share_of_deposits']:.0%}",
         })
-pd.DataFrame(rows).to_markdown(index=False)
+_top = pd.DataFrame(rows)
+_top.columns = ["language", "package", "deposits", "of", "share"]
+table(
+    _top,
+    caption="Most used third-party packages, by language",
+    label="tab:top-packages",
+    note=(
+        "The ten packages appearing in the most deposits in each language. "
+        "\\emph{deposits} counts deposits referencing the package; "
+        "\\emph{of} is the number of deposits containing analyzable code in "
+        "that language, which is the only denominator these shares are "
+        "comparable against. A deposit counts once however many times it "
+        "calls the package."
+    ),
+)
 ```
 
 Every count is a share of the deposits **at risk**, meaning those that contain
@@ -413,10 +430,24 @@ comparable to anything.
 
 ### The most-used research software formats tables
 
-Of the ten most widely used Stata packages, `{python} f"{n_table_makers}"`
+```{python}
+#| label: fig-credit
+figure(
+    "figures/credit.pdf",
+    caption="The twelve most used Stata packages, by share of deposits",
+    label="fig:credit",
+    note=(
+        "Packages whose purpose is presenting results rather than estimating "
+        "anything are filled dark. Counts to the right of each bar are "
+        "deposits. Shares are of deposits containing analyzable Stata."
+    ),
+)
+```
+
+Of the ten most widely used Stata packages (\cref{tab:top-packages}), `{python} f"{n_table_makers}"`
 exist to format output rather than to estimate anything:
-`{python} table_makers_list`. The single most used is
-`{python} top_stata_package`, in `{python} f"{top_stata_share:.0%}"` of Stata
+`{python} table_makers_list`. The ordering is the finding, and \cref{fig:credit} is the ordering. The
+single most used is `{python} top_stata_package`, in `{python} f"{top_stata_share:.0%}"` of Stata
 deposits, ahead of every regression command.
 
 This is worth sitting with if the point of counting is credit. A large part of
@@ -426,10 +457,27 @@ they wrote a package nobody cites.
 
 ### Stata is the majority language and the one nobody counts
 
+```{python}
+#| label: fig-languages
+figure(
+    "figures/languages.pdf",
+    caption="Languages by repository, and so by discipline",
+    label="fig:languages",
+    note=(
+        "Share of deposits containing at least one analyzable file in each "
+        "language. Zenodo's verified collections are economics journals; the "
+        "Harvard Dataverse collections are mostly political science. A "
+        "deposit may contain more than one language, so the bars within a "
+        "repository do not sum to one hundred."
+    ),
+)
+```
+
 `{python} f"{n_stata_deposits:,}"` deposits contain analyzable Stata against
 `{python} f"{n_r_deposits:,}"` with R and
 `{python} f"{n_python_deposits:,}"` with Python, roughly
-`{python} f"{stata_to_r_ratio:.1f}"` Stata deposits for every R one.
+`{python} f"{stata_to_r_ratio:.1f}"` Stata deposits for every R one, and
+\cref{fig:languages} shows the split is disciplinary rather than incidental.
 
 Studies of research software cover R and Python, the two languages with public
 registries. That omission is not a random sample of the field. It removes the
@@ -545,14 +593,24 @@ shaped like abundance.
 
 Of `{python} f"{n_deposits_declared:,}"` Zenodo deposits attempted,
 `{python} f"{n_deposits_collected:,}"`
-(`{python} f"{share_collected:.0%}"`) yielded files. The rest are itemised
-rather than summarised, because the reasons are not interchangeable. A size
+(`{python} f"{share_collected:.0%}"`) yielded files. \Cref{tab:coverage} itemises the rest
+rather than summarising them, because the reasons are not interchangeable. A size
 cap is a choice we made, an unreassembled multi-part archive is a format we
 declined to handle, and a failure is a bug or an outage.
 
 ```{python}
 #| label: coverage
-coverage.to_markdown(index=False)
+table(
+    coverage,
+    caption="Why a deposit yielded no code",
+    label="tab:coverage",
+    note=(
+        "Zenodo deposits that produced no analyzable file, by reason. The "
+        "size cap and the unreassembled multi-part archives are choices we "
+        "made and are recoverable; the single failure is a zip using a "
+        "compression method Python does not implement."
+    ),
+)
 ```
 
 ## Measurement
@@ -594,7 +652,19 @@ by_language = (
 )
 by_language["rate"] = (by_language["sum"] / by_language["size"]).map("{:.1%}".format)
 by_language.columns = ["candidate mentions", "unresolved", "rate"]
-by_language.sort_values("candidate mentions", ascending=False).to_markdown()
+_res = by_language.sort_values("candidate mentions", ascending=False).reset_index()
+_res.columns = ["language", "candidate mentions", "unresolved", "rate"]
+table(
+    _res,
+    caption="Mentions that could name a package, and those we could not resolve",
+    label="tab:resolution",
+    note=(
+        "Restricted to mentions that could name a third-party package, so "
+        "Stata builtins, standard libraries and programs a deposit defines "
+        "itself are excluded from both columns. An unresolved mention is one "
+        "we cannot attribute, not evidence that no package exists."
+    ),
+)
 ```
 
 We report what these checks can establish and no more.
@@ -805,6 +875,20 @@ MATLAB, SAS and SPSS are reported as language presence only. MATLAB has no
 import statement and no resolvable registry, so attributing toolboxes would be
 unbounded error.
 
+## Data and code availability
+
+The Stata command-to-package index is deposited at
+[10.5281/zenodo.21926100](https://doi.org/10.5281/zenodo.21926100) under CC0,
+with `{python} f"{n_ssc_commands:,}"` commands across
+`{python} f"{n_ssc_packages:,}"` packages. It is released separately from
+this paper because its usefulness does not depend on this corpus: anyone
+counting Stata needs the same mapping.
+
+The extraction pipeline, the resolver, the frame and the per-package counts
+are at <https://github.com/recite/softverse>. Package-level counts can be
+looked up directly rather than read off a table, which is the point of
+producing them: a credit metric nobody can query is an assertion.
+
 ## Reproducibility
 
 The corpus, the registry snapshots and the extractor version are pinned. Every
@@ -815,9 +899,17 @@ traced to the text it came from without re-running anything.
 ```{python}
 #| label: provenance
 lock = json.loads(Path("../registries/registries.lock.json").read_text())
-pd.DataFrame(
-    [{"registry": k, "sha256": v[:16]} for k, v in lock.items()]
-).to_markdown(index=False)
+table(
+    pd.DataFrame([{"registry": k, "sha256": v[:16]} for k, v in lock.items()]),
+    caption="Pinned registry snapshots",
+    label="tab:provenance",
+    note=(
+        "Every mention carries the lock identifier of the registry snapshot "
+        "it was resolved against, so a count can be reproduced against the "
+        "registry as it stood rather than as it stands."
+    ),
+    align="ll",
+)
 ```
 
 ## References
