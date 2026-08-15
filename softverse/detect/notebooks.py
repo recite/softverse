@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import replace
 
 from softverse.detect import python_, r, stata
 from softverse.detect.types import ExtractResult, Mention, ParseReport
@@ -117,19 +118,18 @@ def _shift(
     label: str | None,
     language: Language | None = None,
 ) -> list[Mention]:
-    """Re-base chunk-relative line numbers onto the document."""
+    """Re-base chunk-relative line numbers onto the document.
+
+    `replace` rather than a field-by-field rebuild. Listing every field here
+    means a field added to `Mention` is silently dropped from every mention in
+    a literate document until somebody remembers this function, and there is
+    no error when they do not: the data is simply null for `.Rmd` and
+    `.ipynb` and correct everywhere else.
+    """
     return [
-        Mention(
-            raw_name=m.raw_name,
-            construct=m.construct,
+        replace(
+            m,
             line=m.line + offset - 1,
-            col=m.col,
-            byte_start=m.byte_start,
-            byte_end=m.byte_end,
-            snippet=m.snippet,
-            is_dynamic=m.is_dynamic,
-            is_conditional=m.is_conditional,
-            cell_index=m.cell_index,
             chunk_label=label,
             language=language,
         )
@@ -266,21 +266,8 @@ def extract_notebook(source: str) -> ExtractResult:
             # notebook, which is what happens when the whole file is parsed.
             failed_cells += 1
         for mention in result.mentions:
-            mentions.append(
-                Mention(
-                    raw_name=mention.raw_name,
-                    construct=mention.construct,
-                    line=mention.line,
-                    col=mention.col,
-                    byte_start=mention.byte_start,
-                    byte_end=mention.byte_end,
-                    snippet=mention.snippet,
-                    is_dynamic=mention.is_dynamic,
-                    is_conditional=mention.is_conditional,
-                    cell_index=index,
-                    language=language,
-                )
-            )
+            # `replace`, for the reason given in `_shift`.
+            mentions.append(replace(mention, cell_index=index, language=language))
 
     return ExtractResult(
         mentions=mentions,

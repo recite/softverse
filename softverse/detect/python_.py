@@ -53,12 +53,88 @@ def _conditional(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> bool:
     return False
 
 
+def _rebound_names(tree: ast.Module) -> set[str]:
+    """Names the file assigns to, which therefore cannot be trusted as aliases.
+
+    `import numpy as np` followed anywhere by `np = load(...)` means `np.foo`
+    is no longer numpy, and nothing in the source says at which line the
+    meaning changed. Dropping the alias entirely is the conservative reading:
+    it loses the calls that really were numpy rather than inventing calls that
+    were not.
+    """
+    bound: set[str] = set()
+    for node in ast.walk(tree):
+        targets: list[ast.expr] = []
+        if isinstance(node, ast.Assign):
+            targets = list(node.targets)
+        elif isinstance(node, ast.AugAssign | ast.AnnAssign):
+            targets = [node.target]
+        elif isinstance(node, ast.For | ast.AsyncFor):
+            targets = [node.target]
+        elif isinstance(node, ast.withitem) and node.optional_vars is not None:
+            targets = [node.optional_vars]
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            bound.add(node.name)
+            arguments = node.args
+            bound.update(
+                a.arg
+                for a in [
+                    *arguments.posonlyargs,
+                    *arguments.args,
+                    *arguments.kwonlyargs,
+                    arguments.vararg,
+                    arguments.kwarg,
+                ]
+                if a is not None
+            )
+        elif isinstance(node, ast.ClassDef):
+            bound.add(node.name)
+        for target in targets:
+            for sub in ast.walk(target):
+                if isinstance(sub, ast.Name):
+                    bound.add(sub.id)
+    return bound
+
+
+def _alias_map(tree: ast.Module) -> dict[str, str]:
+    """Local name -> top-level package, from this file's own `import`s.
+
+    Only `import x` and `import x as y`. `from pandas import read_csv` binds a
+    function rather than a module, and its call site is a bare `read_csv(f)`
+    already counted at the import; adding the call would count one use twice.
+    """
+    aliases: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Import):
+            continue
+        for alias in node.names:
+            package = alias.name.split(".")[0]
+            # `import os.path` with no `as` binds `os`, not `os.path`.
+            aliases[alias.asname or package] = package
+    for name in _rebound_names(tree):
+        aliases.pop(name, None)
+    return aliases
+
+
+def _attribute_path(node: ast.expr) -> tuple[str, list[str]] | None:
+    """`np.linalg.norm` -> ("np", ["linalg", "norm"]). None if not rooted."""
+    attributes: list[str] = []
+    current = node
+    while isinstance(current, ast.Attribute):
+        attributes.append(current.attr)
+        current = current.value
+    if not isinstance(current, ast.Name) or not attributes:
+        return None
+    return current.id, list(reversed(attributes))
+
+
 def _walk_ast(tree: ast.Module, lines: list[str]) -> list[Mention]:
     parents: dict[ast.AST, ast.AST] = {}
     for parent in ast.walk(tree):
         for child in ast.iter_child_nodes(parent):
             parents[child] = parent
 
+    aliases = _alias_map(tree)
     mentions: list[Mention] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -96,18 +172,31 @@ def _walk_ast(tree: ast.Module, lines: list[str]) -> list[Mention]:
                     )
                 )
             elif node.module:
-                mentions.append(
-                    Mention(
-                        raw_name=node.module.split(".")[0],
-                        construct=Construct.IMPORT_FROM,
-                        line=node.lineno,
-                        col=node.col_offset,
-                        byte_start=0,
-                        byte_end=0,
-                        snippet=_snippet(lines, node.lineno),
-                        is_conditional=_conditional(node, parents),
+                # One mention per imported name, because `from pandas import
+                # read_csv, DataFrame` is two things the code uses and a fifth
+                # of these statements import more than one name. The package
+                # repeats across them; deposit and file counts collapse it, so
+                # only the raw mention count sees the difference.
+                for alias in node.names or [None]:
+                    mentions.append(
+                        Mention(
+                            raw_name=node.module.split(".")[0],
+                            construct=Construct.IMPORT_FROM,
+                            line=node.lineno,
+                            col=node.col_offset,
+                            byte_start=0,
+                            byte_end=0,
+                            snippet=_snippet(lines, node.lineno),
+                            is_conditional=_conditional(node, parents),
+                            # `from x import *` has the name `*`, which names
+                            # no function, so it is recorded as no function.
+                            called_function=(
+                                alias.name
+                                if alias is not None and alias.name != "*"
+                                else None
+                            ),
+                        )
                     )
-                )
         elif isinstance(node, ast.Call):
             func = node.func
             name = (
@@ -117,6 +206,31 @@ def _walk_ast(tree: ast.Module, lines: list[str]) -> list[Mention]:
                 if isinstance(func, ast.Name)
                 else None
             )
+            if (
+                isinstance(func, ast.Attribute)
+                and name not in _DYNAMIC_IMPORTERS
+                and (path := _attribute_path(func)) is not None
+                and path[0] in aliases
+            ):
+                # `pd.read_csv(f)` after `import pandas as pd`. The same thing
+                # R's `dplyr::select` is: the source naming the package at the
+                # call site rather than only at the load. Calls on objects,
+                # `df.head()` and `self.fit()`, have no root in the alias map
+                # and produce nothing, which is the behaviour that keeps this
+                # from becoming a list of every method in the file.
+                mentions.append(
+                    Mention(
+                        raw_name=aliases[path[0]],
+                        construct=Construct.ATTRIBUTE_CALL,
+                        line=node.lineno,
+                        col=node.col_offset,
+                        byte_start=0,
+                        byte_end=0,
+                        snippet=_snippet(lines, node.lineno),
+                        called_function=".".join(path[1]),
+                        is_conditional=_conditional(node, parents),
+                    )
+                )
             if name in _DYNAMIC_IMPORTERS and node.args:
                 first = node.args[0]
                 literal = (

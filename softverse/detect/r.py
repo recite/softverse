@@ -199,6 +199,7 @@ def _mention(
     source: bytes,
     *,
     dynamic: bool = False,
+    called_function: str | None = None,
 ) -> Mention:
     return Mention(
         raw_name=name,
@@ -210,6 +211,7 @@ def _mention(
         snippet=_snippet(source, node),
         is_dynamic=dynamic,
         is_conditional=_conditional(node, source),
+        called_function=called_function,
     )
 
 
@@ -402,6 +404,12 @@ def extract(source: str | bytes) -> ExtractResult:
                 )
                 if name:
                     internal = operator is not None and _text(operator, data) == ":::"
+                    # The right operand is the function, and it was being
+                    # parsed and dropped: `dplyr::select(x)` recorded a
+                    # mention of `dplyr` and nothing about `select`, so the
+                    # corpus could say which packages published code loads
+                    # and never which parts of them it uses.
+                    rhs = node.child_by_field_name("rhs")
                     mentions.append(
                         _mention(
                             name,
@@ -410,6 +418,7 @@ def extract(source: str | bytes) -> ExtractResult:
                             else Construct.NAMESPACE_OP,
                             lhs,
                             data,
+                            called_function=_text(rhs, data) if rhs else None,
                         )
                     )
 

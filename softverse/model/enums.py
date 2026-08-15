@@ -91,6 +91,7 @@ class Construct(StrEnum):
     IMPORT_FROM = "import_from"
     DYNAMIC_IMPORT = "dynamic_import"  # importlib with a literal
     LOCAL_RELATIVE = "local_relative"  # from .x import y
+    ATTRIBUTE_CALL = "attribute_call"  # pd.read_csv, after `import pandas as pd`
     # Stata
     STATA_COMMAND = "stata_command"
     STATA_INSTALL = "stata_install"  # ssc install / net install

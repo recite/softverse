@@ -82,6 +82,11 @@ def extract(source: str) -> ExtractResult:
         mentions.append(
             Mention(
                 raw_name=statement.command,
+                # In Stata the command *is* the call, so this repeats
+                # `raw_name` on purpose. It means "which functions of this
+                # package does published code use" is one query across all
+                # three languages instead of three.
+                called_function=statement.command,
                 construct=Construct.LOCAL_PROGRAM
                 if head in {p.lower() for p in locals_defined}
                 else Construct.STATA_COMMAND,

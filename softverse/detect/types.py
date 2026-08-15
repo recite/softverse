@@ -40,6 +40,20 @@ class Mention:
     #: them. Left None for single-language files, where the file's language is
     #: the mention's language.
     language: Language | None = None
+    #: The thing actually called, when the source says. `dplyr::select(x)` is
+    #: a mention of `dplyr` whose `called_function` is `select`; a Stata
+    #: `reghdfe y x` is a mention of `reghdfe` whose called function is the
+    #: same word, because in Stata the command *is* the call.
+    #:
+    #: Recording it for Stata is redundant and deliberate. Without it a
+    #: consumer has to know that one language puts the call in `raw_name` and
+    #: another puts the package there, and "which functions of this package
+    #: does published code use" becomes three different queries.
+    #:
+    #: None where the source does not say: `library(dplyr)` names a package
+    #: and no function, and a bare `select(x)` names a function whose package
+    #: needs scope resolution this extractor does not attempt.
+    called_function: str | None = None
 
 
 @dataclass
