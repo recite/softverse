@@ -14,7 +14,7 @@ readme = "readme.md"
 license = {text = "MIT"}
 homepage = "https://github.com/recite/softverse"
 repository = "https://github.com/recite/softverse"
-documentation = "https://github.com/recite/softverse"
+documentation = "https://recite.github.io/softverse/"
 keywords = ["research", "software", "citations", "replication", "dataverse", "zenodo"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -59,7 +59,7 @@ dev = [
     "pre-commit>=2.20.0",
     "sphinx>=5.0.0",
     "furo>=2022.6.21",
-    "sphinx-click>=4.3.0",
+    "myst-parser>=4.0.0",
 ]
 
 [project.scripts]
@@ -73,7 +73,7 @@ dev = [
     "pre-commit>=2.20.0",
     "sphinx>=5.0.0",
     "furo>=2022.6.21",
-    "sphinx-click>=4.3.0",
+    "myst-parser>=4.0.0",
     "twine>=6.2.0",
     "matplotlib>=3.11.1",
 ]

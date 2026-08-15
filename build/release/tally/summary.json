@@ -1,0 +1,14 @@
+{
+ "built": "2026-08-15",
+ "frame": "zenodo",
+ "n_deposits": 1454,
+ "n_deposits_analyzable": 1272,
+ "n_files_analyzable": 40884,
+ "n_packages": 1806,
+ "n_unresolved_names": 3590,
+ "deposits_by_language": {
+  "stata": 1075,
+  "r": 392,
+  "python": 224
+ }
+}

@@ -1,0 +1,68 @@
+# Softverse
+
+**Stata is the language social science replication code is written in, and it
+is the language nobody counts.** Across __N_ANALYZABLE__ deposits with analyzable code at
+journals whose data-and-code policy an editor verifies, __N_STATA__ contain Stata
+and __N_R__ contain R. Studies of research software routinely cover R and Python
+and stop there, which describes a field while claiming to describe social
+science.
+
+The second finding is what the counts credit. The most used Stata package is
+`__TOP_STATA__`, in __TOP_STATA_N__ deposits, and __N_FORMATTERS__ of the four most
+used exist to format regression output. The software that gets loaded most is the software that
+turns results into tables.
+
+The third is what no registry can see. `grc1leg` is called __N_GRC1LEG__ times in this
+corpus and belongs to no package archive; it is distributed from StataCorp's
+own site. A credit system built on registries is blind to it.
+
+## Why count this way
+
+Credit is what gets software written. The metrics available are weak: a
+download counts a fetch and rewards frequent releases, and a mention in prose
+counts what an author remembered to name. Neither says the software ran.
+
+*Validated use* is the stronger claim. A package was loaded by code deposited
+with a published paper, at a journal whose data-and-code policy the Social
+Science Data Editors record as actively verified. That is a criterion a reader
+can check.
+
+## Three ways in
+
+**<a href="lookup/">Look up a package</a>.** Every one of the __N_PACKAGES__ packages,
+searchable, with the number of deposits that load it and the denominator it is
+a share of. A search that finds nothing in the registries still answers: type
+`grc1leg` and it reports the calls and says no registry indexes it.
+
+**<a href="paper/softverse.pdf">Read the paper</a>.** The frame, the measurement, and the
+validation, including the R extractor measured against R's own parser.
+
+**<a href="data/">Take the data</a>.** The per-package counts as CSV under CC0, plus the
+unresolved names and a datapackage descriptor. The Stata command-to-package
+index is deposited separately at
+[10.5281/zenodo.21926100](https://doi.org/10.5281/zenodo.21926100), because
+anyone counting Stata needs the same mapping whether or not they care about
+this corpus.
+
+## What the counts are not
+
+Static reference in deposited code. A package loaded in a superseded script or
+a dead branch still counts, and code kept out of the deposit is invisible. The
+per-package counts cover the Zenodo half of the frame, which is economics;
+Harvard Dataverse's journal collections are political science and are tallied
+separately.
+
+```{toctree}
+:hidden:
+:caption: Reference
+
+data-dictionary
+```
+
+```{toctree}
+:hidden:
+:caption: Elsewhere
+
+Source <https://github.com/recite/softverse>
+Stata index (Zenodo) <https://doi.org/10.5281/zenodo.21926100>
+```

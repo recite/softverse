@@ -424,9 +424,9 @@ def test_nested_archive_is_deleted_but_its_contents_survive(tmp_path):
 
     assert "analysis.R" in {p.name for p in result.files}, "contents must survive"
     assert not (dest / "data.zip").exists(), "the nested archive should be gone"
-    assert not any(
-        p.suffix == ".zip" for p in result.files
-    ), "a deleted archive must not remain in the file list"
+    assert not any(p.suffix == ".zip" for p in result.files), (
+        "a deleted archive must not remain in the file list"
+    )
 
 
 def test_a_nested_archive_that_fails_to_extract_is_kept(tmp_path):

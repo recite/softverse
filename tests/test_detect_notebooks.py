@@ -121,6 +121,25 @@ def test_kernel_language_is_read_not_assumed():
     assert result.mentions[0].language is Language.R
 
 
+def test_a_stata_kernel_is_read_by_the_stata_extractor():
+    result = extract_notebook(
+        notebook([code("ssc install estout\n")], language="stata")
+    )
+    assert names(result) == {"estout"}
+    assert result.mentions[0].language is Language.STATA
+
+
+def test_a_kernel_we_cannot_parse_yields_nothing_rather_than_python():
+    """`import Ipopt` is valid Python, so a Julia notebook parsed cleanly and
+    put a Julia package into a corpus where no `.jl` file is ever read."""
+    result = extract_notebook(
+        notebook([code("import Ipopt\nusing DataFrames\n")], language="julia")
+    )
+    assert result.mentions == []
+    assert result.report is not None
+    assert result.report.status is ParseStatus.UNSUPPORTED_LANGUAGE
+
+
 def test_nbformat_3_worksheets_are_read():
     """v1 read only `cells`, so older notebooks silently yielded nothing."""
     nb = notebook([code("import scipy\n")], nbformat=3)

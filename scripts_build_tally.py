@@ -186,10 +186,23 @@ def main() -> int:
     # The denominator travels with the count. Deposits *at risk* of using an R
     # package are the deposits containing analyzable R, not all deposits --
     # a share against the wrong denominator is not comparable to anything.
+    #
+    # A literate document makes "containing analyzable R" harder than it looks.
+    # A notebook's file language is `notebook`, so counting file languages
+    # alone put a deposit whose only Python lives in a `.ipynb` into the
+    # numerator of every Python package it loads and into the denominator of
+    # none. That inflated pandas to 93.9% of Python deposits when the true
+    # figure is 82.6%, and it inflated Python alone, which is the language the
+    # paper reports as smallest. Counting a deposit at risk when a *mention*
+    # in that language came out of it repairs the containers, and for R,
+    # Python and Stata it is exact: every deposit with chunks in one of those
+    # languages yields at least one mention in it.
     at_risk: dict[str, set[str]] = collections.defaultdict(set)
     for row in result.files:
         if row["in_analysis_set"]:
             at_risk[row["language"]].add(row["dataset_doi"])
+    for mention in result.mentions:
+        at_risk[mention["language"]].add(mention["dataset_doi"])
 
     tally = sorted(by_package.values(), key=lambda r: -r["n_deposits"])
     for row in tally:

@@ -374,9 +374,9 @@ def test_archive_is_removed_after_successful_extraction(tmp_path, monkeypatch):
     state, rows = zenodo.collect_record(client, record, tmp_path, disk=unlimited_disk())
     assert state.state == "complete"
     assert any(r["filename"] == "analysis.R" for r in rows), "code must survive"
-    assert not (
-        tmp_path / "7" / "_archives" / "pkg.zip"
-    ).exists(), "the compressed original should be gone"
+    assert not (tmp_path / "7" / "_archives" / "pkg.zip").exists(), (
+        "the compressed original should be gone"
+    )
     client.close()
 
 

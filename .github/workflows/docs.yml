@@ -2,7 +2,7 @@ name: Documentation
 
 on:
   push:
-    branches: [main]
+    branches: [main, v2-rebuild]
   pull_request:
     branches: [main]
 
@@ -15,46 +15,52 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  # The branches that publish. A pull request builds the site and checks it,
+  # and deploys nothing.
+  DEPLOY: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/v2-rebuild' }}
+
 jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v4
-      with:
-        enable-cache: true
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
 
-    - name: Set up Python
-      run: uv python install 3.11
+      - name: Set up Python
+        run: uv python install 3.11
 
-    - name: Install dependencies
-      run: uv sync --all-extras
+      - name: Install dependencies
+        run: uv sync --all-extras
 
-    - name: Build documentation
-      run: |
-        cd docs
-        uv run sphinx-build -b html . _build/html
+      # `make site` and nothing else, so a site that builds here builds the
+      # same way on a laptop. It reads only the tracked tables under
+      # `build/release/tally/`; the collected corpus is not in this checkout.
+      - name: Build the site
+        run: make site
 
-    - name: Setup Pages
-      if: github.ref == 'refs/heads/main'
-      uses: actions/configure-pages@v5
+      - name: Setup Pages
+        if: env.DEPLOY == 'true'
+        uses: actions/configure-pages@v6
 
-    - name: Upload artifact
-      if: github.ref == 'refs/heads/main'
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: docs/_build/html
+      - name: Upload artifact
+        if: env.DEPLOY == 'true'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/_build/html
 
   deploy-docs:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/v2-rebuild'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build-docs
     steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

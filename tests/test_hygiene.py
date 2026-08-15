@@ -87,9 +87,9 @@ def test_an_ssc_shipped_basename_is_vendored():
 
 def test_a_package_source_tree_is_vendored_without_a_conventional_name():
     siblings = {"vendored/thing/DESCRIPTION", "vendored/thing/R/code.R"}
-    assert (
-        vendored_by_marker("vendored/thing/R/code.R", siblings) is None
-    ), "DESCRIPTION is a sibling of R/, not of R/code.R"
+    assert vendored_by_marker("vendored/thing/R/code.R", siblings) is None, (
+        "DESCRIPTION is a sibling of R/, not of R/code.R"
+    )
     assert vendored_by_marker("vendored/thing/code.R", siblings) is VendorRule.V2_MARKER
 
 

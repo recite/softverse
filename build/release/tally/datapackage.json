@@ -1,0 +1,100 @@
+{
+ "name": "softverse-validated-use",
+ "title": "Validated use: per-package counts from replication code",
+ "licenses": [
+  {
+   "name": "CC0-1.0",
+   "path": "https://creativecommons.org/publicdomain/zero/1.0/"
+  }
+ ],
+ "created": "2026-08-15T04:15:39.146704+00:00",
+ "resources": [
+  {
+   "name": "usage_by_package",
+   "path": "usage_by_package.csv",
+   "format": "csv",
+   "schema": {
+    "fields": [
+     {
+      "name": "package",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "ecosystem",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits",
+      "type": "integer"
+     },
+     {
+      "name": "n_files",
+      "type": "integer"
+     },
+     {
+      "name": "n_mentions",
+      "type": "integer"
+     },
+     {
+      "name": "first_year",
+      "type": "integer"
+     },
+     {
+      "name": "last_year",
+      "type": "integer"
+     },
+     {
+      "name": "n_deposits_at_risk",
+      "type": "integer"
+     },
+     {
+      "name": "share_of_deposits",
+      "type": "number"
+     }
+    ]
+   }
+  },
+  {
+   "name": "unknown_names",
+   "path": "unknown_names.csv",
+   "format": "csv",
+   "schema": {
+    "fields": [
+     {
+      "name": "name",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "n_mentions",
+      "type": "integer"
+     }
+    ]
+   }
+  },
+  {
+   "name": "language_presence",
+   "path": "language_presence.csv",
+   "format": "csv",
+   "schema": {
+    "fields": [
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits",
+      "type": "integer"
+     }
+    ]
+   }
+  }
+ ]
+}

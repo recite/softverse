@@ -130,9 +130,9 @@ def test_the_paper_opens_on_a_finding_not_a_topic():
     prose = _prose()
     first_heading = re.search(r"^## (.+)$", prose, re.M)
     assert first_heading, "no sections found"
-    assert (
-        "what this measures" not in first_heading.group(1).lower()
-    ), "the paper opens on its own caveats again"
+    assert "what this measures" not in first_heading.group(1).lower(), (
+        "the paper opens on its own caveats again"
+    )
 
     after = prose[first_heading.end() :].strip()
     opening = " ".join(after.split("\n\n")[0].split())

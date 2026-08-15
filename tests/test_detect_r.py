@@ -350,9 +350,9 @@ def test_against_renvs_own_expectations():
     # stronger claim than renv's fixture makes: it only requires that A not be
     # reported as a package.
     assert "A" not in static
-    assert any(
-        m.raw_name == "A" and m.is_dynamic for m in result.mentions
-    ), "the idiom should still be visible as dynamic, not silently dropped"
+    assert any(m.raw_name == "A" and m.is_dynamic for m in result.mentions), (
+        "the idiom should still be visible as dynamic, not silently dropped"
+    )
 
     # `base::` and `xfun::` are real namespace mentions in this source, and
     # resolution -- not extraction -- is what later marks `base` as base R.

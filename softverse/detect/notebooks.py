@@ -26,7 +26,7 @@ from __future__ import annotations
 import json
 import re
 
-from softverse.detect import python_, r
+from softverse.detect import python_, r, stata
 from softverse.detect.types import ExtractResult, Mention, ParseReport
 from softverse.model.enums import Construct, Language, ParseStatus
 
@@ -42,6 +42,17 @@ _INLINE_R = re.compile(r"`r\s+([^`]+)`")
 _MAGIC_INSTALL = re.compile(
     r"^\s*[%!]\s*(?:pip|conda|mamba)\s+install\s+(?:-\S+\s+)*(.+)$"
 )
+
+#: Kernels we can read. A kernel that is not in here is not parsed, because
+#: the fallback used to be the Python extractor: a Julia notebook's
+#: `import Ipopt` is valid Python, so it parsed cleanly and was recorded as a
+#: Julia package, which is how one Julia "package" entered a corpus in which
+#: no `.jl` file is ever parsed. A Stata kernel went the same way.
+_CELL_EXTRACTOR = {
+    Language.R: r.extract,
+    Language.PYTHON: python_.extract,
+    Language.STATA: stata.extract,
+}
 
 _ENGINE_LANGUAGE = {
     "r": Language.R,
@@ -138,8 +149,6 @@ def extract_rmarkdown(source: str) -> ExtractResult:
         elif engine is Language.PYTHON:
             result = python_.extract(code)
         elif engine is Language.STATA:
-            from softverse.detect import stata
-
             result = stata.extract(code)
         else:
             continue
@@ -194,6 +203,17 @@ def extract_notebook(source: str) -> ExtractResult:
         )
 
     language = _notebook_language(payload)
+    extractor = _CELL_EXTRACTOR.get(language)
+    if extractor is None:
+        return ExtractResult(
+            report=ParseReport(
+                status=ParseStatus.UNSUPPORTED_LANGUAGE,
+                language=language,
+                bytes_total=len(source),
+                detail=f"no extractor for a {language} kernel",
+            )
+        )
+
     # nbformat 3 nested cells under `worksheets`; v1 read only `cells` and so
     # returned nothing for older notebooks without saying so.
     cells = payload.get("cells")
@@ -237,7 +257,7 @@ def extract_notebook(source: str) -> ExtractResult:
             cleaned.append("" if line.lstrip().startswith(("%", "!")) else line)
 
         body = "\n".join(cleaned)
-        result = r.extract(body) if language is Language.R else python_.extract(body)
+        result = extractor(body)
         if result.report and result.report.status in {
             ParseStatus.SYNTAX_ERROR,
             ParseStatus.DECODE_ERROR,
