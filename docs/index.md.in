@@ -46,7 +46,7 @@ extractor against R's own parser.
 
 <a href="data/">Take the data</a>, published as CSV under CC0, along with the
 Stata command-to-package index at
-[10.5281/zenodo.21926100](https://doi.org/10.5281/zenodo.21926100).
+[10.5281/zenodo.21926099](https://doi.org/10.5281/zenodo.21926099).
 
 ## What the counts do not show
 
@@ -68,5 +68,5 @@ data-dictionary
 :caption: Elsewhere
 
 Source <https://github.com/recite/softverse>
-Stata index (Zenodo) <https://doi.org/10.5281/zenodo.21926100>
+Stata index (Zenodo) <https://doi.org/10.5281/zenodo.21926099>
 ```

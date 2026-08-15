@@ -30,9 +30,13 @@ TITLE = (
     "social science replication code"
 )
 
+#: Published 2026-08-15. Set so a default re-run reports it instead of
+#: creating a second deposit of the same tables.
+PUBLISHED_RECORD = 21943909
+
 #: The Stata index this corpus was resolved against. Recorded as a related
 #: identifier so the two deposits are navigable from each other.
-STATA_INDEX_DOI = "10.5281/zenodo.21926100"
+STATA_INDEX_DOI = "10.5281/zenodo.21926099"
 
 
 def summary() -> dict:
@@ -145,7 +149,8 @@ def main() -> int:
         return 1
 
     stats = summary()
-    return run(Deposit(TITLE, Path(BUNDLE), metadata(stats)), token, sys.argv)
+    spec = Deposit(TITLE, Path(BUNDLE), metadata(stats), PUBLISHED_RECORD)
+    return run(spec, token, sys.argv)
 
 
 if __name__ == "__main__":

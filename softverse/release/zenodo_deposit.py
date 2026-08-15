@@ -21,6 +21,16 @@ import httpx
 API = "https://zenodo.org/api"
 
 
+def auth(token: str) -> dict[str, str]:
+    """Bearer header rather than `?access_token=`.
+
+    A query parameter travels in every URL, so httpx puts it in the message
+    of any `raise_for_status` error, which prints the live token to the
+    terminal and into whatever captured that output. A header does not.
+    """
+    return {"Authorization": f"Bearer {token}"}
+
+
 @dataclass(frozen=True)
 class Deposit:
     """A bundle and the metadata Zenodo should carry for it."""
@@ -28,6 +38,12 @@ class Deposit:
     title: str
     bundle: Path
     metadata: dict
+    #: Set once this bundle has been published, so a later default run
+    #: reports the existing record instead of quietly creating a second
+    #: deposit of the same thing. Re-running the default is the normal way
+    #: to iterate on a draft, and after publication that turns into
+    #: duplication with no warning.
+    published_record: int | None = None
 
     def files(self) -> list[Path]:
         return sorted(p for p in self.bundle.iterdir() if p.is_file())
@@ -36,7 +52,7 @@ class Deposit:
 def find_draft(client: httpx.Client, token: str, title: str) -> dict | None:
     """An existing unpublished deposit with this title, if there is one."""
     response = client.get(
-        f"{API}/deposit/depositions", params={"access_token": token, "size": 50}
+        f"{API}/deposit/depositions", params={"size": 50}, headers=auth(token)
     )
     response.raise_for_status()
     for deposit in response.json():
@@ -55,7 +71,7 @@ def show(deposit: dict) -> None:
 def _remote_files(client: httpx.Client, token: str, deposit_id: int) -> list[dict]:
     return client.get(
         f"{API}/deposit/depositions/{deposit_id}/files",
-        params={"access_token": token},
+        headers=auth(token),
     ).json()
 
 
@@ -65,7 +81,7 @@ def sync(client: httpx.Client, token: str, spec: Deposit) -> dict:
     if existing is None:
         created = client.post(
             f"{API}/deposit/depositions",
-            params={"access_token": token},
+            headers=auth(token),
             json=spec.metadata,
         )
         created.raise_for_status()
@@ -74,7 +90,7 @@ def sync(client: httpx.Client, token: str, spec: Deposit) -> dict:
     else:
         updated = client.put(
             f"{API}/deposit/depositions/{existing['id']}",
-            params={"access_token": token},
+            headers=auth(token),
             json=spec.metadata,
         )
         updated.raise_for_status()
@@ -89,17 +105,17 @@ def sync(client: httpx.Client, token: str, spec: Deposit) -> dict:
             if remote["filename"] == path.name:
                 client.delete(
                     f"{API}/deposit/depositions/{deposit['id']}/files/{remote['id']}",
-                    params={"access_token": token},
+                    headers=auth(token),
                 )
         with path.open("rb") as handle:
             put = client.put(
-                f"{bucket}/{path.name}", params={"access_token": token}, content=handle
+                f"{bucket}/{path.name}", headers=auth(token), content=handle
             )
         put.raise_for_status()
         print(f"  uploaded {path.name:<34} {path.stat().st_size:>9,} bytes")
 
     return client.get(
-        f"{API}/deposit/depositions/{deposit['id']}", params={"access_token": token}
+        f"{API}/deposit/depositions/{deposit['id']}", headers=auth(token)
     ).json()
 
 
@@ -107,7 +123,7 @@ def publish(client: httpx.Client, token: str, deposit: dict) -> int:
     """Mint the DOI. There is no undo."""
     response = client.post(
         f"{API}/deposit/depositions/{deposit['id']}/actions/publish",
-        params={"access_token": token},
+        headers=auth(token),
     )
     if response.status_code >= 400:
         print(f"publish failed ({response.status_code}): {response.text[:500]}")
@@ -117,6 +133,46 @@ def publish(client: httpx.Client, token: str, deposit: dict) -> int:
     print(f"  DOI  {published.get('doi')}")
     print(f"  URL  {published['links'].get('record_html', published['links']['html'])}")
     return 0
+
+
+def new_version(
+    client: httpx.Client, token: str, record_id: int, spec: Deposit
+) -> dict:
+    """Open a draft for a new version of an already-published record.
+
+    A published record cannot be edited, which is the point of a DOI. What it
+    can have is another version: the concept DOI keeps resolving to the
+    latest, the old version stays visible in the version history, and the
+    correction is on the record rather than in place of it.
+
+    Idempotent, and it finds an open draft by title rather than by following
+    the record's `latest_draft` link. On a record whose draft is already
+    open, Zenodo returns 400 from `newversion` and then reports
+    `latest_draft` pointing back at the published record itself, so following
+    that link fetches the wrong deposit and every write to it 404s.
+    """
+    existing = find_draft(client, token, spec.title)
+    if existing is not None:
+        deposit = existing
+        print(f"reusing open version draft {deposit['id']}")
+    else:
+        opened = client.post(
+            f"{API}/deposit/depositions/{record_id}/actions/newversion",
+            headers=auth(token),
+        )
+        opened.raise_for_status()
+        draft = client.get(opened.json()["links"]["latest_draft"], headers=auth(token))
+        draft.raise_for_status()
+        deposit = draft.json()
+        print(f"opened version draft {deposit['id']} of record {record_id}")
+
+    updated = client.put(
+        f"{API}/deposit/depositions/{deposit['id']}",
+        headers=auth(token),
+        json=spec.metadata,
+    )
+    updated.raise_for_status()
+    return updated.json()
 
 
 def run(spec: Deposit, token: str, argv: list[str]) -> int:
@@ -142,6 +198,17 @@ def run(spec: Deposit, token: str, argv: list[str]) -> int:
             show(existing)
             print()
             return publish(client, token, existing)
+
+        if (
+            spec.published_record is not None
+            and find_draft(client, token, spec.title) is None
+        ):
+            print(
+                f"already published as record {spec.published_record}.\n"
+                "Use `--new-version` to correct or extend it; running the "
+                "default would create a second deposit of the same bundle."
+            )
+            return 0
 
         deposit = sync(client, token, spec)
         print()

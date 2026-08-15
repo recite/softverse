@@ -4,6 +4,15 @@
     uv run python scripts_deposit_stata_index.py --show      # print its state
     uv run python scripts_deposit_stata_index.py --publish   # mint the DOI
 
+Version 1.0 published with two creators. A published record cannot be edited,
+so the correction to sole authorship is a new version:
+
+    uv run python scripts_deposit_stata_index.py --new-version
+    uv run python scripts_deposit_stata_index.py --new-version --publish
+
+The concept DOI 10.5281/zenodo.21926099 keeps resolving to the latest, and
+version 1.0 stays in the record's history rather than disappearing.
+
 The default never publishes, and `--publish` exists so that the irreversible
 step is a deliberate, separate act with a record in the repository rather than
 a one-off command in somebody's shell history. Publishing mints a DOI, which
@@ -19,10 +28,15 @@ from __future__ import annotations
 
 import sys
 
+import httpx
+
 from softverse.config import PATHS, credential
-from softverse.release.zenodo_deposit import Deposit, run
+from softverse.release.zenodo_deposit import Deposit, new_version, publish, run, show
 
 BUNDLE = PATHS.root / "build" / "release" / "stata-index"
+
+#: Version 1.0, already published. New versions attach to this record.
+PUBLISHED_RECORD = 21926100
 
 TITLE = (
     "Stata command-to-package index: a machine-readable mapping "
@@ -79,10 +93,8 @@ METADATA = {
         "title": TITLE,
         "upload_type": "dataset",
         "description": DESCRIPTION,
-        "creators": [
-            {"name": "Sood, Gaurav"},
-            {"name": "Weitzel, Daniel"},
-        ],
+        "creators": [{"name": "Sood, Gaurav"}],
+        "version": "1.1",
         "license": "cc-zero",
         "keywords": [
             "Stata",
@@ -118,7 +130,19 @@ def main() -> int:
     if not BUNDLE.exists():
         print(f"no bundle at {BUNDLE}; run scripts_release_stata_index.py first")
         return 1
-    return run(Deposit(TITLE, BUNDLE, METADATA), token, sys.argv)
+
+    spec = Deposit(TITLE, BUNDLE, METADATA, PUBLISHED_RECORD)
+    if "--new-version" in sys.argv:
+        with httpx.Client(timeout=300.0) as client:
+            deposit = new_version(client, token, PUBLISHED_RECORD, spec)
+            show(deposit)
+            if "--publish" not in sys.argv:
+                print("\nnothing is published. add `--publish` to mint the version.")
+                return 0
+            print()
+            return publish(client, token, deposit)
+
+    return run(spec, token, sys.argv)
 
 
 if __name__ == "__main__":

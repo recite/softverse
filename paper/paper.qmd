@@ -958,19 +958,24 @@ unbounded error.
 ## Data and code availability
 
 The Stata command-to-package index is deposited at
-[10.5281/zenodo.21926100](https://doi.org/10.5281/zenodo.21926100) under CC0,
+[10.5281/zenodo.21926099](https://doi.org/10.5281/zenodo.21926099) under CC0,
 with `{python} f"{n_ssc_commands:,}"` commands across
 `{python} f"{n_ssc_packages:,}"` packages. It is released separately from
 this paper because its usefulness does not depend on this corpus: anyone
 counting Stata needs the same mapping.
 
+The per-package counts behind every table here are deposited at
+[10.5281/zenodo.21943909](https://doi.org/10.5281/zenodo.21943909) under CC0,
+covering `{python} f"{len(usage):,}"` packages, with the counts by year and
+by journal alongside them. The same tables are served at
+<https://recite.github.io/softverse/data/>, and every package can be looked
+up by name at <https://recite.github.io/softverse/lookup/>, so a software
+author or an evaluating committee can check a number instead of taking the
+top ten in \cref{tab:top-packages} on trust. The archived version is the one
+to cite: a repository serves whatever it holds today.
+
 The extraction pipeline, the resolver and the frame are at
-<https://github.com/recite/softverse>. The per-package counts are published as
-CSV under CC0 at <https://recite.github.io/softverse/data/>, and every one of
-the `{python} f"{len(usage):,}"` packages can be looked up by name at
-<https://recite.github.io/softverse/lookup/>, so a software author or an
-evaluating committee can check a number instead of taking the top ten in
-\cref{tab:top-packages} on trust.
+<https://github.com/recite/softverse>.
 
 ## Reproducibility
 
