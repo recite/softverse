@@ -7,6 +7,11 @@ and __N_R__ contain R. Studies of research software routinely cover R and Python
 and stop there, which describes a field while claiming to describe social
 science.
 
+The frame is two repositories because one discipline is not the field:
+__N_ZENODO__ deposits from Zenodo's verified economics collections and
+__N_DATAVERSE__ from Harvard Dataverse's political science journals. Counts
+here pool both, and every row of the table carries the split.
+
 The second finding is what the counts credit. The most used Stata package is
 `__TOP_STATA__`, in __TOP_STATA_N__ deposits, and __N_FORMATTERS__ of the four most
 used exist to format regression output. The software that gets loaded most is the software that
@@ -47,10 +52,14 @@ this corpus.
 ## What the counts are not
 
 Static reference in deposited code. A package loaded in a superseded script or
-a dead branch still counts, and code kept out of the deposit is invisible. The
-per-package counts cover the Zenodo half of the frame, which is economics;
-Harvard Dataverse's journal collections are political science and are tallied
-separately.
+a dead branch still counts, and code kept out of the deposit is invisible.
+
+The two halves are not identical instruments. The Dataverse material is a
+January 2024 scrape that kept only `.do`, `.r` and `.py` files, so a package
+used mainly inside notebooks or knitr documents is under-counted on that
+side, and the two vintages differ. The ranking is checked against a
+recomputation restricted to the file types both halves collected, and the
+release fails if it moves.
 
 ```{toctree}
 :hidden:

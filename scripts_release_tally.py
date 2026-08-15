@@ -12,10 +12,12 @@ actually wants are 150 KB of CSV. Splitting them means the published site and
 the released data can be built from the repository alone, and a number on the
 site cannot drift from the number in the paper, because both read this.
 
-Scope worth stating: these counts are the Zenodo half of the frame, which is
-economics. The Harvard Dataverse half is political science and is tallied
-separately; it contributes to the language comparison and not to these
-per-package counts.
+The counts pool both repositories, Zenodo and Harvard Dataverse, and every
+row carries the per-source split beside the pooled total. Three checks gate
+the release: the denominators are recomputed from the raw Parquet by the
+documented rule, the pooled counts must reconcile with their own split, and
+the ranking must survive being recomputed on the file types both corpora
+collected.
 """
 
 from __future__ import annotations
@@ -51,12 +53,22 @@ of the three claims and the one worth crediting against.
 
 ## Scope
 
-The frame is the Zenodo half: {n_deposits:,} deposits from the verified
-economics collections. Harvard Dataverse's journal collections are political
-science and are tallied separately, so they contribute to the cross-language
-comparison in the paper and not to the per-package counts here. A package
-heavily used in political science and rarely in economics will look smaller
-here than it is.
+Two repositories, two disciplines, pooled. Zenodo's verified collections are
+economics; Harvard Dataverse's journal collections are mostly political
+science. Every count here is the pooled total, and `usage_by_package.csv`
+carries the split beside it in `n_deposits_zenodo` and
+`n_deposits_dataverse_legacy`, because the halves are very different sizes
+and a pooled number with no breakdown asks you to take the composition on
+trust.
+
+{composition}
+
+Two asymmetries worth knowing before you use the split. The Dataverse half is
+a January 2024 scrape that kept only `.do`, `.r` and `.py`, so a package used
+mainly inside notebooks or knitr documents is under-counted there; the
+ranking is checked against a recomputation restricted to those three
+extensions, and the release fails if it moves. And the halves are different
+vintages, 2024 against 2026, which `first_year` and `last_year` will show.
 
 Counts are static reference in deposited code. A package that is loaded but
 never reached at runtime still counts, and a package invoked through a string
@@ -108,6 +120,29 @@ Produced by [softverse](https://github.com/recite/softverse).
 """
 
 
+#: Reader-facing names for the sources, and what each one is.
+SOURCE_LABEL = {
+    "zenodo": "Zenodo (economics)",
+    "dataverse_legacy": "Harvard Dataverse (political science)",
+}
+
+
+def _composition_table(summary: dict) -> str:
+    """The split, as a table, so the pooled totals are never bare."""
+    rows = [
+        "| repository | deposits | with analyzable code |",
+        "|---|---:|---:|",
+    ]
+    for source, n in summary["deposits_by_source"].items():
+        analyzable = summary["deposits_analyzable_by_source"].get(source, 0)
+        rows.append(f"| {SOURCE_LABEL.get(source, source)} | {n:,} | {analyzable:,} |")
+    rows.append(
+        f"| **total** | **{summary['n_deposits']:,}** | "
+        f"**{summary['n_deposits_analyzable']:,}** |"
+    )
+    return "\n".join(rows)
+
+
 def summarize() -> dict:
     """Corpus counts, computed here so nothing downstream opens the Parquet.
 
@@ -131,14 +166,26 @@ def summarize() -> dict:
         .sort_values(ascending=False)
     )
 
+    by_source = (
+        analyzable.groupby("source", observed=True)["dataset_doi"]
+        .nunique()
+        .sort_values(ascending=False)
+    )
+    deposits_by_source = (
+        files.groupby("source", observed=True)["dataset_doi"].nunique().to_dict()
+    )
+
     return {
         "built": datetime.now(tz=UTC).date().isoformat(),
-        "frame": "zenodo",
+        "sources": sorted(str(s) for s in deposits_by_source),
         "n_deposits": int(files["dataset_doi"].nunique()),
         "n_deposits_analyzable": int(analyzable["dataset_doi"].nunique()),
         "n_files_analyzable": int(len(analyzable)),
         "n_packages": int(len(usage)),
         "n_unresolved_names": int(len(unknown)),
+        "n_collections": int(files["collection_id"].nunique()),
+        "deposits_by_source": {str(k): int(v) for k, v in deposits_by_source.items()},
+        "deposits_analyzable_by_source": {str(k): int(v) for k, v in by_source.items()},
         "deposits_by_language": {
             str(k): int(v) for k, v in by_language.items() if v > 0
         },
@@ -168,6 +215,7 @@ def main() -> int:
             n_languages=len(pd.read_csv(OUT / "language_presence.csv")),
             n_grc1leg=int(grc1leg.iloc[0]) if len(grc1leg) else 0,
             built=summary["built"],
+            composition=_composition_table(summary),
         )
     )
 
@@ -235,6 +283,94 @@ def main() -> int:
     return report(summary)
 
 
+#: The only extensions the 2024 Dataverse scrape kept. Zenodo carries these
+#: plus `.ado`, `.m`, `.Rmd`, `.ipynb` and `.sas`.
+COMMON_BASIS = frozenset({".do", ".r", ".py"})
+
+#: How far a package may move between the pooled ranking and the same ranking
+#: on the common basis. One place absorbs ties; more would mean the extra file
+#: types Zenodo carries are driving the order rather than usage is.
+MAX_RANK_SHIFT = 1
+
+#: The comparison is printed for the top 20 and enforced over the top 10,
+#: which is the depth the paper's tables actually print and therefore the
+#: depth at which a claim rests on the ordering. The gap between the two is
+#: not slack, it is the finding: R and Stata hold all twenty places, and
+#: Python's ranks 14 to 20 move because that is where notebook-only packages
+#: sit and the 2024 Dataverse scrape collected no notebooks.
+GATE_DEPTH = 10
+
+
+def _common_basis_ranking(top_n: int = 20) -> tuple[list[str], str]:
+    """Recompute the ranking using only file types both corpora collected.
+
+    The two halves do not see the same extensions, so pooling could in
+    principle reorder the table through coverage rather than through usage.
+    This is that objection turned into a number instead of a caveat: rebuild
+    the per-package deposit counts from the mentions restricted to `.do`,
+    `.r` and `.py`, and compare the top 20 per language against the shipped
+    ranking.
+    """
+    files = pd.read_parquet(TALLY / "files.parquet", columns=["file_uid", "extension"])
+    mentions = pd.read_parquet(
+        TALLY / "mentions.parquet",
+        columns=[
+            "file_uid",
+            "dataset_doi",
+            "language",
+            "resolved_package",
+            "resolution",
+        ],
+    )
+    shipped = pd.read_csv(TALLY / "usage_by_package.csv")
+
+    countable = {"known_current", "known_archived"}
+    keep = set(files.loc[files["extension"].str.lower().isin(COMMON_BASIS), "file_uid"])
+    basis = mentions[
+        mentions["file_uid"].isin(keep)
+        & mentions["resolution"].isin(countable)
+        & mentions["resolved_package"].notna()
+    ]
+    counts = (
+        basis.groupby(["language", "resolved_package"], observed=True)["dataset_doi"]
+        .nunique()
+        .reset_index(name="n_deposits")
+    )
+
+    problems: list[str] = []
+    lines = []
+    for language in sorted(shipped["language"].unique()):
+        pooled = (
+            shipped[shipped["language"] == language]
+            .nlargest(top_n, "n_deposits")["package"]
+            .tolist()
+        )
+        restricted = (
+            counts[counts["language"] == language]
+            .nlargest(top_n, "n_deposits")["resolved_package"]
+            .tolist()
+        )
+        position = {name: i for i, name in enumerate(restricted)}
+        moved = []
+        for rank, name in enumerate(pooled):
+            if name not in position:
+                note = f"{name} leaves the top {top_n}"
+            elif abs(position[name] - rank) > MAX_RANK_SHIFT:
+                note = f"{name} {rank + 1}->{position[name] + 1}"
+            else:
+                continue
+            moved.append(note)
+            if rank < GATE_DEPTH:
+                problems.append(f"common basis, {language}: {note}")
+        lines.append(
+            f"  {language:<8} {len(pooled) - len(moved):>2}/{len(pooled)} hold rank"
+            + (f"  ({'; '.join(moved[:4])})" if moved else "")
+        )
+
+    report = "common-basis ranking (.do/.r/.py only, as the 2024 scrape kept):\n"
+    return problems, report + "\n".join(lines)
+
+
 def _denominators_recomputed(summary: dict) -> list[str]:
     """Rebuild the denominators from the raw Parquet by the documented rule.
 
@@ -277,9 +413,10 @@ def report(summary: dict) -> int:
     # prints, so a release that disagrees with them is a release that would
     # have quietly contradicted the paper.
     for key, field, expected in (
-        (("estout", "stata"), "n_deposits", "657"),
-        (("reghdfe", "stata"), "n_deposits", "375"),
-        (("estout", "stata"), "n_deposits_at_risk", "1075"),
+        (("estout", "stata"), "n_deposits", "2440"),
+        (("estout", "stata"), "n_deposits_zenodo", "657"),
+        (("reghdfe", "stata"), "n_deposits", "800"),
+        (("estout", "stata"), "n_deposits_at_risk", "6212"),
     ):
         got = usage.get(key, {}).get(field)
         if got != expected:
@@ -290,6 +427,24 @@ def report(summary: dict) -> int:
 
     problems.extend(_denominators_recomputed(summary))
 
+    # Pooled counts must reconcile with the split they ship beside them. A
+    # pooled table that disagrees with its own breakdown is worse than no
+    # pooled table, because it looks checkable and is not.
+    sources = summary["sources"]
+    for (package, language), row in usage.items():
+        parts = sum(
+            int(row[f"n_deposits_{s}"]) for s in sources if f"n_deposits_{s}" in row
+        )
+        if parts != int(row["n_deposits"]):
+            problems.append(
+                f"{package} ({language}): pooled {row['n_deposits']} but "
+                f"the per-source columns sum to {parts}"
+            )
+            break
+
+    basis_problems, basis_report = _common_basis_ranking()
+    problems.extend(basis_problems)
+
     print(f"wrote {OUT}")
     print(
         f"  {summary['n_packages']:,} packages · "
@@ -298,6 +453,10 @@ def report(summary: dict) -> int:
     )
     for language, n in summary["deposits_by_language"].items():
         print(f"    {language:<10} {n:>5}")
+    print("\n  deposits by source:")
+    for source, n in summary["deposits_by_source"].items():
+        print(f"    {source:<20} {n:>6,}")
+    print(f"\n{basis_report}")
     if problems:
         print("\nVERIFICATION FAILED:")
         for problem in problems:
@@ -305,8 +464,10 @@ def report(summary: dict) -> int:
         return 1
     print(
         "\nverified against the exported files: line counts match the tally, "
-        "estout and\nreghdfe match the paper, grc1leg is unresolved, and every "
-        "denominator matches\nthe deposits containing that language"
+        "grc1leg is\nunresolved, every denominator matches a recomputation from "
+        "the Parquet, the\npooled counts reconcile with their per-source split, "
+        "and the ranking survives\nrestriction to the file types both corpora "
+        "collected"
     )
     return 0
 

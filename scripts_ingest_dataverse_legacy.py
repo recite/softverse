@@ -1,63 +1,38 @@
-"""Ingest the 2024 Harvard Dataverse scrape.
+"""Unpack the 2024 Harvard Dataverse scrape into the corpus.
 
-    uv run python scripts_ingest_dataverse_legacy.py [--limit N]
+    uv run python scripts_ingest_dataverse_legacy.py
 
-Reads `data/script_files.tar.gz` (46,735 files, 7,231 deposits, 61 journals)
-and `data/datasets_by_dataverse.tar.gz` (DOIs and publication dates), and
-writes a tally to `build/tally_dataverse_legacy/`.
+Extracts `data/script_files.tar.gz` (46,735 files, 7,231 deposits, 61
+journals) and `data/datasets_by_dataverse.tar.gz` (DOIs and publication
+dates) into `corpus/dataverse_legacy/`. That is all it does.
 
-**Why this is a separate tally rather than merged into the main one.** The
-scrape is *flattened*: its paths are `<journal>_datasets_files/<id>/<file>`
-with no in-deposit directories, because the harvester kept only basenames.
-That breaks the hygiene rules that depend on paths, and it breaks them in a
-way that has now been measured rather than guessed. On the Zenodo corpus,
-where the truth is known, the path rules catch 26,776 vendored files; only
-**25%** of those would still be caught by the name- and hash-based rules that
-survive flattening. Vendored code was separately shown to distort package
-counts by 11-22%, so a merged tally would carry roughly twenty thousand
-undetectable library files straight into the headline table.
+It used to build its own tally into `build/tally_dataverse_legacy/`, which is
+why the published per-package counts were Zenodo-only for so long: two
+scripts, two output directories, and only one of them aggregating. Corpus
+assembly now lives in `softverse/corpus/loaders.py` and aggregation in
+`scripts_build_tally.py`, so both halves are hashed, classified and resolved
+by one pass over one corpus. The evidence for why the flattened paths are
+safe to pool moved to the loader, which is where the question next gets
+asked.
 
-**That estimate answered the wrong question, and the flattening costs almost
-nothing here.** It measured what flattening would do to *Zenodo*, whose
-deposits ship zip archives holding whole project trees. Dataverse deposits of
-this era are not shaped that way, and the corpus says so directly: zero
-`.ado` files (the scrape kept only `.do`, `.r` and `.py`), two sha256 values
-shared across five or more of the 7,231 deposits, and 188 of 15,805 R files
-whose basename is a CRAN package name -- at most five in any one deposit, so
-no library trees.
-
-Checked from the other side too, by asking Harvard for the directory listings
-the scrape discarded. Of 36 sampled deposits, 31 have **no directory
-structure at all**, and the five that do use it for organisation:
-`scripts/`, `data/`, `tables/`, `figures/`, `data/trade/rw`. Not one `ado/`,
-`renv/`, `site-packages/` or `.checkpoint/`. Recovering the paths would give
-nicer provenance for a seventh of the corpus and change no classification, so
-the restriction on package rankings is lifted on that evidence rather than by
-fiat, and the harvest is not worth its 7,231 requests.
-
-Why the paths are unavailable regardless, recorded so nobody re-derives it:
-the file metadata we hold has only `doi, fid, fn`; the OAI records list bare
+Why the paths are unavailable at all, recorded so nobody re-derives it: the
+file metadata we hold has only `doi, fid, fn`; the OAI records list bare
 filenames; and every route carrying `directoryLabel` sits behind an AWS WAF
 challenge (HTTP 202, empty body) that answers this client identically with or
 without an API token. The challenge is a JavaScript capability test rather
-than a human one, so a real browser passes it -- which is how the sample
-above was taken -- but driving one 7,231 times to route around a bot control
-is a decision for the repository's users to make deliberately, and here there
-is nothing on the other side of it.
+than a human one, so a real browser passes it, but driving one 7,231 times to
+route around a bot control is a decision for the repository's users to make
+deliberately, and here there is nothing on the other side of it.
 """
 
 from __future__ import annotations
 
-import collections
-import csv
-import sys
 import tarfile
 from pathlib import Path
 
-from softverse.build.pipeline import CorpusFile, build
 from softverse.config import PATHS
-from softverse.logging_setup import get_logger, setup_logging, stage
-from softverse.model.io import write_table
+from softverse.corpus.loaders import dataverse_legacy_corpus
+from softverse.logging_setup import get_logger, setup_logging
 
 logger = get_logger(__name__)
 
@@ -65,12 +40,6 @@ SCRIPTS_TAR = PATHS.root / "data" / "script_files.tar.gz"
 METADATA_TAR = PATHS.root / "data" / "datasets_by_dataverse.tar.gz"
 FILES_ROOT = PATHS.root / "corpus" / "dataverse_legacy" / "files"
 METADATA_ROOT = PATHS.root / "corpus" / "dataverse_legacy" / "metadata"
-OUT = PATHS.root / "build" / "tally_dataverse_legacy"
-
-#: Marks every row as coming from the flattened scrape, so a downstream query
-#: cannot forget which corpus it is looking at. A footnote can be missed; a
-#: column in a `GROUP BY` cannot.
-SOURCE = "dataverse_legacy"
 
 
 def unpack(archive: Path, destination: Path) -> None:
@@ -91,113 +60,28 @@ def unpack(archive: Path, destination: Path) -> None:
     logger.info("unpacked", extra={"archive": archive.name, "members": len(safe)})
 
 
-def deposit_metadata() -> dict[tuple[str, str], dict]:
-    """(journal, deposit id) -> its Dataverse metadata row.
-
-    Keyed on the trailing segment of `identifier` (`DVN/00IT1L` -> `00IT1L`),
-    which is what the scrape used for its directory names. Note the source is
-    the *tarball*, not `data/datasets/`: that directory holds 74 of the 150
-    journal files and is missing `restat`, the largest journal in the scrape.
-    Joining against it matched 88.5% of deposits; against the tarball, 100%.
-    """
-    unpack(METADATA_TAR, METADATA_ROOT)
-    out: dict[tuple[str, str], dict] = {}
-    for path in METADATA_ROOT.rglob("*_datasets.csv"):
-        if ".ipynb_checkpoints" in str(path):
-            continue
-        journal = path.stem.replace("_datasets", "")
-        with open(path, encoding="utf-8", errors="replace") as handle:
-            for row in csv.DictReader(handle):
-                identifier = (row.get("identifier") or "").strip()
-                if identifier:
-                    out[(journal, identifier.rsplit("/", 1)[-1])] = row
-    return out
-
-
-def corpus(limit: int | None = None) -> list[CorpusFile]:
-    unpack(SCRIPTS_TAR, FILES_ROOT)
-    meta = deposit_metadata()
-    out: list[CorpusFile] = []
-    unmatched: collections.Counter = collections.Counter()
-
-    for path in FILES_ROOT.rglob("*"):
-        if not path.is_file():
-            continue
-        parts = path.relative_to(FILES_ROOT).parts
-        if len(parts) < 3 or not parts[0].endswith("_datasets_files"):
-            continue
-        journal = parts[0].replace("_datasets_files", "")
-        deposit = parts[1]
-        row = meta.get((journal, deposit))
-        if row is None:
-            unmatched[journal] += 1
-            continue
-        published = (row.get("publicationDate") or "")[:4]
-        out.append(
-            CorpusFile(
-                path=path,
-                # The real DOI, so this corpus is joinable to anything else
-                # that speaks Dataverse.
-                dataset_doi=f"doi:10.7910/DVN/{deposit}",
-                collection_id=journal,
-                source=SOURCE,
-                # Flattened, and recorded as such: this is the filename with
-                # no directory because the scrape kept no directory.
-                relative_path="/".join(parts[2:]),
-                deposit_year=int(published) if published.isdigit() else None,
-            )
-        )
-        if limit and len(out) >= limit:
-            break
-
-    if unmatched:
-        # Reported, never absorbed. A deposit we cannot place is a gap in the
-        # frame, not a rounding error.
-        logger.warning("files with no deposit metadata", extra=dict(unmatched))
-    return out
-
-
 def main() -> int:
     setup_logging("INFO", log_dir=PATHS.logs, stage="dataverse-legacy")
-    limit = (
-        int(sys.argv[sys.argv.index("--limit") + 1]) if "--limit" in sys.argv else None
-    )
+    for archive, destination in (
+        (SCRIPTS_TAR, FILES_ROOT),
+        (METADATA_TAR, METADATA_ROOT),
+    ):
+        if not archive.exists():
+            print(f"missing {archive}")
+            return 1
+        unpack(archive, destination)
 
-    files = corpus(limit)
+    files = dataverse_legacy_corpus()
     if not files:
-        print("nothing to ingest")
+        print("unpacked, but the loader found no placeable files")
         return 1
-    print(f"{len(files):,} files from {len({f.dataset_doi for f in files}):,} deposits")
 
-    # Same registries, same pins, same builtin list as the Zenodo tally --
-    # the corpora must differ only in what they contain, not in how they were
-    # resolved, or nothing can be compared between them.
-    from scripts_build_tally import load_registry
-
-    registry, shipped = load_registry()
-
-    with stage("dataverse-legacy-build", logger):
-        result = build(
-            files, registry, ssc_shipped=shipped, registry_lock_id=registry.lock_id
-        )
-
-    OUT.mkdir(parents=True, exist_ok=True)
-    write_table(result.files, "files", OUT)
-    write_table(result.mentions, "mentions", OUT)
-
-    by_journal: dict[str, collections.Counter] = collections.defaultdict(
-        collections.Counter
-    )
-    for row in result.files:
-        if row["in_analysis_set"] and row["language"]:
-            by_journal[row["collection_id"]][row["language"]] += 1
-
-    print(f"\nfiles     : {len(result.files):,}")
-    print(f"mentions  : {len(result.mentions):,}")
-    print(f"unresolved: {len(result.unknown):,} distinct names")
-    print(f"\nwritten to {OUT}")
-    print("\nNOTE: flattened corpus -- package rankings from it are not")
-    print("comparable to the Zenodo tally. See this script's docstring.")
+    deposits = {f.dataset_doi for f in files}
+    journals = {f.collection_id for f in files}
+    years = sorted({f.deposit_year for f in files if f.deposit_year})
+    print(f"{len(files):,} files from {len(deposits):,} deposits")
+    print(f"{len(journals)} journals, {years[0]} to {years[-1]}")
+    print("\nrun scripts_build_tally.py to tally this alongside Zenodo")
     return 0
 
 

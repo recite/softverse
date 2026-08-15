@@ -54,10 +54,29 @@ ECOSYSTEM_LABEL = {
 }
 
 
+#: Reader-facing names for the two repositories.
+SOURCE_LABEL = {
+    "zenodo": "Zenodo",
+    "dataverse_legacy": "Dataverse",
+}
+
+
 def rows() -> list[dict]:
-    """Per-package counts, smallest useful payload rather than the whole CSV."""
+    """Per-package counts, smallest useful payload rather than the whole CSV.
+
+    Each row carries the pooled count and the per-source split, because the
+    two repositories are different disciplines and very different sizes. A
+    reader looking up a package they wrote should be able to see which of the
+    two is crediting them.
+    """
     with open(TALLY / "usage_by_package.csv", encoding="utf-8") as handle:
         raw = list(csv.DictReader(handle))
+
+    sources = [
+        key[len("n_deposits_") :]
+        for key in (raw[0] if raw else {})
+        if key.startswith("n_deposits_") and key != "n_deposits_at_risk"
+    ]
 
     out = []
     for row in raw:
@@ -76,6 +95,10 @@ def rows() -> list[dict]:
                 # a division by nothing rather than a zero.
                 "s": round(100 * deposits / at_risk, 1) if at_risk else None,
                 "m": int(row["n_mentions"]),
+                "src": {
+                    SOURCE_LABEL.get(s, s): int(row.get(f"n_deposits_{s}") or 0)
+                    for s in sources
+                },
             }
         )
     out.sort(key=lambda r: -r["d"])
@@ -117,11 +140,15 @@ def analyzable_deposits() -> int:
 def build(data: list[dict], misses: list[dict], n_deposits: int) -> str:
     languages = sorted({r["l"] for r in data})
     options = "".join(f'<option value="{lang}">{lang}</option>' for lang in languages)
+    sources = sorted({s for r in data for s in r["src"]})
+    source_options = "".join(f'<option value="{s}">{s}</option>' for s in sources)
 
     return (
         TEMPLATE.replace("__PAYLOAD__", json.dumps(data, separators=(",", ":")))
         .replace("__MISSES__", json.dumps(misses, separators=(",", ":")))
         .replace("__OPTIONS__", options)
+        .replace("__SOURCE_OPTIONS__", source_options)
+        .replace("__SOURCES__", json.dumps(sources))
         .replace("__NPACKAGES__", f"{len(data):,}")
         .replace("__NDEPOSITS__", f"{n_deposits:,}")
     )
@@ -204,13 +231,16 @@ a { color: var(--accent); }
     How often each package is loaded by the code behind published papers, at
     journals whose data-and-code policies are actively verified.
     __NPACKAGES__ packages across __NDEPOSITS__ deposits holding analyzable
-    code. Not downloads, not mentions in prose: code that shipped with a paper.
+    code, from Zenodo's economics collections and Harvard Dataverse's
+    political science journals. Not downloads, not mentions in prose: code
+    that shipped with a paper.
   </p>
 </header>
 
 <div class="controls">
   <input type="search" id="q" placeholder="Search a package, e.g. reghdfe" autocomplete="off" aria-label="Search packages">
   <select id="lang" aria-label="Filter by language"><option value="">All languages</option>__OPTIONS__</select>
+  <select id="src" aria-label="Filter by repository"><option value="">Both repositories</option>__SOURCE_OPTIONS__</select>
   <select id="min" aria-label="Minimum deposits">
     <option value="1">1+ deposits</option>
     <option value="5">5+ deposits</option>
@@ -229,6 +259,7 @@ a { color: var(--accent); }
     <th class="num"><button data-k="s">Share</button></th>
     <th class="num"><button data-k="m">Calls</button></th>
     <th><button data-k="e">Registry</button></th>
+    <th><button data-k="d">Repositories</button></th>
   </tr></thead>
   <tbody id="body"></tbody>
 </table>
@@ -243,10 +274,11 @@ a { color: var(--accent); }
   comparable against, so a Stata share and an R share have different
   denominators by design. Counts are static reference in deposited code, which
   is not the same as execution.
-  <br>The frame is the Zenodo half, which is economics. Harvard Dataverse's
-  journal collections are political science and are tallied separately, so a
-  package heavily used there and rarely in economics looks smaller here than
-  it is.
+  <br>Counts pool both repositories; the last column says which one is doing
+  the crediting, and the filter narrows to one. The Dataverse half is a
+  January 2024 scrape that collected only <code>.do</code>, <code>.r</code>
+  and <code>.py</code>, so a package used mainly inside notebooks or knitr
+  documents is under-counted there.
   <br>Built from the released tables at
   <a href="https://github.com/recite/softverse">recite/softverse</a>. Full
   method in <a href="../paper/softverse.pdf">the paper</a>.
@@ -256,6 +288,7 @@ a { color: var(--accent); }
 <script>
 const DATA = __PAYLOAD__;
 const MISSES = __MISSES__;
+const SOURCES = __SOURCES__;
 const body = document.getElementById("body");
 const count = document.getElementById("count");
 const empty = document.getElementById("empty");
@@ -267,12 +300,18 @@ const maxShare = Math.max(...DATA.map(r => r.s || 0), 1);
 function render() {
   const q = document.getElementById("q").value.trim().toLowerCase();
   const lang = document.getElementById("lang").value;
+  const src = document.getElementById("src").value;
   const min = +document.getElementById("min").value;
 
+  // Filtering by repository counts that repository's deposits, not the
+  // pooled total. Showing a pooled number under a "Zenodo only" filter would
+  // be the same mistake as reporting one repository as if it were the field.
   let rows = DATA.filter(r =>
     (!q || r.p.toLowerCase().includes(q)) &&
     (!lang || r.l === lang) &&
-    r.d >= min);
+    (!src || (r.src[src] || 0) > 0) &&
+    (src ? r.src[src] : r.d) >= min)
+    .map(r => src ? {...r, d: r.src[src], s: null} : r);
 
   rows.sort((a, b) => {
     const x = a[sortKey] ?? -1, y = b[sortKey] ?? -1;
@@ -292,6 +331,7 @@ function render() {
       <td class="num">${share(r)}</td>
       <td class="num">${r.m.toLocaleString()}</td>
       <td class="lang">${esc(r.e)}</td>
+      <td class="lang">${split(r)}</td>
     </tr>`).join("");
 
   if (rows.length > shown.length) {
@@ -301,8 +341,17 @@ function render() {
 }
 
 function share(r) {
-  if (r.s === null) { return '<span class="lang">n/a</span>'; }
+  if (r.s === null || r.s === undefined) { return '<span class="lang">&mdash;</span>'; }
   return `${r.s.toFixed(1)}%<span class="bar" style="width:${(100 * r.s / maxShare).toFixed(1)}%"></span>`;
+}
+
+// Which repository is doing the crediting. A package can be near the top of
+// the pooled table on the strength of one of the two.
+function split(r) {
+  return SOURCES
+    .filter(s => (r.src[s] || 0) > 0)
+    .map(s => `${esc(s)}&nbsp;${r.src[s].toLocaleString()}`)
+    .join(" &middot; ") || "&mdash;";
 }
 
 // A search that goes quiet reads as "nobody uses this". Often the name is
@@ -336,7 +385,7 @@ document.querySelectorAll("th button").forEach(b =>
     render();
   }));
 
-["q", "lang", "min"].forEach(id =>
+["q", "lang", "src", "min"].forEach(id =>
   document.getElementById(id).addEventListener("input", render));
 
 render();

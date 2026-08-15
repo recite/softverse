@@ -1,14 +1,26 @@
 {
  "built": "2026-08-15",
- "frame": "zenodo",
- "n_deposits": 1454,
- "n_deposits_analyzable": 1272,
- "n_files_analyzable": 40884,
- "n_packages": 1806,
- "n_unresolved_names": 3590,
+ "sources": [
+  "dataverse_legacy",
+  "zenodo"
+ ],
+ "n_deposits": 8685,
+ "n_deposits_analyzable": 8349,
+ "n_files_analyzable": 79654,
+ "n_packages": 3223,
+ "n_unresolved_names": 7686,
+ "n_collections": 69,
+ "deposits_by_source": {
+  "zenodo": 1454,
+  "dataverse_legacy": 7231
+ },
+ "deposits_analyzable_by_source": {
+  "dataverse_legacy": 7077,
+  "zenodo": 1272
+ },
  "deposits_by_language": {
-  "stata": 1075,
-  "r": 392,
-  "python": 224
+  "stata": 6212,
+  "r": 3518,
+  "python": 406
  }
 }

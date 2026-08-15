@@ -7,12 +7,20 @@ run while collection is still going -- the numbers simply describe less of the
 frame. Every output carries the denominators it was computed against, because a
 count without one cannot be compared to anything.
 
+Every source goes through here. Zenodo and the 2024 Harvard Dataverse scrape
+were tallied by two scripts into two directories for a while, and only one of
+them aggregated, so the published per-package counts were the Zenodo half
+alone: economics, one seventh of the deposits on disk. `full_corpus()`
+concatenates them and `build()` runs once, which is what makes the two
+comparable rather than merely adjacent.
+
 Outputs, under `build/tally/`:
 
-    usage_by_package.csv       package -> deposits, files, mentions, years
-    usage_by_package_year.csv  the trend table, with denominators
+    usage_by_package.csv       package -> deposits, files, mentions, years,
+                               pooled and split by source
+    usage_by_package_year.csv  the trend table
     usage_by_collection.csv    per journal/community
-    language_presence.csv      deposits containing each language
+    language_presence.csv      deposits containing each language, per source
     unknown_names.csv          detected names we could not resolve
     mentions.parquet           every mention, with line/col/snippet
     files.parquet              the provenance spine
@@ -33,12 +41,12 @@ from pathlib import Path
 import duckdb
 
 from softverse.build.pipeline import (
-    CorpusFile,
     build,
     dataset_packages,
     language_presence,
 )
 from softverse.config import PATHS
+from softverse.corpus.loaders import full_corpus
 from softverse.logging_setup import get_logger, setup_logging
 from softverse.model.io import write_table
 from softverse.registries.resolve import Registry
@@ -98,41 +106,6 @@ def load_registry() -> tuple[Registry, frozenset[str]]:
     )
 
 
-def zenodo_corpus() -> list[CorpusFile]:
-    """Collected Zenodo files, with their community and year from the ledger."""
-    root = PATHS.root / "corpus" / "zenodo" / "files"
-    if not root.exists():
-        return []
-    ledger_path = PATHS.root / "corpus" / "zenodo" / "ledger.jsonl"
-    year_of: dict[str, int] = {}
-    if ledger_path.exists():
-        for line in ledger_path.read_text().splitlines():
-            if line.strip():
-                try:
-                    rec = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                rid = rec["dataset_doi"].rsplit(".", 1)[-1]
-                year_of[rid] = rec.get("year") or 0
-
-    out: list[CorpusFile] = []
-    for path in root.rglob("*"):
-        if not path.is_file():
-            continue
-        record_id = path.relative_to(root).parts[0]
-        out.append(
-            CorpusFile(
-                path=path,
-                dataset_doi=f"zenodo:{record_id}",
-                collection_id="zenodo",
-                source="zenodo",
-                relative_path=str(path.relative_to(root / record_id)),
-                deposit_year=year_of.get(record_id) or None,
-            )
-        )
-    return out
-
-
 def write_csv(rows: list[dict], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if not rows:
@@ -147,18 +120,28 @@ def write_csv(rows: list[dict], path: Path) -> None:
 def main() -> int:
     setup_logging("WARNING", log_dir=PATHS.logs, stage="tally")
     registry, shipped = load_registry()
-    corpus = zenodo_corpus()
+    corpus = full_corpus()
     if not corpus:
         print("no corpus collected yet")
         return 1
 
     n_deposits = len({c.dataset_doi for c in corpus})
+    by_source = collections.Counter(c.source for c in corpus)
+    print(f"{len(corpus):,} files from {n_deposits:,} deposits")
+    for source, n in sorted(by_source.items()):
+        print(f"  {source:<20}{n:>9,} files")
+
     result = build(
         corpus, registry, ssc_shipped=shipped, registry_lock_id=registry.lock_id
     )
     packages = dataset_packages(result.mentions)
+    sources = sorted(by_source)
 
     # -- usage_by_package: the tally ---------------------------------------
+    # Pooled counts, with the per-source split beside them rather than in a
+    # footnote. The two halves are very different sizes, 7,231 Dataverse
+    # deposits against 1,601 from Zenodo, so a pooled number with no
+    # breakdown asks the reader to take the composition on trust.
     by_package: dict[tuple, dict] = {}
     for row in packages:
         key = (row["language"], row["package"])
@@ -173,9 +156,11 @@ def main() -> int:
                 "n_mentions": 0,
                 "first_year": None,
                 "last_year": None,
+                **{f"n_deposits_{s}": 0 for s in sources},
             },
         )
         entry["n_deposits"] += 1
+        entry[f"n_deposits_{row['source']}"] += 1
         entry["n_files"] += row["n_files"]
         entry["n_mentions"] += row["n_mentions"]
         year = row["year"]
@@ -198,11 +183,16 @@ def main() -> int:
     # Python and Stata it is exact: every deposit with chunks in one of those
     # languages yields at least one mention in it.
     at_risk: dict[str, set[str]] = collections.defaultdict(set)
+    at_risk_by_source: dict[tuple[str, str], set[str]] = collections.defaultdict(set)
     for row in result.files:
         if row["in_analysis_set"]:
             at_risk[row["language"]].add(row["dataset_doi"])
+            at_risk_by_source[(row["source"], row["language"])].add(row["dataset_doi"])
     for mention in result.mentions:
         at_risk[mention["language"]].add(mention["dataset_doi"])
+        at_risk_by_source[(mention["source"], mention["language"])].add(
+            mention["dataset_doi"]
+        )
 
     tally = sorted(by_package.values(), key=lambda r: -r["n_deposits"])
     for row in tally:
@@ -211,8 +201,39 @@ def main() -> int:
         row["share_of_deposits"] = (
             round(row["n_deposits"] / denom, 4) if denom else None
         )
+        for source in sources:
+            row[f"n_at_risk_{source}"] = len(
+                at_risk_by_source.get((source, row["language"]), ())
+            )
 
     write_csv(tally, OUT / "usage_by_package.csv")
+
+    # -- by collection: the per-journal view --------------------------------
+    # Promised by this script's docstring since it was written and never
+    # produced, because until the Zenodo metadata was persisted there was
+    # exactly one collection id on that side. There are now ten communities
+    # and sixty-one journals.
+    by_collection: dict[tuple, dict] = {}
+    for row in packages:
+        key = (row["source"], row["collection_id"], row["language"], row["package"])
+        entry = by_collection.setdefault(
+            key,
+            {
+                "source": row["source"],
+                "collection_id": row["collection_id"],
+                "language": row["language"],
+                "package": row["package"],
+                "n_deposits": 0,
+            },
+        )
+        entry["n_deposits"] += 1
+    write_csv(
+        sorted(
+            by_collection.values(),
+            key=lambda r: (r["collection_id"], r["language"], -r["n_deposits"]),
+        ),
+        OUT / "usage_by_collection.csv",
+    )
 
     # -- by package-year ----------------------------------------------------
     by_year: dict[tuple, dict] = {}
@@ -238,7 +259,10 @@ def main() -> int:
     # -- language presence and unresolved names -----------------------------
     presence = language_presence(result.files)
     write_csv(
-        [{"language": k, "n_deposits": v} for k, v in presence.items()],
+        [
+            {"source": source, "language": language, "n_deposits": n}
+            for (source, language), n in presence.items()
+        ],
         OUT / "language_presence.csv",
     )
     unknown = sorted(result.unknown.items(), key=lambda kv: -kv[1])
@@ -264,10 +288,13 @@ def main() -> int:
     )
     print(f"\nwritten to {OUT}/")
     print("\n=== TOP 15 BY DEPOSITS ===")
+    split = "  ".join(f"{s.split('_')[0]:>9}" for s in sources)
+    print(f"  {'pooled':>9} {'of':<6} {'lang':<7} {'package':<16}{split}")
     for row in tally[:15]:
+        counts = "  ".join(f"{row[f'n_deposits_{s}']:>9,}" for s in sources)
         print(
-            f"  {row['n_deposits']:>4}/{row['n_deposits_at_risk']:<4} "
-            f"{row['language']:<7} {row['package']}"
+            f"  {row['n_deposits']:>9,} {row['n_deposits_at_risk']:<6,} "
+            f"{row['language']:<7} {row['package']:<16}{counts}"
         )
     return 0
 

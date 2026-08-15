@@ -42,6 +42,19 @@ the repositories that actually hold the material.
 these journals should be able to read all of it and say one is misplaced.
 Journals we could not locate are rows in that file, not omissions.
 
+Two repositories hold the material, and they are two disciplines. Zenodo's
+verified collections are economics; Harvard Dataverse's journal collections
+are mostly political science. Both are tallied together in one pass, and
+every row of `usage_by_package.csv` carries the pooled count next to the
+per-repository split, because they are very different sizes and a pooled
+number with no breakdown asks you to take the composition on trust.
+
+The Dataverse material is a January 2024 scrape that collected only `.do`,
+`.r` and `.py` files, so a package used mainly inside notebooks or knitr
+documents is under-counted on that side. That is checked rather than
+asserted: `scripts_release_tally.py` recomputes the whole ranking restricted
+to the file types both halves collected, and fails if the ordering moves.
+
 ## Quick start
 
 ```bash
@@ -52,9 +65,14 @@ uv run python -c "from softverse.registries.fetch import fetch_all; from pathlib
 
 # Collect. Incremental by default: only deposits never successfully fetched.
 uv run python scripts_collect_zenodo.py
-uv run python scripts_collect_zenodo.py --fresh   # full re-scrape
+uv run python scripts_collect_zenodo.py --fresh          # full re-scrape
+uv run python scripts_collect_zenodo.py --metadata-only  # community and year only
 
-# Tally. Safe to run mid-collection; it describes whatever is on disk.
+# Unpack the 2024 Harvard Dataverse scrape into the corpus.
+uv run python scripts_ingest_dataverse_legacy.py
+
+# Tally every source in one pass. Safe to run mid-collection; it describes
+# whatever is on disk.
 uv run python scripts_build_tally.py
 ```
 
@@ -62,12 +80,16 @@ Outputs land in `build/tally/`:
 
 | file | contents |
 |---|---|
-| `usage_by_package.csv` | the tally: package → deposits, files, mentions, share |
+| `usage_by_package.csv` | the tally: package → deposits, files, mentions, share, pooled and split by repository |
 | `usage_by_package_year.csv` | the same over time |
-| `language_presence.csv` | deposits containing each language |
+| `usage_by_collection.csv` | the same per journal or community |
+| `language_presence.csv` | deposits containing each language, per repository |
 | `unknown_names.csv` | detected names resolving to no registry |
 | `mentions.parquet` | every mention, with line, column and snippet |
 | `files.parquet` | the provenance spine |
+
+Then `make release-tables` cuts the small tracked copy the site and the paper
+both read, and `make site` builds the published pages from it.
 
 ## How detection works
 

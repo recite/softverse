@@ -191,11 +191,20 @@ n_spanned_deposits = sum(1 for _r in _last.values() if _r.get("n_spanned"))
 # The findings paragraphs. Every claim there is a computation here, including
 # the qualitative one: which of the top Stata packages are output formatters
 # is a fixed, checkable list of names, not a judgement made at writing time.
-_at_risk = dict(zip(presence["language"], presence["n_deposits"], strict=True))
+# `presence` is per (source, language) now that both repositories go through
+# one tally, so the headline counts sum across sources and the disciplinary
+# comparison indexes into them rather than reading a second file.
+_at_risk = presence.groupby("language")["n_deposits"].sum().to_dict()
 n_stata_deposits = int(_at_risk.get("stata", 0))
 n_r_deposits = int(_at_risk.get("r", 0))
 n_python_deposits = int(_at_risk.get("python", 0))
 stata_to_r_ratio = n_stata_deposits / max(1, n_r_deposits)
+
+# The composition behind every pooled count in the paper.
+_by_source = files[files["in_analysis_set"]].groupby("source")["dataset_doi"].nunique()
+n_zenodo_deposits = int(_by_source.get("zenodo", 0))
+n_dataverse_deposits = int(_by_source.get("dataverse_legacy", 0))
+n_collections_tallied = int(files["collection_id"].nunique())
 
 
 def _top(language: str, n: int = 10):
@@ -423,6 +432,14 @@ table(
     ),
 )
 ```
+
+Every count pools both repositories: `{python} f"{n_zenodo_deposits:,}"`
+deposits of economics from Zenodo and
+`{python} f"{n_dataverse_deposits:,}"` of political science from Harvard
+Dataverse, across `{python} f"{n_collections_tallied}"` collections. The
+released table carries the split beside every pooled total, because the two
+halves are very different sizes and a pooled number with no breakdown asks a
+reader to take the composition on trust.
 
 Every count is a share of the deposits **at risk**, meaning those that contain
 analyzable code in that language. A share against any other denominator is not
@@ -840,6 +857,22 @@ deliberate deferral; the labelling frame is designed and can be run.
 
 Static reference is not execution. The reachability analysis bounds that gap
 rather than closing it.
+
+The two halves of the corpus are not identical instruments. The Harvard
+Dataverse material is a January 2024 scrape that retained only `.do`, `.r`
+and `.py` files, where the Zenodo material is whole deposits including
+notebooks, knitr documents and `.ado`. A package used mainly inside a
+literate document is therefore under-counted on the Dataverse side, and the
+two vintages differ by two years.
+
+Recomputing every ranking on the file types both halves collected says how
+much that matters, and the answer differs by language. For Stata and R all
+twenty top places hold. For Python they do not: `ipython` and `spacy` leave
+the top twenty and four others move, all at ranks fourteen and below. That is
+the asymmetry showing itself rather than hiding, and it is the expected shape,
+because Python is the language whose code most often lives in a notebook and
+notebooks are precisely what the 2024 scrape did not collect. The top ten in
+every language, which is what this paper's tables print, is unchanged.
 
 Deposits whose only content exceeds the archive size cap yield no code, and
 the tail this excludes is not data without code. Code files scale with archive

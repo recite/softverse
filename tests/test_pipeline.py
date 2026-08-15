@@ -12,6 +12,7 @@ from softverse.model.enums import Construct, Resolution
 def mention(**kw):
     base = {
         "dataset_doi": "doi:a",
+        "source": "dataverse_legacy",
         "collection_id": "ajps",
         "deposit_year": 2020,
         "language": "python",
@@ -98,9 +99,9 @@ def test_language_presence_is_claimable_even_without_package_attribution():
     verifiable claim and worth reporting."""
     presence = language_presence(
         [
-            {"dataset_doi": "doi:a", "language": "matlab"},
-            {"dataset_doi": "doi:b", "language": "matlab"},
-            {"dataset_doi": "doi:a", "language": "r"},
+            {"dataset_doi": "doi:a", "source": "zenodo", "language": "matlab"},
+            {"dataset_doi": "doi:b", "source": "zenodo", "language": "matlab"},
+            {"dataset_doi": "doi:a", "source": "zenodo", "language": "r"},
         ]
     )
-    assert presence == {"matlab": 2, "r": 1}
+    assert presence == {("zenodo", "matlab"): 2, ("zenodo", "r"): 1}

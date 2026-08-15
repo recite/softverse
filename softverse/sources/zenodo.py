@@ -20,10 +20,12 @@ the flattened Dataverse corpus, so they remain usable while this re-collects.
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import threading
 import time
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -709,6 +711,68 @@ def collect(
                 extra={"n": len(still)},
             )
     return rows
+
+
+#: Columns of `corpus/zenodo/deposits.csv`.
+DEPOSIT_FIELDS = (
+    "dataset_doi",
+    "record_id",
+    "collection_id",
+    "communities",
+    "publication_date",
+    "deposit_year",
+)
+
+
+def deposit_rows(records: Iterable[ZenodoRecord]) -> list[dict]:
+    """One row per deposit: which community it belongs to, and when.
+
+    Both values are read off every record at harvest and were, until this
+    existed, used for a console summary and then dropped. Nothing on disk
+    carried them: `ledger.jsonl` is retry bookkeeping with no year and no
+    community field, so the tally rebuilt its corpus from bare files and had
+    to hardcode `collection_id="zenodo"`. That left one collection across
+    178,130 files and a null year on all 3,297,235 mentions, which is why the
+    per-year and per-collection tables were empty.
+    """
+    return [
+        {
+            "dataset_doi": f"zenodo:{record.record_id}",
+            "record_id": record.record_id,
+            # The first community is the primary collection; the rest are kept
+            # so a deposit cross-listed in two is not silently reduced to one.
+            "collection_id": (
+                record.communities[0] if record.communities else "zenodo"
+            ),
+            "communities": ";".join(record.communities),
+            "publication_date": record.publication_date or "",
+            "deposit_year": record.year or "",
+        }
+        for record in records
+    ]
+
+
+def write_deposits(records: Iterable[ZenodoRecord], path: Path) -> int:
+    """Write `deposits.csv`, merging with whatever is already there.
+
+    Merged rather than overwritten because a partial harvest must not delete
+    metadata for deposits it did not look at. Overwriting a frame file cost
+    12,336 Dataverse deposits once already.
+    """
+    merged: dict[str, dict] = {}
+    if path.exists():
+        with open(path, encoding="utf-8", newline="") as handle:
+            for row in csv.DictReader(handle):
+                merged[row["dataset_doi"]] = row
+    for row in deposit_rows(records):
+        merged[row["dataset_doi"]] = row
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(DEPOSIT_FIELDS))
+        writer.writeheader()
+        writer.writerows(sorted(merged.values(), key=lambda r: r["dataset_doi"]))
+    return len(merged)
 
 
 def collections_rows(records: list[ZenodoRecord]) -> list[dict]:

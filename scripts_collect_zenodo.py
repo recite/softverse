@@ -33,6 +33,11 @@ def main() -> int:
     # `--fresh` refetches everything; the default is incremental, which fetches
     # only deposits never successfully collected plus anything left partial.
     fresh = "--fresh" in sys.argv
+    # `--metadata-only` runs the community search and writes `deposits.csv`,
+    # then stops. The search is what carries each record's community and
+    # publication date, so this backfills metadata for an already-collected
+    # corpus without re-downloading a byte of it.
+    metadata_only = "--metadata-only" in sys.argv
     positional = [a for a in sys.argv[1:] if not a.startswith("-")]
     limit = int(positional[0]) if positional else 2000
     workers = zenodo.DEFAULT_WORKERS
@@ -82,6 +87,17 @@ def main() -> int:
         got = harvested_by.get(slug, 0)
         flag = "" if got >= n * 0.9 else "   <-- shortfall"
         print(f"  {slug:<30}{n:>10}{got:>11}{flag}")
+
+    # Written before any collection, so the metadata survives a run that is
+    # interrupted, and so `--metadata-only` has somewhere to stop.
+    n_deposits = zenodo.write_deposits(records.values(), ROOT / "deposits.csv")
+    n_communities = len({r.communities[0] for r in records.values() if r.communities})
+    n_dated = sum(1 for r in records.values() if r.year)
+    print(f"\ndeposits.csv     : {n_deposits:,} rows")
+    print(f"  collections    : {n_communities}")
+    print(f"  with a year    : {n_dated:,}/{len(records):,}")
+    if metadata_only:
+        return 0
 
     todo = list(records.values())[:limit]
     logger.info("collecting", extra={"records": len(todo)})

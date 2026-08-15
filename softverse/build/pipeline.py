@@ -23,7 +23,6 @@ from pathlib import Path
 from softverse import EXTRACTOR_VERSION
 from softverse.corpus.hygiene import classify, cross_dataset_hashes, sha256_of
 from softverse.detect.dispatch import extract_file, language_of
-from softverse.stata.lexer import local_programs as stata_local_programs
 from softverse.logging_setup import get_logger, stage
 from softverse.model.enums import (
     ANALYZABLE_STATUSES,
@@ -34,6 +33,7 @@ from softverse.model.enums import (
 )
 from softverse.model.io import reconcile
 from softverse.registries.resolve import normalize
+from softverse.stata.lexer import local_programs as stata_local_programs
 
 logger = get_logger(__name__)
 
@@ -74,10 +74,6 @@ class BuildResult:
             if k.startswith("files_") and k != "files_total"
         }
         reconcile(self.counts["files_total"], parts, "files")
-
-
-def _year_of(doi_to_year: dict[str, int], doi: str) -> int | None:
-    return doi_to_year.get(doi)
 
 
 def build(
@@ -347,6 +343,7 @@ def dataset_packages(mentions: list[dict], *, use_only: bool = True) -> list[dic
             key,
             {
                 "dataset_doi": mention["dataset_doi"],
+                "source": mention["source"],
                 "collection_id": mention["collection_id"],
                 "year": mention["deposit_year"],
                 "language": mention["language"],
@@ -366,15 +363,20 @@ def dataset_packages(mentions: list[dict], *, use_only: bool = True) -> list[dic
     return list(grouped.values())
 
 
-def language_presence(files: list[dict]) -> dict[str, int]:
-    """Deposits containing at least one file of each language.
+def language_presence(files: list[dict]) -> dict[tuple[str, str], int]:
+    """Deposits containing at least one file of each language, per source.
 
     A defensible claim even for MATLAB and SAS, where we deliberately make no
     package-level attribution: "N% of deposits contain MATLAB" is verifiable,
     "they use toolbox X" would not be.
+
+    Keyed on `(source, language)` because the two corpora do not carry the
+    same file types. The 2024 Dataverse scrape kept `.do`, `.r` and `.py` and
+    nothing else, so a pooled language share would read as a fact about social
+    science when part of it is a fact about what that scrape collected.
     """
-    by_language: dict[str, set[str]] = defaultdict(set)
+    by_key: dict[tuple[str, str], set[str]] = defaultdict(set)
     for row in files:
         if row["language"] and row["language"] != str(Language.UNKNOWN):
-            by_language[row["language"]].add(row["dataset_doi"])
-    return {lang: len(dois) for lang, dois in sorted(by_language.items())}
+            by_key[(row["source"], row["language"])].add(row["dataset_doi"])
+    return {key: len(dois) for key, dois in sorted(by_key.items())}

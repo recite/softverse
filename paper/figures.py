@@ -69,26 +69,37 @@ def _style(ax) -> None:
     ax.set_axisbelow(True)
 
 
+#: Reader-facing names, and what each repository is.
+SOURCE_LABEL = {
+    "zenodo": "Zenodo (economics)",
+    "dataverse_legacy": "Dataverse (political science)",
+}
+
+
 def languages(presence: pd.DataFrame, files: pd.DataFrame) -> Path:
     """Deposits containing each language, by repository.
 
     Two repositories, two disciplines: Zenodo's verified collections are
     economics and Harvard Dataverse's journal collections are mostly
     political science.
+
+    One frame, grouped by `source`. It used to read a second tally directory
+    and silently fall back to a single bar if that file was absent, so the
+    figure could quietly stop making the comparison it exists to make.
     """
-    legacy = TALLY.parent / "tally_dataverse_legacy" / "files.parquet"
-    frames = {"Zenodo (economics)": files}
-    if legacy.exists():
-        frames["Dataverse (political science)"] = pd.read_parquet(legacy)
+    analyzable_all = files[files["in_analysis_set"].astype(bool)]
+    frames = {
+        SOURCE_LABEL.get(source, source): group
+        for source, group in analyzable_all.groupby("source", observed=True)
+    }
 
     langs = ["stata", "r", "python"]
     labels = {"stata": "Stata", "r": "R", "python": "Python"}
 
     fig, ax = plt.subplots(figsize=(5.4, 2.9))
     width = 0.38
-    for offset, (name, frame) in zip((-0.5, 0.5), frames.items(), strict=False):
-        analyzable = frame[frame["in_analysis_set"]]
-        counts = analyzable.groupby("language")["dataset_doi"].nunique()
+    for offset, (name, analyzable) in zip((-0.5, 0.5), frames.items(), strict=False):
+        counts = analyzable.groupby("language", observed=True)["dataset_doi"].nunique()
         total = analyzable["dataset_doi"].nunique()
         shares = [100 * counts.get(lang, 0) / max(1, total) for lang in langs]
         positions = [i + offset * width for i in range(len(langs))]

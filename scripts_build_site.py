@@ -78,10 +78,13 @@ def landing(summary: dict, usage: list[dict], unknown: list[dict]) -> str:
     grc1leg = next((int(r["n_mentions"]) for r in unknown if r["name"] == "grc1leg"), 0)
     n_formatters = sum(1 for r in stata[:4] if r["package"] in TABLE_MAKERS)
 
+    by_source = summary["deposits_by_source"]
     values = {
         "__N_ANALYZABLE__": f"{summary['n_deposits_analyzable']:,}",
         "__N_STATA__": f"{by_language.get('stata', 0):,}",
         "__N_R__": f"{by_language.get('r', 0):,}",
+        "__N_ZENODO__": f"{by_source.get('zenodo', 0):,}",
+        "__N_DATAVERSE__": f"{by_source.get('dataverse_legacy', 0):,}",
         "__N_PACKAGES__": f"{summary['n_packages']:,}",
         "__TOP_STATA__": stata[0]["package"],
         "__TOP_STATA_N__": f"{int(stata[0]['n_deposits']):,}",
