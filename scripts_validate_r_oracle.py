@@ -23,12 +23,14 @@ bounds one thing exactly: whether our tree-sitter walk sees what R sees.
 
 from __future__ import annotations
 
+import collections
 import json
 import subprocess
 import sys
 from pathlib import Path
 
 from softverse.config import PATHS
+from softverse.corpus.loaders import full_corpus
 from softverse.detect.r import extract
 from softverse.logging_setup import get_logger, setup_logging
 from softverse.model.enums import Construct
@@ -104,7 +106,16 @@ walk <- function(e) {
       # being wrong: `require("foo", ..., character.only = TRUE)` names foo.
       nms <- names(e)
       co <- if (!is.null(nms) && "character.only" %in% nms) e[["character.only"]] else FALSE
-      character_only <- isTRUE(co) || identical(co, quote(TRUE))
+      # `T` as well as `TRUE`. `character.only = T` is the common spelling in
+      # the wild, and `T` is a *symbol* rather than the literal, so testing
+      # only for `quote(TRUE)` reads the flag as absent, takes the loop
+      # variable for a package name, and reports `library(package,
+      # character.only = T)` as a dependency called "package". Every
+      # disagreement in the Dataverse half was this. `T` is rebindable, so
+      # this is a reading rather than a certainty, and it is the same reading
+      # the extractor makes.
+      character_only <- isTRUE(co) || identical(co, quote(TRUE)) ||
+                        identical(co, quote(T))
       arg <- e[[2]]
       if (is.character(arg)) {
         add(as_name(arg))
@@ -186,14 +197,25 @@ def main() -> int:
         int(sys.argv[sys.argv.index("--limit") + 1]) if "--limit" in sys.argv else None
     )
 
-    files = sorted(
-        p
-        for p in (PATHS.root / "corpus" / "zenodo" / "files").rglob("*")
-        if p.suffix.lower() == ".r" and p.is_file()
-    )
+    # Every source, not one directory. This globbed `corpus/zenodo/files`,
+    # so the check covered 18,120 of the corpus's 28,527 R files and none of
+    # Harvard Dataverse at all, while the paper described the result as
+    # holding over "corpus .R files". A validation that cannot see half the
+    # data is not a weaker claim about the whole, it is a claim about a
+    # different corpus.
+    source_of = {
+        item.path: item.source
+        for item in full_corpus()
+        if item.path.suffix.lower() == ".r"
+    }
+    files = sorted(source_of)
     if limit:
         files = files[:limit]
-    logger.info("comparing", extra={"files": len(files)})
+    by_source = collections.Counter(source_of[p] for p in files)
+    logger.info("comparing", extra={"files": len(files), **by_source})
+    print(f"comparing {len(files):,} R files")
+    for source, n in sorted(by_source.items()):
+        print(f"  {source:<20}{n:>8,}")
 
     script = OUT / "_r_oracle.R"
     OUT.mkdir(parents=True, exist_ok=True)
@@ -202,6 +224,12 @@ def main() -> int:
     tp = fp = fn = 0
     unparseable = 0
     compared = 0
+    # Per source, so a future reader can see coverage without reading this
+    # file, and so a regression confined to one corpus cannot hide inside a
+    # pooled precision of 1.0000.
+    per_source: dict[str, collections.Counter] = collections.defaultdict(
+        collections.Counter
+    )
     misses: dict[str, int] = {}
     spurious: dict[str, int] = {}
     examples: list[dict] = []
@@ -230,6 +258,7 @@ def main() -> int:
             # R could not parse it. Whatever we found there is unscoreable:
             # the oracle has no opinion, not an empty one.
             unparseable += 1
+            per_source[source_of.get(path, "unknown")]["unparseable"] += 1
             continue
         mine = ours(path)
         if mine is None:
@@ -238,13 +267,19 @@ def main() -> int:
         if isinstance(found_names, str):  # belt and braces against auto_unbox
             found_names = [found_names]
         theirs = set(found_names)
+        source = source_of.get(path, "unknown")
         compared += 1
+        counts = per_source[source]
+        counts["compared"] += 1
         tp += len(mine & theirs)
+        counts["tp"] += len(mine & theirs)
         for name in theirs - mine:
             fn += 1
+            counts["fn"] += 1
             misses[name] = misses.get(name, 0) + 1
         for name in mine - theirs:
             fp += 1
+            counts["fp"] += 1
             spurious[name] = spurious.get(name, 0) + 1
         if (mine != theirs) and len(examples) < 40:
             examples.append(
@@ -262,7 +297,20 @@ def main() -> int:
 
     precision = tp / (tp + fp) if tp + fp else 1.0
     recall = tp / (tp + fn) if tp + fn else 1.0
+
+    def rates(c: collections.Counter) -> dict:
+        return {
+            "n_files_compared": c["compared"],
+            "n_files_unparseable_by_r": c["unparseable"],
+            "true_positives": c["tp"],
+            "false_positives": c["fp"],
+            "false_negatives": c["fn"],
+            "precision": c["tp"] / (c["tp"] + c["fp"]) if c["tp"] + c["fp"] else 1.0,
+            "recall": c["tp"] / (c["tp"] + c["fn"]) if c["tp"] + c["fn"] else 1.0,
+        }
+
     report = {
+        "by_source": {s: rates(c) for s, c in sorted(per_source.items())},
         "n_files_compared": compared,
         "n_files_unparseable_by_r": unparseable,
         "true_positives": tp,

@@ -211,6 +211,24 @@ def _assert_disjoint(files: list[CorpusFile]) -> None:
                 )
 
 
+def deposit_directories(files: list[CorpusFile] | None = None) -> dict[str, Path]:
+    """Deposit DOI to the directory holding its files.
+
+    Derived from each file's own `relative_path` rather than from the DOI's
+    text. A Zenodo DOI ends in the directory name, so splitting the string
+    worked there and produced nonsense for Dataverse, whose DOI is
+    `doi:10.7910/DVN/00IT1L` and whose files sit under
+    `<journal>_datasets_files/00IT1L/`. Anything that walks a deposit's files
+    on disk needs this, and getting it wrong looks like a deposit that is
+    simply missing.
+    """
+    out: dict[str, Path] = {}
+    for item in files if files is not None else full_corpus():
+        depth = len(Path(item.relative_path).parts)
+        out.setdefault(item.dataset_doi, item.path.parents[depth - 1])
+    return out
+
+
 def paths_for(source: str) -> Path:
     """Where a source's files live, for anything that needs to re-read them."""
     return {

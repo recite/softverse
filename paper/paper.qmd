@@ -1,8 +1,20 @@
 ---
 title: "What software does social science run on? Measuring library use in replication code"
 author:
+  # TODO before submission: affiliation and ORCID. Left blank deliberately
+  # and not filled in with a plausible guess.
   - name: Gaurav Sood
+    email: gsood07@gmail.com
+    affiliation: ""
+    orcid: ""
 date: today
+keywords:
+  - research software
+  - software citation
+  - replication
+  - metascience
+  - Stata
+  - static analysis
 abstract: |
   Software that research depends on earns its authors very little. A metric
   that could change this is a signal, and a signal is informative in
@@ -63,6 +75,7 @@ mentions = con.execute(f"SELECT * FROM '{TALLY}/mentions.parquet'").df()
 files = con.execute(f"SELECT * FROM '{TALLY}/files.parquet'").df()
 usage = pd.read_csv(TALLY / "usage_by_package.csv")
 presence = pd.read_csv(TALLY / "language_presence.csv")
+collections = pd.read_csv(TALLY / "usage_by_collection.csv")
 frame = pd.read_csv("../data/frame/frame.csv")
 
 n_deposits = files["dataset_doi"].nunique()
@@ -268,6 +281,92 @@ _found_makers = [p for p in _top_stata["package"] if p in TABLE_MAKERS]
 n_table_makers = len(_found_makers)
 table_makers_list = ", ".join(f"`{p}`" for p in _found_makers)
 
+#: Journal collections whose subject is economics. Named rather than read off
+#: the repository, because that is exactly the confound the per-journal table
+#: exists to rule out: five of these sit in Harvard Dataverse alongside the
+#: political science journals, so if the split followed the repository they
+#: would side with their neighbours. A reader who disagrees with a membership
+#: here can change it and recompute.
+ECONOMICS_COLLECTIONS = {
+    "ej-replication-repository",
+    "restud-replication",
+    "es-replication-repository",
+    "jeea_replication",
+    "ectj-replication-repository",
+    "restat",
+    "qje",
+    "JAERE",
+    "rfs",
+    "JPE",
+}
+
+# Deposits per collection containing analyzable Stata: the denominator the
+# per-collection shares need, which the usage table cannot supply because it
+# counts packages rather than collections.
+_stata_deposits = (
+    files[files["in_analysis_set"] & files["language"].eq("stata")]
+    .groupby("collection_id")["dataset_doi"]
+    .nunique()
+)
+_stata_by_collection = collections[collections["language"] == "stata"]
+_biggest = _stata_deposits.nlargest(12).index
+
+_rows = []
+for _cid in _biggest:
+    _here = _stata_by_collection[_stata_by_collection["collection_id"] == _cid]
+    _ranked = _here.nlargest(3, "n_deposits")
+    _rows.append(
+        {
+            "collection": _cid,
+            "field": (
+                "economics" if _cid in ECONOMICS_COLLECTIONS else "political science"
+            ),
+            "deposits": int(_stata_deposits[_cid]),
+            **{
+                f"#{i + 1}": f"{r.package} ({int(r.n_deposits)})"
+                for i, r in enumerate(_ranked.itertuples())
+            },
+        }
+    )
+by_collection = pd.DataFrame(_rows)
+
+# The claims, computed over every collection large enough to rank rather
+# than over the twelve the table shows. The table illustrates; the statistic
+# is the evidence, and restricting it to what fits on a page would be
+# choosing the sample after seeing it.
+MIN_STATA_DEPOSITS = 50
+
+n_collections_shown = len(by_collection)
+n_estout_first = int(by_collection["#1"].str.startswith("estout").sum())
+
+_eligible = [
+    c for c in _stata_deposits[_stata_deposits >= MIN_STATA_DEPOSITS].index
+    if c in set(_stata_by_collection["collection_id"])
+]
+
+
+def _leans(collection_id: str) -> str:
+    here = _stata_by_collection[_stata_by_collection["collection_id"] == collection_id]
+
+    def loaded(package: str) -> int:
+        return int(here.loc[here["package"] == package, "n_deposits"].sum())
+
+    return "reghdfe" if loaded("reghdfe") > loaded("coefplot") else "coefplot"
+
+
+_econ = [c for c in _eligible if c in ECONOMICS_COLLECTIONS]
+_polsci = [c for c in _eligible if c not in ECONOMICS_COLLECTIONS]
+n_ranked_collections = len(_eligible)
+n_econ_shown = len(_econ)
+n_polsci_shown = len(_polsci)
+n_econ_reghdfe = sum(1 for c in _econ if _leans(c) == "reghdfe")
+n_polsci_coefplot = sum(1 for c in _polsci if _leans(c) == "coefplot")
+
+# The confound this rules out: economics journals that live in the Dataverse
+# half, so repository is held constant and the split still appears.
+_dv = set(files[files["source"].eq("dataverse_legacy")]["collection_id"])
+n_econ_in_dataverse = sum(1 for c in _econ if c in _dv)
+
 # The unresolved rate per *deposit*, which is the unit this paper argues for
 # everywhere else and then quietly abandoned here. Pooling over mentions lets
 # one deposit speak for the corpus, and one did until vendored library trees
@@ -312,6 +411,10 @@ n_oracle_unparseable = _oracle["n_files_unparseable_by_r"]
 n_oracle_pairs = _oracle["true_positives"] + _oracle["false_negatives"]
 oracle_precision = _oracle["precision"]
 oracle_recall = _oracle["recall"]
+# Per source, because until recently this check globbed the Zenodo directory
+# and reported its result as though it described the corpus.
+n_oracle_sources = len(_oracle["by_source"])
+n_oracle_dataverse_files = _oracle["by_source"]["dataverse_legacy"]["n_files_compared"]
 
 # Cross-tool agreement, read from the artifact `scripts_validate_renv.py`
 # writes. This paragraph used to carry a typed 0.998 that nothing in the
@@ -557,6 +660,52 @@ drops it because counting Stata is harder, so the discipline that uses Stata
 most disappears from the record for a reason that has nothing to do with how
 much software it uses.
 
+### The formatter leads every journal; second place follows the field
+
+```{python}
+#| label: tbl-collections
+table(
+    by_collection,
+    caption="Most loaded Stata packages in the twelve largest journal collections",
+    label="tab:collections",
+    align="llrlll",
+    note=(
+        "Collections ranked by deposits containing analyzable Stata. "
+        "\\emph{deposits} is that count; each package column gives the "
+        "package and the deposits loading it. Field is assigned from a "
+        "named list in the source rather than from the repository, because "
+        "several economics journals deposit to Harvard Dataverse alongside "
+        "the political science ones."
+    ),
+)
+```
+
+`{python} top_stata_package` is the most loaded Stata package in
+`{python} f"{n_estout_first}"` of the `{python} f"{n_collections_shown}"`
+largest collections (\cref{tab:collections}), in economics and political
+science alike.
+
+Second place is not the same everywhere, and it separates the two fields.
+Across all `{python} f"{n_ranked_collections}"` collections holding at least
+`{python} f"{MIN_STATA_DEPOSITS}"` Stata deposits, `reghdfe`, a
+fixed-effects estimator, outranks `coefplot` in
+`{python} f"{n_econ_reghdfe}"` of the `{python} f"{n_econ_shown}"` economics
+collections, and `coefplot`, which draws coefficient plots, outranks
+`reghdfe` in `{python} f"{n_polsci_coefplot}"` of the
+`{python} f"{n_polsci_shown}"` political science ones.
+
+Repository is the obvious confound, since the frame's two halves are nearly
+one discipline each, and a 2024 scrape differs from a 2026 one in more than
+subject. It survives the check.
+`{python} f"{n_econ_in_dataverse}"` of those economics collections deposit to
+Harvard Dataverse, so for them the repository, the vintage and the collection
+method are all held fixed against the political science journals beside them,
+and the split still appears.
+
+Pooling is what makes this visible. A single ranking over the whole corpus
+puts the formatters on top and conceals that the tool underneath them differs
+by field.
+
 ### Some of the most-used software is in no registry at all
 
 `{python} top_unresolved_stata` is the most widespread Stata command the
@@ -622,11 +771,38 @@ Harvard Dataverse's journal collections are mostly political science, and a
 study of only one would describe a field while claiming to describe social
 science.
 
-| repository | collections | deposits |
-|---|---:|---:|
-| Zenodo | `{python} len(zen)` | `{python} f"{int(zen['n_records_declared'].sum()):,}"` |
-| Harvard Dataverse | `{python} f"{n_dv_collections}"` | `{python} f"{n_dv_deposits:,}"` |
-| **total** | | **`{python} f"{n_frame_total:,}"`** |
+```{python}
+#| label: tbl-frame
+table(
+    pd.DataFrame(
+        [
+            {
+                "repository": "Zenodo",
+                "collections": len(zen),
+                "deposits": int(zen["n_records_declared"].sum()),
+            },
+            {
+                "repository": "Harvard Dataverse",
+                "collections": n_dv_collections,
+                "deposits": n_dv_deposits,
+            },
+            {
+                "repository": "total",
+                "collections": len(zen) + n_dv_collections,
+                "deposits": n_frame_total,
+            },
+        ]
+    ),
+    caption="The sampling frame, by repository",
+    label="tab:frame",
+    note=(
+        "Journals whose data-and-code policy the Social Science Data Editors "
+        "record as actively verified. Zenodo deposits are the counts the "
+        "communities declare; Dataverse deposits are enumerated collection "
+        "by collection."
+    ),
+)
+```
 
 The Dataverse figure is enumerated rather than declared. One request returns
 a journal collection's entire dataset list, so these are counted deposits and
@@ -675,13 +851,29 @@ table(
 
 ## Measurement
 
-| language | mechanism |
-|---|---|
-| R | `tree-sitter` syntax walk |
-| Python | stdlib `ast`, `tokenize` fallback |
-| Stata | purpose-built lexer + SSC command→package index |
-| `.Rmd`/`.qmd`/`.Rnw` | knitr chunk splitter, routed per engine |
-| `.ipynb` | per-cell, kernel language from metadata |
+```{python}
+#| label: tbl-mechanism
+table(
+    pd.DataFrame(
+        [
+            ("R", "tree-sitter syntax walk"),
+            ("Python", "stdlib ast, tokenize fallback"),
+            ("Stata", "purpose-built lexer, SSC command-to-package index"),
+            (".Rmd / .qmd / .Rnw", "knitr chunk splitter, routed per engine"),
+            (".ipynb", "per cell, kernel language from the metadata"),
+        ],
+        columns=["language", "mechanism"],
+    ),
+    caption="How each language is read",
+    label="tab:mechanism",
+    align="ll",
+    note=(
+        "Literate formats are split first and each chunk routed to the "
+        "extractor for its own language, so a Python chunk in a knitr "
+        "document resolves against PyPI rather than against CRAN."
+    ),
+)
+```
 
 Two choices carry most of the weight. The first is that strings and comments
 are excluded structurally instead of being stripped out beforehand. In a
@@ -756,12 +948,28 @@ the number a reader should use to discount the coverage claim.
 So does the unit. Per deposit, which is the unit used everywhere else in this
 paper, the distribution sits nowhere near the pooled figure:
 
-| statistic | unresolved share |
-|---|---:|
-| pooled over mentions | `{python} f"{unknown_share:.1%}"` |
-| median deposit | `{python} f"{median_deposit_unresolved:.1%}"` |
-| 90th-percentile deposit | `{python} f"{p90_deposit_unresolved:.1%}"` |
-| deposits fully resolved | `{python} f"{share_deposits_fully_resolved:.0%}"` |
+```{python}
+#| label: tbl-unresolved
+table(
+    pd.DataFrame(
+        [
+            ("pooled over mentions", f"{unknown_share:.1%}"),
+            ("median deposit", f"{median_deposit_unresolved:.1%}"),
+            ("90th-percentile deposit", f"{p90_deposit_unresolved:.1%}"),
+            ("deposits fully resolved", f"{share_deposits_fully_resolved:.0%}"),
+        ],
+        columns=["statistic", "unresolved share"],
+    ),
+    caption="Unresolved share, pooled and per deposit",
+    label="tab:unresolved",
+    note=(
+        "Restricted to mentions that could name a third-party package. The "
+        "pooled figure and the median deposit answer different questions, "
+        "and the gap between them is the point: the pooled rate describes a "
+        "minority of deposits."
+    ),
+)
+```
 
 Every candidate mention resolves in
 `{python} f"{share_deposits_fully_resolved:.0%}"` of deposits. The pooled
@@ -815,9 +1023,9 @@ system variables `_n` and `_b` and the function `e()` are reported as official
 Stata commands.
 
 Agreement with a second tool gives a different kind of evidence.
-`renv::dependencies()`
-(`{python} renv_version`) over
-`{python} f"{n_renv_compared:,}"` corpus R deposits gives a mean per-deposit
+`renv::dependencies()` (`{python} renv_version`) over
+`{python} f"{n_renv_compared:,}"` of the corpus's
+`{python} f"{n_r_deposits:,}"` R deposits gives a mean per-deposit
 Jaccard of `{python} f"{renv_mean_jaccard:.2f}"` and a pooled Jaccard of
 `{python} f"{renv_pooled_jaccard:.2f}"`;
 `{python} f"{renv_perfect_share:.0%}"` of deposits agree exactly. Both are
@@ -838,10 +1046,17 @@ Syntactic accuracy has a true oracle. For "does this file contain a call to
 `library` whose argument is `x`", R's own parser defines the answer, so
 disagreement is an error on this side and the error rate is exact.
 Running R's parser over
-`{python} f"{n_oracle_files:,}"` corpus `.R` files and recursing its
-expression trees gives precision `{python} f"{oracle_precision:.4f}"` and
-recall `{python} f"{oracle_recall:.4f}"` across
+`{python} f"{n_oracle_files:,}"` `.R` files across both repositories and
+recursing its expression trees gives precision
+`{python} f"{oracle_precision:.4f}"` and recall
+`{python} f"{oracle_recall:.4f}"` over
 `{python} f"{n_oracle_pairs:,}"` name-file pairs.
+
+Both repositories, because for a while it was one. The check globbed the
+Zenodo directory and its result was reported as though it described the
+corpus, which left `{python} f"{n_oracle_dataverse_files:,}"` Dataverse files
+vouched for by a measurement that had never read them. Extending it found a
+disagreement immediately, and the disagreement was the oracle's.
 
 A further `{python} f"{n_oracle_unparseable:,}"` files R itself could not
 parse. Those are excluded from the score instead of counted as clean, since a
@@ -849,19 +1064,22 @@ file nobody can parse may well have dependencies, and scoring it as empty
 would award credit for finding nothing in it.
 
 How that figure was reached matters as much as its value, because a broken
-comparison also produces perfect agreement. Five disagreements were
-adjudicated by running R and watching what it did. Four were the oracle's
-fault: it
-unboxed a one-element result into a bare string, so a lone `LearnBayes` was
-read as eight packages named after its letters; it skipped every
-`character.only = TRUE` call, though a string literal there is still a literal;
-it could not see through `base::library(c)`, because such a call's head is
-itself a call; and it never descended into a function's formals, hiding every
-`pkg::fun()` used as a default argument. The fifth was an error here:
-`"m"::baz()` is legal R and the extractor dropped it. Where the two disagreed
-about `requireNamespace(pkg)`, running R settled it: `library(pkg)` with `pkg <- "stats"` errors, so
-the symbol is the name, while `requireNamespace(pkg)` returns `TRUE`, so the
-symbol is a variable.
+comparison also produces perfect agreement. Six disagreements were
+adjudicated by running R and watching what it did, and five were the
+oracle's fault. It unboxed a one-element result into a bare string, so a lone
+`LearnBayes` was read as eight packages named after its letters. It skipped
+every `character.only = TRUE` call, though a string literal there is still a
+literal. It could not see through `base::library(c)`, because such a call's
+head is itself a call. It never descended into a function's formals, hiding
+every `pkg::fun()` used as a default argument. And it tested the flag against
+the literal `TRUE` while the corpus writes `character.only = T`, which is a
+symbol, so `library(pkg, character.only = T)` inside a loop was read as a
+dependency named `pkg`. The sixth was an error here: `"m"::baz()` is legal R
+and the extractor dropped it.
+
+Where the two disagreed about `requireNamespace(pkg)`, running R settled it:
+`library(pkg)` with `pkg <- "stats"` errors, so the symbol is the name, while
+`requireNamespace(pkg)` returns `TRUE`, so the symbol is a variable.
 
 A score tuned against the data it grades proves little, so the extractor is
 also checked against ground truth written by someone else: `renv`'s own test
@@ -955,6 +1173,32 @@ MATLAB, SAS and SPSS are reported as language presence only. MATLAB has no
 import statement and no resolvable registry, so attributing toolboxes would be
 unbounded error.
 
+## Conclusion
+
+Research software is credited badly because the numbers available to credit
+it with are cheap to produce. This paper offers one that is not: a count of
+the packages that published, policy-verified replication code loads, over
+`{python} f"{n_deposits_analyzable:,}"` deposits and
+`{python} f"{len(usage):,}"` packages.
+
+What the counts show is not what a download ranking would suggest. The
+software social science leans on hardest is the software that prepares its
+exhibits, and `{python} top_stata_package` leads every one of the largest
+journal collections in both disciplines. Underneath that, the tools differ by
+field rather than by repository. The language carrying most of this work,
+Stata, is missing from the literature on research software for a mechanical
+reason: it has no registry mapping a command to a package, so this paper
+built one. And a long tail of software that researchers use constantly sits
+outside every registry, which is a ceiling on what any credit system built
+on registry lookups can reach. That ceiling belongs to the ecosystem, and no
+amount of care in the method moves it.
+
+The counts are static reference and not execution, they weight every deposit
+alike, and they cover two disciplines and not the whole field. Each of those
+is measured above. What they support is modest and concrete: a software author can point at a number a committee can check, and
+work on software reliability can choose its targets by how much published
+research would be touched.
+
 ## Data and code availability
 
 The Stata command-to-package index is deposited at
@@ -999,6 +1243,27 @@ table(
     align="ll",
 )
 ```
+
+## Acknowledgements
+
+Daniel Weitzel contributed to an earlier version of this project.
+
+## Competing interests
+
+The author has no competing financial interests. Two intellectual ones are
+worth naming. The argument that better counts would increase the production
+of research software is taken from the author's own earlier writing
+[@sood_countpy], and the paper releases the artefact it argues the field
+lacks, so it both proposes a metric and supplies it.
+
+## Funding
+
+This research received no external funding.
+
+## Author contributions
+
+Sole author. Conceptualisation, methodology, software, data curation, formal
+analysis, and writing.
 
 ## References
 
