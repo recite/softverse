@@ -1,8 +1,8 @@
 {
-  "checked_at": "2026-08-15T05:18:39.691349+00:00",
+  "checked_at": "2026-08-15T06:08:10.116104+00:00",
   "bibliography": "paper/references.bib",
-  "n_entries": 7,
-  "n_verified": 7,
+  "n_entries": 8,
+  "n_verified": 8,
   "results": [
     {
       "key": "trisovic2022",
@@ -51,6 +51,13 @@
       "ok": true,
       "reason": "verified by URL",
       "doi": null,
+      "registered_title": null
+    },
+    {
+      "key": "spence1973",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.2307/1882010",
       "registered_title": null
     }
   ]

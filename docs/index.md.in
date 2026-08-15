@@ -1,65 +1,60 @@
 # Softverse
 
-**Stata is the language social science replication code is written in, and it
-is the language nobody counts.** Across __N_ANALYZABLE__ deposits with analyzable code at
-journals whose data-and-code policy an editor verifies, __N_STATA__ contain Stata
-and __N_R__ contain R. Studies of research software routinely cover R and Python
-and stop there, which describes a field while claiming to describe social
-science.
+Softverse counts how often each R, Python and Stata package is loaded by the
+code behind published social science papers. It covers __N_PACKAGES__
+packages across __N_ANALYZABLE__ replication deposits at economics and
+political science journals that check an author's code before publication.
 
-The frame is two repositories because one discipline is not the field:
-__N_ZENODO__ deposits from Zenodo's verified economics collections and
-__N_DATAVERSE__ from Harvard Dataverse's political science journals. Counts
-here pool both, and every row of the table carries the split.
+The counts exist to support credit, and they are built to be expensive to
+fake. What a software author can point to today is a download count, which
+records how often a file was fetched, or a mention in someone's methods
+section. A build server installing a package on every commit runs the
+download count up on its own, and cutting more frequent releases runs it up
+further, so a number like that tells a hiring committee about release
+practice as much as about use. Adding one to a count here takes a paper
+published at a journal that checks its authors' code, with the package loaded
+in that code.
 
-The second finding is what the counts credit. The most used Stata package is
-`__TOP_STATA__`, in __TOP_STATA_N__ deposits, and __N_FORMATTERS__ of the four most
-used exist to format regression output. The software that gets loaded most is the software that
-turns results into tables.
+## Three things the counts show
 
-The third is what no registry can see. `grc1leg` is called __N_GRC1LEG__ times in this
-corpus and belongs to no package archive; it is distributed from StataCorp's
-own site. A credit system built on registries is blind to it.
+The most loaded package is `__TOP_STATA__`, a Stata command that formats
+regression output into a table, in __TOP_STATA_N__ deposits. __N_FORMATTERS__
+of the four most loaded packages also present results rather than estimate
+them, so the tools research leans on hardest are the ones that prepare its
+exhibits, and those are the tools least likely to be cited.
 
-## Why count this way
+Stata is the most used of the three languages and the least studied. It
+appears in __N_STATA__ deposits against __N_R__ for R. Work on research
+software covers R and Python because CRAN and PyPI will tell you which
+project a library name belongs to, and Stata has no equivalent registry. This
+project reconstructed one from the Statistical Software Components archive
+and released it.
 
-Credit is what gets software written. The metrics available are weak: a
-download counts a fetch and rewards frequent releases, and a mention in prose
-counts what an author remembered to name. Neither says the software ran.
+Some heavily used software belongs to no registry at all. `grc1leg` is called
+__N_GRC1LEG__ times in this corpus, StataCorp distributes it from their own
+website, and no archive lists it, so a credit system that works by registry
+lookup cannot reach whoever wrote it.
 
-*Validated use* is the stronger claim. A package was loaded by code deposited
-with a published paper, at a journal whose data-and-code policy the Social
-Science Data Editors record as actively verified. That is a criterion a reader
-can check.
+## Where to go
 
-## Three ways in
+<a href="lookup/">Look up a package</a> to see its count, the denominator it
+is a share of, and which of the two repositories is doing the crediting.
 
-**<a href="lookup/">Look up a package</a>.** Every one of the __N_PACKAGES__ packages,
-searchable, with the number of deposits that load it and the denominator it is
-a share of. A search that finds nothing in the registries still answers: type
-`grc1leg` and it reports the calls and says no registry indexes it.
+<a href="paper/softverse.pdf">Read the paper</a> for the sampling frame, the
+extraction method, and the validation, which includes measuring the R
+extractor against R's own parser.
 
-**<a href="paper/softverse.pdf">Read the paper</a>.** The frame, the measurement, and the
-validation, including the R extractor measured against R's own parser.
+<a href="data/">Take the data</a>, published as CSV under CC0, along with the
+Stata command-to-package index at
+[10.5281/zenodo.21926100](https://doi.org/10.5281/zenodo.21926100).
 
-**<a href="data/">Take the data</a>.** The per-package counts as CSV under CC0, plus the
-unresolved names and a datapackage descriptor. The Stata command-to-package
-index is deposited separately at
-[10.5281/zenodo.21926100](https://doi.org/10.5281/zenodo.21926100), because
-anyone counting Stata needs the same mapping whether or not they care about
-this corpus.
+## What the counts do not show
 
-## What the counts are not
-
-Static reference in deposited code. A package loaded in a superseded script or
-a dead branch still counts, and code kept out of the deposit is invisible.
-
-The two halves are not identical instruments. The Dataverse material is a
-January 2024 scrape that kept only `.do`, `.r` and `.py` files, so a package
-used mainly inside notebooks or knitr documents is under-counted on that
-side, and the two vintages differ. The ranking is checked against a
-recomputation restricted to the file types both halves collected, and the
-release fails if it moves.
+These counts say a package was loaded by code in the deposit. They do not say
+the code ran. Authors often leave older scripts in a deposit, and a script can
+load a package inside a branch that never executes. Whatever an author kept
+out of the deposit cannot be counted at all. The paper measures how wide that
+gap is.
 
 ```{toctree}
 :hidden:

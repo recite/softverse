@@ -19,35 +19,36 @@ Precisely: **software referenced in deposited replication code.**
 > analyzable script in language *L*, the share that statically reference
 > package *P*.
 
-Static reference is not runtime use — a deposit can load a package in a
-superseded script or a dead branch, and code kept out of the deposit is
-invisible. The distance between the two is the main limitation and is reported
-rather than glossed.
+A reference is not a run. A deposit can load a package in an older script or
+inside a branch that never executes, and code the author kept out of the
+deposit cannot be seen at all. How far apart those two things are is the main
+limitation, and the paper measures it.
 
 The unit is the **deposit**, not the mention. A deposit calling `ggplot2` two
 hundred times is one user of `ggplot2`; a mention-weighted ranking would rank
 whichever deposits happen to be largest.
 
-Every count carries its denominator. "273 deposits use `estout`" is reported as
-**273/469** — of the deposits containing analyzable Stata, not of all deposits.
+Every count carries its denominator. "273 deposits use `estout`" is reported
+as 273 of 469, where 469 counts the deposits containing analyzable Stata and
+not the deposits overall.
 
 ## Sampling frame
 
-The inclusion rule is not ours to invent. We use the journal list maintained by
-the [Social Science Data Editors](https://github.com/social-science-data-editors/DCAS)
-— journals whose data-and-code policy the editors *actively verify* — mapped to
-the repositories that actually hold the material.
+The inclusion rule comes from outside this project. It is the journal list
+kept by the [Social Science Data Editors](https://github.com/social-science-data-editors/DCAS),
+covering journals whose data-and-code policy the editors actively verify,
+mapped to the repositories that hold the material.
 
 `data/frame/frame.csv` is deliberately small and readable: someone who knows
 these journals should be able to read all of it and say one is misplaced.
-Journals we could not locate are rows in that file, not omissions.
+Journals that could not be located are rows in that file, so a gap in the
+frame is visible rather than absent.
 
-Two repositories hold the material, and they are two disciplines. Zenodo's
-verified collections are economics; Harvard Dataverse's journal collections
-are mostly political science. Both are tallied together in one pass, and
-every row of `usage_by_package.csv` carries the pooled count next to the
-per-repository split, because they are very different sizes and a pooled
-number with no breakdown asks you to take the composition on trust.
+The two repositories hold two disciplines. Zenodo's verified collections are
+economics and Harvard Dataverse's journal collections are mostly political
+science. One pass tallies both, and every row of `usage_by_package.csv`
+carries the pooled count next to the per-repository split, since the two are
+very different sizes.
 
 The Dataverse material is a January 2024 scrape that collected only `.do`,
 `.r` and `.py` files, so a package used mainly inside notebooks or knitr
@@ -101,32 +102,35 @@ both read, and `make site` builds the published pages from it.
 | `.Rmd` / `.qmd` / `.Rnw` | knitr chunk splitter, routed per engine |
 | `.ipynb` | per cell, kernel language read from metadata |
 
-**Strings and comments are excluded structurally, not by pre-stripping.** In a
-syntax tree, `cat("run library(dplyr)")` is a call whose argument is a string
-node — those bytes never form a call, so a walk over call nodes cannot see them.
+Strings and comments are excluded by structure instead of being stripped out
+first. In a syntax tree, `cat("run library(dplyr)")` is a call whose argument
+is a string node, so those bytes never form a call and a walk over call nodes
+cannot reach them.
 
-**Stata needed an artifact that did not exist.** R has CRAN and Python has PyPI;
-Stata has no machine-readable registry. Softverse reconstructs a command→package
-index from SSC distribution manifests — 3,967 packages, 7,468 commands, both
-excluding internal helper files — and releases it. Without it Stata is unmeasurable, which is why it tends to be left
-out of work like this, despite being the language this corpus uses most.
+Stata needed an artifact that did not exist. R has CRAN and Python has PyPI;
+Stata has no machine-readable registry. Softverse reconstructs a
+command-to-package index from SSC distribution manifests, 3,967 packages and
+7,468 commands, both counted excluding internal helper files, and releases it.
+Without that index Stata cannot be measured at all, which is why work like
+this leaves out the language this corpus uses most.
 
 ## Design commitments
 
 These exist because the previous version of this project got each one wrong, in
 ways that silently invalidated its published numbers.
 
-- **Join keys are never null.** Enforced at the write boundary, not merely
-  declared: pyarrow treats `nullable=False` as documentation.
-- **Every stage reconciles.** `files_total == analyzed + vendored + duplicate +
+- Join keys are checked for nulls at the write boundary rather than declared
+  in a schema, because pyarrow treats `nullable=False` as documentation.
+- Every stage reconciles: `files_total == analyzed + vendored + duplicate +
   skipped + unparseable`, asserted in code.
-- **"No packages here" is never the same value as "could not read this."**
-  Parse status is recorded per file.
-- **Provenance on every row.** Extractor version, grammar version, registry lock,
-  plus source line and snippet, so any published number traces back to text.
-- **Registries are pinned**, so resolution does not depend on when it ran.
-- **Coverage gaps are rows, not silences.** Skipped archives and unlocated
-  journals are recorded with their sizes and reasons.
+- Parse status is recorded per file, so "no packages here" and "could not read
+  this" are never stored as the same value.
+- Every row carries its provenance: extractor version, grammar version,
+  registry lock, source line and snippet, so a published number traces back
+  to the text it came from.
+- Registries are pinned, so a resolution does not depend on the day it ran.
+- Skipped archives and journals that could not be located are recorded as
+  rows, with their sizes and reasons, rather than dropped.
 
 ## Repository layout
 
@@ -144,6 +148,6 @@ paper/              manuscript (Quarto) + validate_bib.py
 data/frame/         the frame, human-readable
 ```
 
-## Authors
+## Author
 
-Gaurav Sood and Daniel Weitzel
+Gaurav Sood

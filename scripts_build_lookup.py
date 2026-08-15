@@ -228,12 +228,12 @@ a { color: var(--accent); }
   <div class="eyebrow">softverse</div>
   <h1>Validated use lookup</h1>
   <p class="lede">
-    How often each package is loaded by the code behind published papers, at
-    journals whose data-and-code policies are actively verified.
-    __NPACKAGES__ packages across __NDEPOSITS__ deposits holding analyzable
-    code, from Zenodo's economics collections and Harvard Dataverse's
-    political science journals. Not downloads, not mentions in prose: code
-    that shipped with a paper.
+    How often each package is loaded by the code behind published papers.
+    __NPACKAGES__ packages across __NDEPOSITS__ deposits at economics and
+    political science journals that check an author's code before
+    publication. A download count rises when a build server installs a
+    package; a count here rises when somebody publishes a paper that uses
+    it.
   </p>
 </header>
 
@@ -268,20 +268,19 @@ a { color: var(--accent); }
 <div class="miss" id="miss" hidden></div>
 
 <footer>
-  A deposit counts once however many times it calls the package;
-  <em>calls</em> is the raw total. <em>Share</em> is of deposits containing
-  analyzable code in that language, which is the only denominator these are
-  comparable against, so a Stata share and an R share have different
-  denominators by design. Counts are static reference in deposited code, which
-  is not the same as execution.
-  <br>Counts pool both repositories; the last column says which one is doing
-  the crediting, and the filter narrows to one. The Dataverse half is a
-  January 2024 scrape that collected only <code>.do</code>, <code>.r</code>
-  and <code>.py</code>, so a package used mainly inside notebooks or knitr
-  documents is under-counted there.
-  <br>Built from the released tables at
-  <a href="https://github.com/recite/softverse">recite/softverse</a>. Full
-  method in <a href="../paper/softverse.pdf">the paper</a>.
+  <strong>Deposits</strong> counts each deposit once, however many times its
+  code calls the package. <strong>Calls</strong> is the raw total.
+  <strong>Share</strong> divides by the deposits containing code in that
+  language, so a Stata share and an R share have different denominators and
+  should not be read against each other. <strong>Repositories</strong> splits
+  the count between the two collections, and the filter narrows to one.
+  <br>Two things to know before relying on a number. A package can be loaded
+  by code that never runs, so these are loads and not executions. And the
+  Dataverse collection came from a 2024 scrape that kept only
+  <code>.do</code>, <code>.r</code> and <code>.py</code> files, so packages
+  used inside notebooks are under-counted on that side.
+  <br><a href="../paper/softverse.pdf">The paper</a> gives the method and
+  <a href="../data/">the tables</a> are CC0.
 </footer>
 </div>
 
@@ -364,12 +363,12 @@ function showMisses(q, lang) {
   miss.hidden = hits.length === 0;
   if (!hits.length) { return; }
   miss.innerHTML =
-    "<p>Called in deposited code but in no registry we index, so it earns no " +
-    "credit anywhere:</p><ul>" +
+    "<p>Used in deposited code, but listed in no registry, so no " +
+    "registry-based credit system can see it:</p><ul>" +
     hits.map(r => `<li><strong>${esc(r.p)}</strong> (${esc(r.l)}) &middot; ` +
       `${r.m.toLocaleString()} calls</li>`).join("") +
-    "</ul><p>These are raw unresolved names, so some are false positives: a " +
-    "language keyword or a program defined in the deposit itself.</p>";
+    "</ul><p>These are raw unresolved names. Some are false positives: a " +
+    "language keyword, or a program the deposit defines for itself.</p>";
 }
 
 function esc(s) {

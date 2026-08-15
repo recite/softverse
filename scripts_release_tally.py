@@ -52,33 +52,30 @@ Science Data Editors record as *actively verified*.
 **{n_packages:,} packages · {n_deposits_analyzable:,} deposits with analyzable
 code · {n_deposits:,} deposits collected · built {built}**
 
-A download says a file was fetched. A mention in prose says an author
-remembered to name something. Neither says the software ran. These counts say
-a package was loaded by code that shipped with a paper, which is the strongest
-of the three claims and the one worth crediting against.
+A count here is the number of deposits whose code loads the package. Adding
+one to it takes a paper published at a journal that checks its authors' code,
+which is what makes these counts harder to inflate than download counts. The
+[project page](https://recite.github.io/softverse/) makes that case; this
+file documents what is in the tables and how to read them.
 
 ## Scope
 
-Two repositories, two disciplines, pooled. Zenodo's verified collections are
-economics; Harvard Dataverse's journal collections are mostly political
-science. Every count here is the pooled total, and `usage_by_package.csv`
-carries the split beside it in `n_deposits_zenodo` and
-`n_deposits_dataverse_legacy`, because the halves are very different sizes
-and a pooled number with no breakdown asks you to take the composition on
-trust.
+The deposits come from two repositories that hold different disciplines.
+Zenodo's verified collections are economics, and Harvard Dataverse's journal
+collections are mostly political science.
 
 {composition}
 
-Two asymmetries worth knowing before you use the split. The Dataverse half is
-a January 2024 scrape that kept only `.do`, `.r` and `.py`, so a package used
-mainly inside notebooks or knitr documents is under-counted there; the
-ranking is checked against a recomputation restricted to those three
-extensions, and the release fails if it moves. And the halves are different
-vintages, 2024 against 2026, which `first_year` and `last_year` will show.
+Counts pool the two. `usage_by_package.csv` also carries the split, in
+`n_deposits_zenodo` and `n_deposits_dataverse_legacy`, because the two are
+very different sizes and a pooled figure alone would hide that.
 
-Counts are static reference in deposited code. A package that is loaded but
-never reached at runtime still counts, and a package invoked through a string
-that is assembled at runtime does not.
+The Dataverse deposits come from a January 2024 scrape that kept `.do`, `.r`
+and `.py` files and nothing else, so a package used mainly inside a notebook
+or a knitr document is under-counted on that side. The release checks this
+by recomputing the whole ranking on those three extensions alone and fails if
+the order moves. The two collections are also two years apart, which
+`first_year` and `last_year` will show.
 
 ## Files
 
@@ -93,25 +90,24 @@ that is assembled at runtime does not.
 
 ### `usage_by_package.csv`
 
-- `package`, `language`, `ecosystem` — the resolved package and its registry
-- `n_deposits` — deposits loading it, counted once per deposit
-- `n_files`, `n_mentions` — files and raw calls
-- `n_deposits_at_risk` — the denominator `share_of_deposits` uses: deposits
+- `package`, `language`, `ecosystem`: the resolved package and its registry
+- `n_deposits`: deposits loading it, counted once per deposit
+- `n_files`, `n_mentions`: files, and raw calls
+- `n_deposits_at_risk`: the denominator for `share_of_deposits`, meaning deposits
   that hold an analyzable file in that language, or that yielded a reference
   in it. The second clause is what covers literate documents, where the file
   is a notebook and the code inside it is Python. It differs by language, so a
   Stata share and an R share are not shares of the same thing
-- `share_of_deposits` — `n_deposits / n_deposits_at_risk`
+- `share_of_deposits`: `n_deposits` divided by `n_deposits_at_risk`
 
 ### `unknown_names.csv`
 
-Deliberately unfiltered. Some entries are false positives: `str` is a Stata
-type, and some names are programs defined inside the deposit itself. But the
-list also holds real, heavily used software that no registry indexes,
-`grc1leg` being the clearest case at {n_grc1leg:,} calls, distributed from
-StataCorp's own site and invisible to any credit system built on registries.
-Pruning it by hand would bury a judgement call inside a file whose point is
-that you can check it.
+Names that appear in the code and resolve to no registry, unfiltered. Some
+are false positives: `str` is a Stata type, and some are programs a deposit
+defines for itself. The list also holds real and heavily used software that
+no registry indexes, `grc1leg` being the clearest case at {n_grc1leg:,}
+calls. Pruning the list by hand would put a judgement call inside a file
+whose value is that you can check every row of it.
 
 ## Licence
 

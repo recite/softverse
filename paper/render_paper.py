@@ -18,6 +18,7 @@ import io
 import os
 import re
 import sys
+import textwrap
 import traceback
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -240,11 +241,22 @@ def render_markdown() -> tuple[str, dict]:
     text = PAPER.read_text()
     front = _FRONT.search(text)
     meta: dict[str, str] = {}
+    abstract = ""
     if front:
         for key in ("title",):
             m = re.search(rf'^{key}:\s*"?(.+?)"?\s*$', front.group(1), re.M)
             if m:
                 meta[key] = m.group(1)
+        # The abstract is a `|` block, and it holds `{python}` expressions like
+        # the rest of the paper. Front matter is stripped before substitution
+        # runs, so it has to be pulled out here and substituted separately, or
+        # the one part of the paper a referee reads first is the one part with
+        # unresolved placeholders in it.
+        block = re.search(
+            r"^abstract:\s*\|\n((?:[ \t]+.*\n|\n)+)", front.group(1), re.M
+        )
+        if block:
+            abstract = textwrap.dedent(block.group(1)).strip()
         text = text[front.end() :]
 
     namespace: dict = {}
@@ -270,7 +282,12 @@ def render_markdown() -> tuple[str, dict]:
         except Exception as exc:  # noqa: BLE001 - surfaced in the page
             return f"[UNRESOLVED: {exc}]"
 
-    return _INLINE.sub(substitute, body), namespace
+    rendered = _INLINE.sub(substitute, body)
+    if abstract:
+        filled = _INLINE.sub(substitute, abstract)
+        indented = "\n".join("  " + line for line in filled.splitlines())
+        rendered = f"---\nabstract: |\n{indented}\n---\n\n{rendered}"
+    return rendered, namespace
 
 
 def main() -> int:

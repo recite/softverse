@@ -134,8 +134,15 @@ def test_the_paper_opens_on_a_finding_not_a_topic():
         "the paper opens on its own caveats again"
     )
 
-    after = prose[first_heading.end() :].strip()
-    opening = " ".join(after.split("\n\n")[0].split())
+    # The text before the first heading, not after it. An article opens with
+    # its introduction and does not label it, so the opening paragraph now
+    # sits above every `##`; the earlier version of this test read the
+    # paragraph after the first heading and reported the introduction as
+    # missing the moment the heading came off.
+    before = prose[: first_heading.start()]
+    paragraphs = [p for p in before.split("\n\n") if p.strip() and "```" not in p]
+    assert paragraphs, "the paper has no text before its first heading"
+    opening = " ".join(paragraphs[-1].split())
     # A finding names something concrete. A topic sentence says a field is
     # important. The cheapest discriminator is whether the paper's own
     # subject matter appears before the reader is asked to care.
@@ -143,3 +150,101 @@ def test_the_paper_opens_on_a_finding_not_a_topic():
     assert not opening.lower().startswith(
         ("research software is", "software is", "in recent years", "it has long")
     ), f"opens on a topic rather than a finding: {opening[:90]}"
+
+
+def _sentences(text: str) -> list[str]:
+    """Prose split into sentences, with markup and whitespace normalised."""
+    import re
+
+    text = re.sub(r"```\{=latex\}.*?```", " ", text, flags=re.S)
+    text = re.sub(r"^\s*[|>#].*$", " ", text, flags=re.M)
+    text = re.sub(r"\[@[^\]]+\]|\\cref\{[^}]*\}|[`*_]", " ", text)
+    text = " ".join(text.split())
+    return [s.strip() for s in re.split(r"(?<=[.?!])\s+", text) if s.strip()]
+
+
+def test_no_sentence_is_written_twice():
+    """The check that finds what no wordlist can.
+
+    Three passages were written out twice, two hundred lines apart: the
+    unregistered-Stata paragraph appeared in full in both Findings and
+    Validation, "Static reference is not execution." opened two different
+    sections, and one sentence about packages outside CRAN was reworded just
+    enough to look deliberate. Luskin's rule is never say anything twice, and
+    a reader who meets a paragraph for the second time stops trusting that
+    the paper knows what it has already said.
+
+    Near-duplicates, not exact ones. An exact-match version of this test
+    passed against the very text it was written to catch, because the repeat
+    was reworded on the way through: "a package outside CRAN or PyPI is
+    unusual enough to be remarkable" against "a package outside those
+    registries is unusual enough to be remarkable". Word overlap finds those;
+    string equality finds only the laziest case.
+    """
+    sentences = [s for s in _sentences(_prose()) if len(s.split()) >= 6]
+    words = [frozenset(s.lower().split()) for s in sentences]
+
+    repeated = []
+    for i, left in enumerate(words):
+        for j in range(i + 1, len(words)):
+            right = words[j]
+            overlap = len(left & right) / max(1, len(left | right))
+            if overlap >= 0.7:
+                repeated.append(f"{sentences[i]!r} / {sentences[j]!r}")
+    assert not repeated, f"{len(repeated)} near-duplicate pairs: {repeated[:2]}"
+
+
+#: Phrases taken from sentences that were in the paper, each one a formula for
+#: sounding like a conclusion instead of stating one. Not a general aphorism
+#: detector, which cannot exist; a guard against these coming back.
+BANNED = (
+    "worth sitting with",  # "This is worth sitting with if the point..."
+    "worth stating",  # "the working is worth stating"
+    "worth getting right",  # "which makes the counts worth getting right"
+    "worth recording",  # "Two things the enumeration found are worth recording"
+    "is the finding",  # "The ordering is the finding, and X is the ordering."
+    "that is the point",  # "That is the point of producing the counts"
+    "which is the point",
+    "unusual enough to be",  # "unusual enough to be remarkable", used twice
+    "in the only way that matters",  # "authoritative in the only way that matters"
+    "nobody counts",  # "the language nobody counts"
+    "nobody can query",  # "a credit metric nobody can query is an assertion"
+)
+
+
+def test_the_prose_carries_no_epigram_formulas():
+    prose = _prose().lower()
+    found = [phrase for phrase in BANNED if phrase in prose]
+    assert not found, f"epigram formulas: {found}"
+
+
+def test_no_paragraph_opens_on_a_bolded_assertion():
+    """`**A claim.** Then the explanation.` is the bold-header pattern with the
+    list markers taken off, and Validation alone had ten of them.
+
+    Anchored on a blank line rather than on `^`, because the prose is hard
+    wrapped: a bolded term that happens to land at the start of a wrapped
+    line is not a paragraph lead, and the first version of this test reported
+    one as a defect.
+    """
+    import re
+
+    found = re.findall(r"(?:\A|\n\n)\*\*([^*]{10,})\*\*", _prose())
+    assert not found, f"{len(found)} bolded paragraph leads, first: {found[:2]}"
+
+
+def test_the_paper_does_not_say_we():
+    """Sole-authored. The royal `we` appeared 26 times and `our` ten more."""
+    import re
+
+    prose = _prose()
+    found = re.findall(r"\b(we|our|ours)\b", prose, re.I)
+    assert not found, f"{len(found)} first-person plurals, e.g. {found[:5]}"
+
+
+def test_rather_than_is_not_a_tic():
+    """Thirty-five of these disambiguated nothing; they were cadence. Some are
+    load-bearing and stay, so this caps rather than bans."""
+    prose = _prose().lower()
+    n = prose.count("rather than")
+    assert n <= 12, f"{n} uses of 'rather than', which reads as a tic above ~12"
