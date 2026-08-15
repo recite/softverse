@@ -5,7 +5,12 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+      # 1 MB rather than the 500 KB default. The released tables under
+      # build/release/tally are text we mean to track, and the largest is
+      # 552 KB; the guard is here to catch an accidental Parquet or archive,
+      # both of which are far bigger than this.
       - id: check-added-large-files
+        args: [--maxkb=1024]
       - id: check-merge-conflict
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

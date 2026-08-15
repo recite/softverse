@@ -34,7 +34,13 @@ from softverse.config import PATHS
 TALLY = PATHS.root / "build" / "tally"
 OUT = PATHS.root / "build" / "release" / "tally"
 
-TABLES = ("usage_by_package.csv", "unknown_names.csv", "language_presence.csv")
+TABLES = (
+    "usage_by_package.csv",
+    "usage_by_package_year.csv",
+    "usage_by_collection.csv",
+    "unknown_names.csv",
+    "language_presence.csv",
+)
 
 DESCRIPTOR = """\
 # Validated use: per-package counts
@@ -78,9 +84,11 @@ that is assembled at runtime does not.
 
 | file | rows | contents |
 |---|---:|---|
-| `usage_by_package.csv` | {n_packages:,} | per-package deposit and call counts |
+| `usage_by_package.csv` | {n_packages:,} | per-package deposit and call counts, pooled and split |
+| `usage_by_package_year.csv` | {n_years:,} | the same by deposit year |
+| `usage_by_collection.csv` | {n_collection_rows:,} | the same per journal or community |
 | `unknown_names.csv` | {n_unknown:,} | names called in code that resolve to no registry |
-| `language_presence.csv` | {n_languages} | deposits containing each language |
+| `language_presence.csv` | {n_languages} | deposits containing each language, per repository |
 | `summary.json` | | corpus counts the tables are shares of |
 
 ### `usage_by_package.csv`
@@ -213,6 +221,8 @@ def main() -> int:
             n_deposits_analyzable=summary["n_deposits_analyzable"],
             n_unknown=summary["n_unresolved_names"],
             n_languages=len(pd.read_csv(OUT / "language_presence.csv")),
+            n_years=len(pd.read_csv(OUT / "usage_by_package_year.csv")),
+            n_collection_rows=len(pd.read_csv(OUT / "usage_by_collection.csv")),
             n_grc1leg=int(grc1leg.iloc[0]) if len(grc1leg) else 0,
             built=summary["built"],
             composition=_composition_table(summary),

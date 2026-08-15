@@ -43,9 +43,11 @@ that is assembled at runtime does not.
 
 | file | rows | contents |
 |---|---:|---|
-| `usage_by_package.csv` | 3,223 | per-package deposit and call counts |
+| `usage_by_package.csv` | 3,223 | per-package deposit and call counts, pooled and split |
+| `usage_by_package_year.csv` | 9,738 | the same by deposit year |
+| `usage_by_collection.csv` | 13,880 | the same per journal or community |
 | `unknown_names.csv` | 7,686 | names called in code that resolve to no registry |
-| `language_presence.csv` | 15 | deposits containing each language |
+| `language_presence.csv` | 15 | deposits containing each language, per repository |
 | `summary.json` | | corpus counts the tables are shares of |
 
 ### `usage_by_package.csv`
