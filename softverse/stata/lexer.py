@@ -508,3 +508,38 @@ def local_programs(source: str) -> set[str]:
         if _IDENT.match(candidate):
             names.add(candidate)
     return names
+
+
+#: `version 14`, `vers 14.2`, `ver 8`. Stata accepts the abbreviations.
+_VERSION_FORMS = frozenset({"version", "vers", "ver"})
+_VERSION_NUMBER = re.compile(r"^(\d+(?:\.\d+)?)")
+
+
+def declared_version(source: str) -> str | None:
+    """The Stata version a do-file declares, if it declares one.
+
+    Read here rather than off a `Statement`, because a standalone
+    `version 14.2` never becomes one. `version` is a real colon prefix
+    (`version 14: regress y x`), so `_strip_prefixes` peels it and then skips
+    tokens up to and including the colon; with no colon to find it consumes
+    the line, `rest` comes back empty, and `lex()` drops the statement before
+    it exists. Both behaviours are correct for their own case, and 1,761
+    do-files in this corpus fall between them.
+
+    The prefix use is deliberately *not* a declaration. `version 14: regress`
+    asks for one command to run under version 14 semantics and says nothing
+    about the version the author ran.
+
+    First declaration wins. Stata applies the most recent one, but a file that
+    sets a version twice is telling you about a block rather than about
+    itself, and the opening line is what describes the script.
+    """
+    for _line, _col, text in _split_statements(strip_comments(source)):
+        tokens = text.split()
+        if len(tokens) < 2 or tokens[0].lower().rstrip(":,") not in _VERSION_FORMS:
+            continue
+        if tokens[0].endswith(":") or tokens[1].endswith(":"):
+            continue
+        if match := _VERSION_NUMBER.match(tokens[1].rstrip(",")):
+            return match.group(1)
+    return None

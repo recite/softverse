@@ -81,6 +81,17 @@ frame = pd.read_csv("../data/frame/frame.csv")
 n_deposits = files["dataset_doi"].nunique()
 n_files = len(files)
 n_mentions = len(mentions)
+
+# What the deposits say about the environment they ran in, with the
+# denominator attached. Read without it, a count of deposits declaring Stata
+# 14 reads as a census of a corpus in which seven deposits in eight say
+# nothing at all.
+environment = json.loads((TALLY / "environment_coverage.json").read_text())
+n_stata_version = environment["stata_version"]["deposits_carrying"]
+n_stata_version_of = environment["stata_version"]["deposits_eligible"]
+n_r_version = environment["r_version"]["deposits_carrying"]
+n_r_version_of = environment["r_version"]["deposits_eligible"]
+share_stata_version = n_stata_version / n_stata_version_of
 at_risk = (
     files[files["in_analysis_set"]]
     .groupby("language")["dataset_doi"]
@@ -1195,6 +1206,22 @@ MATLAB, SAS and SPSS are reported as language presence only. MATLAB has no
 import statement and no resolvable registry, so attributing toolboxes would be
 unbounded error.
 
+Which version ran is mostly not recorded. Code names the packages it loads
+and almost never the release it loaded them at, so these counts pool a
+package across its whole history. Where a file does say, this release now
+records it: a Stata `version` statement in
+`{python} f"{n_stata_version:,}"` of the
+`{python} f"{n_stata_version_of:,}"` deposits holding a do-file, an
+`renv.lock` or a bundled `DESCRIPTION` in `{python} f"{n_r_version}"` of
+`{python} f"{n_r_version_of:,}"` with R code, and a notebook's own note of
+the interpreter that executed it. At
+`{python} f"{share_stata_version:.0%}"` coverage for the best-covered of
+these, the environment table supports checking particular deposits and not
+estimating a distribution, which is why the denominator ships beside it. A
+reader who wants the share of economics papers still on an unsupported Stata
+cannot have it from this corpus. A reader who wants to know what the deposits
+that do say were running can.
+
 ## Conclusion
 
 Research software is credited badly because the numbers available to credit
@@ -1230,10 +1257,22 @@ with `{python} f"{n_ssc_commands:,}"` commands across
 this paper because its usefulness does not depend on this corpus: anyone
 counting Stata needs the same mapping.
 
-The per-package counts behind every table here are deposited at
+The pipeline makes four things, and they are not equally public. The
+**corpus** is the deposited code itself, `{python} f"{n_files:,}"` files, too
+large to redistribute and in any case already public at the archives it came
+from. The **atomic record** is one row per mention, carrying the package, the
+function where the source names one, the file, the line and a snippet. The
+**aggregates** are sums of that record, by package, year, journal and
+function. The **registry** is the instrument rather than a result: the CRAN,
+PyPI and SSC name tables that turn a token into a package, pinned so a count
+can be reproduced rather than merely repeated.
+
+The atomic record and the aggregates are deposited at
 [10.5281/zenodo.21943909](https://doi.org/10.5281/zenodo.21943909) under CC0,
 covering `{python} f"{len(usage):,}"` packages, with the counts by year and
-by journal alongside them. The same tables are served at
+by journal alongside them. Releasing the mention rows and not only their sums
+is what lets a reader disagree with a decision made here and recount without
+re-parsing the corpus. The same tables are served at
 <https://recite.github.io/softverse/data/>, and every package can be looked
 up by name at <https://recite.github.io/softverse/lookup/>, so a software
 author or an evaluating committee can check a number instead of taking the

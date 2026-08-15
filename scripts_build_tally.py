@@ -20,6 +20,7 @@ Outputs, under `build/tally/`:
                                pooled and split by source
     usage_by_package_year.csv  the trend table
     usage_by_collection.csv    per journal/community
+    usage_by_function.csv      which functions of a package the code calls
     language_presence.csv      deposits containing each language, per source
     unknown_names.csv          detected names we could not resolve
     mentions.parquet           every mention, with line/col/snippet
@@ -48,6 +49,7 @@ from softverse.build.pipeline import (
 from softverse.config import PATHS
 from softverse.corpus.loaders import full_corpus
 from softverse.logging_setup import get_logger, setup_logging
+from softverse.model.enums import NON_USE_CONSTRUCTS, Resolution
 from softverse.model.io import write_table
 from softverse.registries.resolve import Registry
 from softverse.stata.builtins import builtins
@@ -235,6 +237,51 @@ def main() -> int:
         OUT / "usage_by_collection.csv",
     )
 
+    # -- by function: what parts of a package published code uses -----------
+    # Aggregated from the mentions rather than from `packages`, because
+    # `dataset_packages` collapses to one row per (deposit, package) and the
+    # function is exactly what that collapse throws away.
+    #
+    # Only where the source names a function. `library(dplyr)` names a package
+    # and nothing else, and counting it under a fabricated function would put
+    # a row in this table that no line of code supports.
+    countable = {str(Resolution.KNOWN_CURRENT), str(Resolution.KNOWN_ARCHIVED)}
+    non_use = {str(c) for c in NON_USE_CONSTRUCTS}
+    by_function: dict[tuple, dict] = {}
+    for mention in result.mentions:
+        if mention["resolution"] not in countable or not mention["resolved_package"]:
+            continue
+        if mention["construct"] in non_use or not mention["called_function"]:
+            continue
+        key = (
+            mention["source"],
+            mention["language"],
+            mention["resolved_package"],
+            mention["called_function"],
+        )
+        entry = by_function.setdefault(
+            key,
+            {
+                "source": mention["source"],
+                "language": mention["language"],
+                "package": mention["resolved_package"],
+                "function": mention["called_function"],
+                "n_calls": 0,
+                "_deposits": set(),
+            },
+        )
+        entry["n_calls"] += 1
+        entry["_deposits"].add(mention["dataset_doi"])
+    functions = sorted(
+        (
+            {k: v for k, v in row.items() if k != "_deposits"}
+            | {"n_deposits": len(row["_deposits"])}
+            for row in by_function.values()
+        ),
+        key=lambda r: (-r["n_deposits"], -r["n_calls"]),
+    )
+    write_csv(functions, OUT / "usage_by_function.csv")
+
     # -- by package-year ----------------------------------------------------
     by_year: dict[tuple, dict] = {}
     for row in packages:
@@ -276,6 +323,17 @@ def main() -> int:
 
     write_table(result.mentions, "mentions", OUT)
     write_table(result.files, "files", OUT)
+
+    # -- the environment layer ----------------------------------------------
+    # Sparse by nature, so the denominator ships with it. A count of deposits
+    # running Stata 14 means nothing without the number that said anything at
+    # all, and a reader who has to compute that themselves will not.
+    write_table(result.declarations, "declared_dependencies", OUT)
+    write_table(result.environment, "environment_signals", OUT)
+    coverage = result.coverage()
+    (OUT / "environment_coverage.json").write_text(
+        json.dumps(coverage, indent=1) + "\n"
+    )
 
     print(f"deposits collected : {n_deposits:,}")
     print(f"files              : {len(result.files):,}")

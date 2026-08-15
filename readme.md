@@ -112,17 +112,45 @@ uv run python scripts_ingest_dataverse_legacy.py
 uv run python scripts_build_tally.py
 ```
 
+Softverse produces four things, and they are worth naming separately because
+only two of them are published.
+
+The **corpus** is the code itself: 217,573 files from 22,346 deposits, kept on
+disk under `corpus/` and mirrored by `scripts_corpus_view.py` into the layout
+other projects read. It is far too large to publish and is rebuilt by the
+ingest scripts above.
+
+The **atomic record** is one row per mention: the package, the function where
+the source names one, the file, the line, the column and the snippet. This is
+what everything else is a sum of.
+
+The **aggregates** are those sums, cut by package, year, journal and function.
+
+The **registry** is the instrument rather than a result: the CRAN, PyPI and
+SSC name tables, plus the Stata command index, that turn a token into a
+package. It is what makes the counts reproducible, and it changes under you if
+you do not pin it.
+
 Outputs land in `build/tally/`:
 
-| file | contents |
-|---|---|
-| `usage_by_package.csv` | the tally: package → deposits, files, mentions, share, pooled and split by repository |
-| `usage_by_package_year.csv` | the same over time |
-| `usage_by_collection.csv` | the same per journal or community |
-| `language_presence.csv` | deposits containing each language, per repository |
-| `unknown_names.csv` | detected names resolving to no registry |
-| `mentions.parquet` | every mention, with line, column and snippet |
-| `files.parquet` | the provenance spine |
+| file | layer | contents |
+|---|---|---|
+| `usage_by_package.csv` | aggregate | the tally: package → deposits, files, mentions, share, pooled and split by repository |
+| `usage_by_package_year.csv` | aggregate | the same over time |
+| `usage_by_collection.csv` | aggregate | the same per journal or community |
+| `usage_by_function.csv` | aggregate | package → function, where the source names one |
+| `language_presence.csv` | aggregate | deposits containing each language, per repository |
+| `unknown_names.csv` | diagnostic | detected names resolving to no registry |
+| `mentions.parquet` | atomic | every mention, with line, column and snippet |
+| `files.parquet` | atomic | the provenance spine |
+| `declared_dependencies.parquet` | atomic | what manifests declare: shipped, locked or asked for |
+| `environment_signals.parquet` | atomic | R, Python and Stata versions, and the OS, where a file says |
+| `environment_coverage.json` | denominator | deposits stating each signal, over deposits that could |
+
+The last three are sparse on purpose. Most deposits record nothing about the
+environment they ran in, so read them with `environment_coverage.json`
+alongside: it gives, per signal, the deposits that said something over the
+deposits that were in a position to.
 
 Then `make release-tables` cuts the small tracked copy the site and the paper
 both read, and `make site` builds the published pages from it.

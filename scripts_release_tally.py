@@ -2,8 +2,11 @@
 
     uv run python scripts_release_tally.py
 
-Writes `build/release/tally/`: the three small tables, a summary of the
-corpus they were computed on, and a frictionless datapackage.
+Writes `build/release/tally/`: the aggregate tables, the mention rows they
+are sums of, a summary of the corpus they were computed on, and a
+frictionless datapackage. The Parquet is deliberately untracked; git carries
+the 150 KB of CSV that the site and the paper read, and Zenodo carries the
+94 MB the recount needs.
 
 This exists to separate two things that were tangled. `build/tally/` holds
 57 MB of Parquet derived from 499 GB of downloaded deposits, and none of it
@@ -23,9 +26,11 @@ collected.
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import shutil
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pandas as pd
 
@@ -38,8 +43,16 @@ TABLES = (
     "usage_by_package.csv",
     "usage_by_package_year.csv",
     "usage_by_collection.csv",
+    "usage_by_function.csv",
     "unknown_names.csv",
     "language_presence.csv",
+    # The atomic record, which the aggregates above are all sums of. Held back
+    # until now, which is why the one project consuming this corpus re-parsed
+    # 217,573 files to recover what the build had already computed.
+    "mentions.parquet",
+    "files.parquet",
+    "declared_dependencies.parquet",
+    "environment_signals.parquet",
 )
 
 DESCRIPTOR = """\
@@ -84,9 +97,25 @@ the order moves. The two collections are also two years apart, which
 | `usage_by_package.csv` | {n_packages:,} | per-package deposit and call counts, pooled and split |
 | `usage_by_package_year.csv` | {n_years:,} | the same by deposit year |
 | `usage_by_collection.csv` | {n_collection_rows:,} | the same per journal or community |
+| `usage_by_function.csv` | {n_functions:,} | package → function, where the source names one |
 | `unknown_names.csv` | {n_unknown:,} | names called in code that resolve to no registry |
 | `language_presence.csv` | {n_languages} | deposits containing each language, per repository |
+| `mentions.parquet` | {n_mentions:,} | every mention: package, function, file, line, snippet |
+| `files.parquet` | {n_files:,} | the provenance spine every mention joins to |
+| `declared_dependencies.parquet` | {n_declarations:,} | what manifests declare: shipped, locked or asked for |
+| `environment_signals.parquet` | {n_signals:,} | R, Python and Stata versions, and the OS, where a file says |
+| `environment_coverage.json` | | deposits stating each signal, over deposits that could |
 | `summary.json` | | corpus counts the tables are shares of |
+
+`mentions.parquet` is the record every count above is a sum of, and it is
+here so a reader who disagrees with a decision made upstream can recount
+without re-parsing 200,000 files. It is 94 MB; the CSVs are 150 KB.
+
+`declared_dependencies.parquet` and `environment_signals.parquet` are sparse
+and answer a different question: not what the code loads but what version of
+it the deposit shipped, and what ran it. Most deposits say nothing at all, so
+read these next to `environment_coverage.json`, which gives per signal the
+deposits that said something over the deposits that were in a position to.
 
 ### `usage_by_package.csv`
 
@@ -147,6 +176,35 @@ def _composition_table(summary: dict) -> str:
     return "\n".join(rows)
 
 
+#: pandas dtype kind -> frictionless field type.
+_FIELD_TYPE = {"i": "integer", "u": "integer", "f": "number", "b": "boolean"}
+
+
+def _resource(path: Path) -> dict:
+    """A frictionless resource, described from the file rather than by hand.
+
+    The hand-written version listed three of the five tables that shipped and
+    named columns that had since been renamed. Reading the header is the only
+    version that cannot go stale, which is the same rule the rest of this
+    project applies to numbers.
+    """
+    if path.suffix == ".parquet":
+        frame = pd.read_parquet(path).head(0)
+    else:
+        frame = pd.read_csv(path, nrows=0)
+    return {
+        "name": path.stem,
+        "path": path.name,
+        "format": path.suffix.lstrip("."),
+        "schema": {
+            "fields": [
+                {"name": str(c), "type": _FIELD_TYPE.get(frame[c].dtype.kind, "string")}
+                for c in frame.columns
+            ]
+        },
+    }
+
+
 def summarize() -> dict:
     """Corpus counts, computed here so nothing downstream opens the Parquet.
 
@@ -193,7 +251,17 @@ def summarize() -> dict:
         "deposits_by_language": {
             str(k): int(v) for k, v in by_language.items() if v > 0
         },
+        # Deposits stating each environment signal, over deposits that could
+        # have. Every figure drawn from `environment_signals.parquet` is a
+        # share of the first number, not of the corpus.
+        "environment_coverage": environment_coverage(),
     }
+
+
+def environment_coverage() -> dict:
+    """The coverage block the build computed, or empty if it did not run."""
+    path = TALLY / "environment_coverage.json"
+    return json.loads(path.read_text()) if path.exists() else {}
 
 
 def main() -> int:
@@ -201,9 +269,21 @@ def main() -> int:
         print("no tally; run scripts_build_tally.py first")
         return 1
 
+    # A sparse table without its denominator is worse than no table: it reads
+    # as a census. Refusing to ship one is cheaper than the correction.
+    if not environment_coverage():
+        print(
+            "environment_signals ships without a coverage denominator; "
+            "rerun scripts_build_tally.py to write environment_coverage.json"
+        )
+        return 1
+
     OUT.mkdir(parents=True, exist_ok=True)
     for name in TABLES:
         shutil.copyfile(TALLY / name, OUT / name)
+    shutil.copyfile(
+        TALLY / "environment_coverage.json", OUT / "environment_coverage.json"
+    )
 
     # The validation artefacts ship with the tables they vouch for. The paper
     # cites precision, recall and Jaccard; a reader who wants to check those
@@ -227,6 +307,19 @@ def main() -> int:
             n_languages=len(pd.read_csv(OUT / "language_presence.csv")),
             n_years=len(pd.read_csv(OUT / "usage_by_package_year.csv")),
             n_collection_rows=len(pd.read_csv(OUT / "usage_by_collection.csv")),
+            n_functions=len(pd.read_csv(OUT / "usage_by_function.csv")),
+            n_mentions=len(
+                pd.read_parquet(OUT / "mentions.parquet", columns=["file_uid"])
+            ),
+            n_files=len(pd.read_parquet(OUT / "files.parquet", columns=["file_uid"])),
+            n_declarations=len(
+                pd.read_parquet(
+                    OUT / "declared_dependencies.parquet", columns=["package"]
+                )
+            ),
+            n_signals=len(
+                pd.read_parquet(OUT / "environment_signals.parquet", columns=["signal"])
+            ),
             n_grc1leg=int(grc1leg.iloc[0]) if len(grc1leg) else 0,
             built=summary["built"],
             composition=_composition_table(summary),
@@ -245,50 +338,7 @@ def main() -> int:
                     }
                 ],
                 "created": datetime.now(tz=UTC).isoformat(),
-                "resources": [
-                    {
-                        "name": "usage_by_package",
-                        "path": "usage_by_package.csv",
-                        "format": "csv",
-                        "schema": {
-                            "fields": [
-                                {"name": "package", "type": "string"},
-                                {"name": "language", "type": "string"},
-                                {"name": "ecosystem", "type": "string"},
-                                {"name": "n_deposits", "type": "integer"},
-                                {"name": "n_files", "type": "integer"},
-                                {"name": "n_mentions", "type": "integer"},
-                                {"name": "first_year", "type": "integer"},
-                                {"name": "last_year", "type": "integer"},
-                                {"name": "n_deposits_at_risk", "type": "integer"},
-                                {"name": "share_of_deposits", "type": "number"},
-                            ]
-                        },
-                    },
-                    {
-                        "name": "unknown_names",
-                        "path": "unknown_names.csv",
-                        "format": "csv",
-                        "schema": {
-                            "fields": [
-                                {"name": "name", "type": "string"},
-                                {"name": "language", "type": "string"},
-                                {"name": "n_mentions", "type": "integer"},
-                            ]
-                        },
-                    },
-                    {
-                        "name": "language_presence",
-                        "path": "language_presence.csv",
-                        "format": "csv",
-                        "schema": {
-                            "fields": [
-                                {"name": "language", "type": "string"},
-                                {"name": "n_deposits", "type": "integer"},
-                            ]
-                        },
-                    },
-                ],
+                "resources": [_resource(OUT / name) for name in TABLES],
             },
             indent=1,
         )
@@ -377,9 +427,12 @@ def _common_basis_ranking(top_n: int = 20) -> tuple[list[str], str]:
             moved.append(note)
             if rank < GATE_DEPTH:
                 problems.append(f"common basis, {language}: {note}")
+        # Every change, not the first four. Truncating here once reported
+        # "ipython leaves the top 20" while hiding that spacy left as well,
+        # which reads as a smaller discrepancy than the one measured.
         lines.append(
             f"  {language:<8} {len(pooled) - len(moved):>2}/{len(pooled)} hold rank"
-            + (f"  ({'; '.join(moved[:4])})" if moved else "")
+            + (f"  ({'; '.join(moved)})" if moved else "")
         )
 
     report = "common-basis ranking (.do/.r/.py only, as the 2024 scrape kept):\n"
@@ -416,10 +469,14 @@ def report(summary: dict) -> int:
     """Check the exported files, not the objects they were written from."""
     problems = []
     for name in TABLES:
-        source = sum(1 for _ in open(TALLY / name, encoding="utf-8"))
-        shipped = sum(1 for _ in open(OUT / name, encoding="utf-8"))
+        # Digests rather than line counts: Parquet is binary, so counting
+        # newlines in it raises `UnicodeDecodeError` on the first compressed
+        # page. A digest also catches a copy that kept the row count and
+        # changed the contents, which a line count never could.
+        source = hashlib.sha256((TALLY / name).read_bytes()).hexdigest()
+        shipped = hashlib.sha256((OUT / name).read_bytes()).hexdigest()
         if source != shipped:
-            problems.append(f"{name}: {shipped} lines shipped, {source} in the tally")
+            problems.append(f"{name}: shipped copy differs from the tally")
 
     with open(OUT / "usage_by_package.csv", encoding="utf-8") as handle:
         usage = {(r["package"], r["language"]): r for r in csv.DictReader(handle)}
@@ -478,7 +535,8 @@ def report(summary: dict) -> int:
             print(f"  - {problem}")
         return 1
     print(
-        "\nverified against the exported files: line counts match the tally, "
+        "\nverified against the exported files: every shipped file's digest "
+        "matches the tally, "
         "grc1leg is\nunresolved, every denominator matches a recomputation from "
         "the Parquet, the\npooled counts reconcile with their per-source split, "
         "and the ranking survives\nrestriction to the file types both corpora "

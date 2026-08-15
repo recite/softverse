@@ -7,7 +7,7 @@
    "path": "https://creativecommons.org/publicdomain/zero/1.0/"
   }
  ],
- "created": "2026-08-15T18:02:48.732962+00:00",
+ "created": "2026-08-15T20:47:21.251115+00:00",
  "resources": [
   {
    "name": "usage_by_package",
@@ -29,31 +29,134 @@
      },
      {
       "name": "n_deposits",
-      "type": "integer"
+      "type": "string"
      },
      {
       "name": "n_files",
-      "type": "integer"
+      "type": "string"
      },
      {
       "name": "n_mentions",
-      "type": "integer"
+      "type": "string"
      },
      {
       "name": "first_year",
-      "type": "integer"
+      "type": "string"
      },
      {
       "name": "last_year",
-      "type": "integer"
+      "type": "string"
+     },
+     {
+      "name": "n_deposits_dataverse_legacy",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits_zenodo",
+      "type": "string"
      },
      {
       "name": "n_deposits_at_risk",
-      "type": "integer"
+      "type": "string"
      },
      {
       "name": "share_of_deposits",
-      "type": "number"
+      "type": "string"
+     },
+     {
+      "name": "n_at_risk_dataverse_legacy",
+      "type": "string"
+     },
+     {
+      "name": "n_at_risk_zenodo",
+      "type": "string"
+     }
+    ]
+   }
+  },
+  {
+   "name": "usage_by_package_year",
+   "path": "usage_by_package_year.csv",
+   "format": "csv",
+   "schema": {
+    "fields": [
+     {
+      "name": "package",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "year",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits",
+      "type": "string"
+     }
+    ]
+   }
+  },
+  {
+   "name": "usage_by_collection",
+   "path": "usage_by_collection.csv",
+   "format": "csv",
+   "schema": {
+    "fields": [
+     {
+      "name": "source",
+      "type": "string"
+     },
+     {
+      "name": "collection_id",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "package",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits",
+      "type": "string"
+     }
+    ]
+   }
+  },
+  {
+   "name": "usage_by_function",
+   "path": "usage_by_function.csv",
+   "format": "csv",
+   "schema": {
+    "fields": [
+     {
+      "name": "source",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "package",
+      "type": "string"
+     },
+     {
+      "name": "function",
+      "type": "string"
+     },
+     {
+      "name": "n_calls",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits",
+      "type": "string"
      }
     ]
    }
@@ -74,7 +177,7 @@
      },
      {
       "name": "n_mentions",
-      "type": "integer"
+      "type": "string"
      }
     ]
    }
@@ -86,12 +189,332 @@
    "schema": {
     "fields": [
      {
+      "name": "source",
+      "type": "string"
+     },
+     {
       "name": "language",
       "type": "string"
      },
      {
       "name": "n_deposits",
+      "type": "string"
+     }
+    ]
+   }
+  },
+  {
+   "name": "mentions",
+   "path": "mentions.parquet",
+   "format": "parquet",
+   "schema": {
+    "fields": [
+     {
+      "name": "mention_uid",
+      "type": "string"
+     },
+     {
+      "name": "file_uid",
+      "type": "string"
+     },
+     {
+      "name": "dataset_doi",
+      "type": "string"
+     },
+     {
+      "name": "source",
+      "type": "string"
+     },
+     {
+      "name": "collection_id",
+      "type": "string"
+     },
+     {
+      "name": "deposit_year",
       "type": "integer"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "construct",
+      "type": "string"
+     },
+     {
+      "name": "raw_name",
+      "type": "string"
+     },
+     {
+      "name": "called_function",
+      "type": "string"
+     },
+     {
+      "name": "normalized_name",
+      "type": "string"
+     },
+     {
+      "name": "resolved_package",
+      "type": "string"
+     },
+     {
+      "name": "ecosystem",
+      "type": "string"
+     },
+     {
+      "name": "resolution",
+      "type": "string"
+     },
+     {
+      "name": "line",
+      "type": "integer"
+     },
+     {
+      "name": "col",
+      "type": "integer"
+     },
+     {
+      "name": "byte_start",
+      "type": "integer"
+     },
+     {
+      "name": "byte_end",
+      "type": "integer"
+     },
+     {
+      "name": "snippet",
+      "type": "string"
+     },
+     {
+      "name": "cell_index",
+      "type": "number"
+     },
+     {
+      "name": "chunk_label",
+      "type": "string"
+     },
+     {
+      "name": "is_conditional",
+      "type": "boolean"
+     },
+     {
+      "name": "is_dynamic",
+      "type": "boolean"
+     },
+     {
+      "name": "is_reachable",
+      "type": "string"
+     },
+     {
+      "name": "extractor_version",
+      "type": "string"
+     },
+     {
+      "name": "grammar_version",
+      "type": "string"
+     },
+     {
+      "name": "registry_lock_id",
+      "type": "string"
+     }
+    ]
+   }
+  },
+  {
+   "name": "files",
+   "path": "files.parquet",
+   "format": "parquet",
+   "schema": {
+    "fields": [
+     {
+      "name": "file_uid",
+      "type": "string"
+     },
+     {
+      "name": "dataset_version_uid",
+      "type": "string"
+     },
+     {
+      "name": "dataset_doi",
+      "type": "string"
+     },
+     {
+      "name": "source",
+      "type": "string"
+     },
+     {
+      "name": "collection_id",
+      "type": "string"
+     },
+     {
+      "name": "dataverse_file_id",
+      "type": "number"
+     },
+     {
+      "name": "container_file_uid",
+      "type": "string"
+     },
+     {
+      "name": "path_in_container",
+      "type": "string"
+     },
+     {
+      "name": "directory_label",
+      "type": "string"
+     },
+     {
+      "name": "relative_path",
+      "type": "string"
+     },
+     {
+      "name": "filename",
+      "type": "string"
+     },
+     {
+      "name": "extension",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "size_bytes",
+      "type": "number"
+     },
+     {
+      "name": "md5_api",
+      "type": "string"
+     },
+     {
+      "name": "sha256_local",
+      "type": "string"
+     },
+     {
+      "name": "md5_verified",
+      "type": "string"
+     },
+     {
+      "name": "restricted",
+      "type": "string"
+     },
+     {
+      "name": "encoding",
+      "type": "string"
+     },
+     {
+      "name": "encoding_confidence",
+      "type": "number"
+     },
+     {
+      "name": "is_vendored",
+      "type": "boolean"
+     },
+     {
+      "name": "vendor_rule",
+      "type": "string"
+     },
+     {
+      "name": "duplicate_of",
+      "type": "string"
+     },
+     {
+      "name": "file_role",
+      "type": "string"
+     },
+     {
+      "name": "is_reachable",
+      "type": "string"
+     },
+     {
+      "name": "parse_status",
+      "type": "string"
+     },
+     {
+      "name": "parse_error_nodes",
+      "type": "number"
+     },
+     {
+      "name": "n_mentions",
+      "type": "integer"
+     },
+     {
+      "name": "in_analysis_set",
+      "type": "boolean"
+     },
+     {
+      "name": "download_ts",
+      "type": "string"
+     },
+     {
+      "name": "local_path",
+      "type": "string"
+     }
+    ]
+   }
+  },
+  {
+   "name": "declared_dependencies",
+   "path": "declared_dependencies.parquet",
+   "format": "parquet",
+   "schema": {
+    "fields": [
+     {
+      "name": "dataset_doi",
+      "type": "string"
+     },
+     {
+      "name": "source_file_uid",
+      "type": "string"
+     },
+     {
+      "name": "manifest_kind",
+      "type": "string"
+     },
+     {
+      "name": "package",
+      "type": "string"
+     },
+     {
+      "name": "version_constraint",
+      "type": "string"
+     },
+     {
+      "name": "ecosystem",
+      "type": "string"
+     },
+     {
+      "name": "dependency_role",
+      "type": "string"
+     }
+    ]
+   }
+  },
+  {
+   "name": "environment_signals",
+   "path": "environment_signals.parquet",
+   "format": "parquet",
+   "schema": {
+    "fields": [
+     {
+      "name": "dataset_doi",
+      "type": "string"
+     },
+     {
+      "name": "source_file_uid",
+      "type": "string"
+     },
+     {
+      "name": "manifest_kind",
+      "type": "string"
+     },
+     {
+      "name": "signal",
+      "type": "string"
+     },
+     {
+      "name": "value",
+      "type": "string"
      }
     ]
    }

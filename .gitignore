@@ -93,12 +93,7 @@ monitor_collection.py
 
 # v2 pipeline artifacts. `/build/*` rather than `/build/`: git does not
 # descend into an excluded directory, so a negation under an excluded parent
-# never fires and `# Only the tally is tracked. The Stata index is a 1 MB pair of files already
-# deposited at 10.5281/zenodo.21926100, so a copy here is duplication that
-# also trips the large-file hook.
-!/build/release/
-/build/release/*
-!/build/release/tally/` silently did nothing for months.
+# never fires and `!/build/release/tally/` silently did nothing for months.
 /corpus/
 /build/*
 # Only the tally is tracked. The Stata index is a 1 MB pair of files already
@@ -107,6 +102,11 @@ monitor_collection.py
 !/build/release/
 /build/release/*
 !/build/release/tally/
+# ...except the atomic record. `mentions.parquet` is 94 MB, which GitHub
+# refuses outright, and it is in the bundle because Zenodo should carry the
+# rows the aggregates are sums of. The site and the paper read only the CSVs
+# and `summary.json`, so a clone still builds everything it needs to.
+/build/release/tally/*.parquet
 /registries/snapshots/
 /outputs/
 

@@ -1,0 +1,26 @@
+{
+ "julia_version": {
+  "deposits_carrying": 6,
+  "deposits_eligible": 59
+ },
+ "matlab_version": {
+  "deposits_carrying": 1,
+  "deposits_eligible": 59
+ },
+ "os": {
+  "deposits_carrying": 13,
+  "deposits_eligible": 3488
+ },
+ "python_version": {
+  "deposits_carrying": 58,
+  "deposits_eligible": 408
+ },
+ "r_version": {
+  "deposits_carrying": 28,
+  "deposits_eligible": 3529
+ },
+ "stata_version": {
+  "deposits_carrying": 777,
+  "deposits_eligible": 6100
+ }
+}

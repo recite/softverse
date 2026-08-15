@@ -23,6 +23,7 @@ from pathlib import Path
 from softverse import EXTRACTOR_VERSION
 from softverse.corpus.hygiene import classify, cross_dataset_hashes, sha256_of
 from softverse.detect.dispatch import extract_file, language_of
+from softverse.detect.manifests import is_manifest, read_manifest
 from softverse.logging_setup import get_logger, stage
 from softverse.model.enums import (
     ANALYZABLE_STATUSES,
@@ -33,6 +34,7 @@ from softverse.model.enums import (
 )
 from softverse.model.io import reconcile
 from softverse.registries.resolve import normalize
+from softverse.stata.lexer import declared_version as stata_declared_version
 from softverse.stata.lexer import local_programs as stata_local_programs
 
 logger = get_logger(__name__)
@@ -59,12 +61,65 @@ class CorpusFile:
         return self.dataset_version_uid or self.dataset_doi
 
 
+#: Which files put a deposit in a position to state each signal. A notebook
+#: appears against several because its kernel decides which one it carries,
+#: and that is not known from the file's language, which is `notebook`.
+#: `os` is here only under R: a vendored `DESCRIPTION` is the one file in this
+#: corpus that names an operating system.
+_SIGNAL_LANGUAGES = {
+    "r_version": {str(Language.R), str(Language.RMARKDOWN), str(Language.NOTEBOOK)},
+    "os": {str(Language.R), str(Language.RMARKDOWN)},
+    "python_version": {str(Language.PYTHON), str(Language.NOTEBOOK)},
+    "julia_version": {str(Language.JULIA), str(Language.NOTEBOOK)},
+    "matlab_version": {str(Language.NOTEBOOK)},
+    "stata_version": {str(Language.NOTEBOOK)},
+}
+
+
 @dataclass
 class BuildResult:
     files: list[dict] = field(default_factory=list)
     mentions: list[dict] = field(default_factory=list)
+    #: What manifests declare: a package and the version a deposit shipped,
+    #: locked or asked for. Sparse, and empty for most deposits.
+    declarations: list[dict] = field(default_factory=list)
+    #: What files say about the interpreter and the machine.
+    environment: list[dict] = field(default_factory=list)
     counts: Counter = field(default_factory=Counter)
     unknown: Counter = field(default_factory=Counter)
+
+    def coverage(self) -> dict[str, dict[str, int]]:
+        """Deposits carrying each environment signal, over deposits that could.
+
+        Published beside the counts because a sparse table read without its
+        denominator says whatever the reader hoped. `stata_version` covers
+        deposits with at least one non-vendored do-file, not every deposit,
+        since a deposit with no Stata in it was never a candidate to declare
+        a Stata version and counting it as a miss understates the coverage.
+        """
+        carrying: dict[str, set[str]] = defaultdict(set)
+        for row in self.environment:
+            carrying[row["signal"]].add(row["dataset_doi"])
+        eligible: dict[str, set[str]] = defaultdict(set)
+        for row in self.files:
+            if not row["in_analysis_set"]:
+                continue
+            # A do-file, specifically, rather than any Stata: the `version`
+            # statement is only read from `.do`, so a deposit holding nothing
+            # but vendored `.ado` was never in a position to declare one and
+            # counting it as a miss understates the coverage.
+            if row["extension"] == ".do":
+                eligible["stata_version"].add(row["dataset_doi"])
+            for signal, languages in _SIGNAL_LANGUAGES.items():
+                if row["language"] in languages:
+                    eligible[signal].add(row["dataset_doi"])
+        return {
+            signal: {
+                "deposits_carrying": len(carrying.get(signal, ())),
+                "deposits_eligible": len(eligible.get(signal, ())),
+            }
+            for signal in sorted(set(carrying) | set(eligible))
+        }
 
     def reconcile_files(self) -> None:
         """Assert the file dispositions account for every file seen."""
@@ -74,6 +129,39 @@ class BuildResult:
             if k.startswith("files_") and k != "files_total"
         }
         reconcile(self.counts["files_total"], parts, "files")
+
+
+def _read_manifest_into(result: BuildResult, item: CorpusFile, file_uid: str) -> None:
+    """Append a manifest's declarations and signals to the build."""
+    try:
+        text = item.path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return
+    manifest = read_manifest(item.path.name, text)
+    if manifest is None:
+        return
+    for declaration in manifest.declarations:
+        result.declarations.append(
+            {
+                "dataset_doi": item.dataset_doi,
+                "source_file_uid": file_uid,
+                "manifest_kind": manifest.kind,
+                "package": declaration.package,
+                "version_constraint": declaration.version_constraint,
+                "ecosystem": str(declaration.ecosystem),
+                "dependency_role": declaration.dependency_role,
+            }
+        )
+    for signal, value in manifest.signals.items():
+        result.environment.append(
+            {
+                "dataset_doi": item.dataset_doi,
+                "source_file_uid": file_uid,
+                "manifest_kind": manifest.kind,
+                "signal": signal,
+                "value": value,
+            }
+        )
 
 
 def build(
@@ -191,6 +279,36 @@ def build(
                 uuid.NAMESPACE_URL, f"{item.dataset_doi}/{item.relative_path}"
             ).hex
 
+            # The environment layer, read in this same pass. A manifest is
+            # read whether or not it is vendored, because a vendored
+            # DESCRIPTION is exactly the interesting case: it records what the
+            # deposit shipped and the R version that built it.
+            if is_manifest(item.path.name):
+                _read_manifest_into(result, item, file_uid)
+            # A Stata `version` is read only from a non-vendored do-file. In
+            # an `.ado` the statement is a compatibility floor its package
+            # author wrote, not a record of what ran here: across this corpus
+            # do-files declare 14, 16.1 and 16 while ado-files declare 6, 8.2
+            # and 8, so pooling the two reports Stata 6 as the modal version
+            # of a corpus in which almost nobody ran it.
+            elif item.path.suffix.lower() == ".do" and not verdict.is_vendored:
+                try:
+                    version = stata_declared_version(
+                        item.path.read_text(encoding="utf-8", errors="replace")
+                    )
+                except OSError:
+                    version = None
+                if version:
+                    result.environment.append(
+                        {
+                            "dataset_doi": item.dataset_doi,
+                            "source_file_uid": file_uid,
+                            "manifest_kind": "stata_do",
+                            "signal": "stata_version",
+                            "value": version,
+                        }
+                    )
+
             if verdict.is_vendored:
                 result.counts["files_vendored"] += 1
                 status, mentions, language = ParseStatus.SKIPPED_VENDORED, [], language_of(item.path)
@@ -230,9 +348,16 @@ def build(
                     result.unknown[(mention.raw_name, str(language))] += 1
                 result.mentions.append(
                     {
+                        # The called function is part of the key. Python
+                        # records one mention per imported name, so every name
+                        # in `from pandas import read_csv, DataFrame` shares a
+                        # file, a byte offset and a package: without this the
+                        # two rows take the same uid and the table has
+                        # duplicate keys where it promises unique ones.
                         "mention_uid": uuid.uuid5(
                             uuid.NAMESPACE_URL,
-                            f"{file_uid}/{mention.byte_start}/{mention.raw_name}",
+                            f"{file_uid}/{mention.byte_start}/{mention.raw_name}"
+                            f"/{mention.called_function or ''}",
                         ).hex,
                         "file_uid": file_uid,
                         "dataset_doi": item.dataset_doi,
@@ -242,6 +367,7 @@ def build(
                         "language": str(mention_language),
                         "construct": str(mention.construct),
                         "raw_name": mention.raw_name,
+                        "called_function": mention.called_function,
                         "normalized_name": normalize(mention.raw_name, mention_language),
                         "resolved_package": resolved.package,
                         "ecosystem": str(resolved.ecosystem) if resolved.ecosystem else None,

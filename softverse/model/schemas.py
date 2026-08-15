@@ -201,6 +201,10 @@ MENTIONS = pa.schema(
         pa.field("language", _dict(), nullable=False),
         pa.field("construct", _dict(), nullable=False),
         pa.field("raw_name", pa.string(), nullable=False),
+        # The function called, where the source says: `select` for
+        # `dplyr::select`, the command itself for Stata. Null for a bare
+        # `library(dplyr)`, which names a package and no function.
+        pa.field("called_function", pa.string()),
         pa.field("normalized_name", pa.string()),
         pa.field("resolved_package", pa.string()),
         pa.field("ecosystem", _dict()),
@@ -290,9 +294,30 @@ DECLARED_DEPENDENCIES = pa.schema(
         pa.field("ecosystem", _dict()),
         # renv.lock ships a full closure; DESCRIPTION distinguishes roles.
         # Conflating them would misread concordance as recall.
-        pa.field("dependency_role", _dict()),  # direct | transitive | dev | suggests
+        #
+        # `direct` is what an author wrote in a requirements file, `locked` is
+        # a package inside a resolved closure, and `installed` is a package
+        # the deposit shipped a copy of. A deposit that vendors 200 libraries
+        # is not a deposit that uses 200 libraries, so a query that treats
+        # these as one thing measures how the archive was packed.
+        pa.field("dependency_role", _dict()),  # direct | locked | installed
     ],
     metadata={"grain": "one row per declared dependency"},
+)
+
+ENVIRONMENT_SIGNALS = pa.schema(
+    [
+        pa.field("dataset_doi", pa.string(), nullable=False),
+        pa.field("source_file_uid", pa.string(), nullable=False),
+        pa.field("manifest_kind", _dict(), nullable=False),
+        # r_version | python_version | stata_version | os
+        pa.field("signal", _dict(), nullable=False),
+        pa.field("value", pa.string(), nullable=False),
+    ],
+    metadata={
+        "grain": "one row per environment signal a file states; "
+        "sparse, and read with the coverage block in summary.json"
+    },
 )
 
 UNKNOWN_NAMES = pa.schema(
@@ -368,6 +393,7 @@ SCHEMAS: dict[str, pa.Schema] = {
     "packages": PACKAGES,
     "stata_command_index": STATA_COMMAND_INDEX,
     "declared_dependencies": DECLARED_DEPENDENCIES,
+    "environment_signals": ENVIRONMENT_SIGNALS,
     "unknown_names": UNKNOWN_NAMES,
     "dataset_packages": DATASET_PACKAGES,
     "journal_year_packages": JOURNAL_YEAR_PACKAGES,
