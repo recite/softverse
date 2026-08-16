@@ -65,7 +65,7 @@ def test_intervals_grow_and_never_go_below_the_floor():
 
 
 def test_gives_up_rather_than_polling_forever():
-    watcher, slept = make_watcher(challenges=10_000)
+    watcher, _slept = make_watcher(challenges=10_000)
     assert not watcher.wait_until_open(max_wait_s=3 * 3600)
     # A handful of probes over three hours, not hundreds.
     assert watcher.client.probes < 10, watcher.client.probes

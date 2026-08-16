@@ -1,4 +1,4 @@
-"""PyArrow schemas for every table Softverse emits.
+r"""PyArrow schemas for every table Softverse emits.
 
 Design rules, each traceable to a v1 defect:
 

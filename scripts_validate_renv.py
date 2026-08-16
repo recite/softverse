@@ -76,7 +76,8 @@ def renv_packages(script: Path, directory: Path) -> set[str] | None:
 
 def jaccard(a: set[str], b: set[str]) -> float:
     """1.0 when both are empty: two scanners agreeing there is nothing here
-    agree, and scoring that as 0 would punish the easiest case."""
+    agree, and scoring that as 0 would punish the easiest case.
+    """
     union = a | b
     return len(a & b) / len(union) if union else 1.0
 

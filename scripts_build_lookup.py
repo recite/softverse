@@ -24,10 +24,13 @@ from __future__ import annotations
 
 import csv
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from softverse.config import PATHS
 from softverse.logging_setup import get_logger, setup_logging
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = get_logger(__name__)
 
@@ -69,7 +72,7 @@ def rows() -> list[dict]:
     reader looking up a package they wrote should be able to see which of the
     two is crediting them.
     """
-    with open(TALLY / "usage_by_package.csv", encoding="utf-8") as handle:
+    with (TALLY / "usage_by_package.csv").open(encoding="utf-8") as handle:
         raw = list(csv.DictReader(handle))
 
     sources = [
@@ -112,7 +115,7 @@ def unresolved() -> list[dict]:
     the obvious one, and hand-pruning the list would hide a judgment call
     inside a page whose whole point is that you can check the number.
     """
-    with open(TALLY / "unknown_names.csv", encoding="utf-8") as handle:
+    with (TALLY / "unknown_names.csv").open(encoding="utf-8") as handle:
         raw = list(csv.DictReader(handle))
     out = [
         {

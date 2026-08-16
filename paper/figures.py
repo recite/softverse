@@ -25,11 +25,11 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-import matplotlib
+import matplotlib as mpl
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import pandas as pd  # noqa: E402
+mpl.use("Agg")
+import matplotlib.pyplot as plt
+import pandas as pd
 
 HERE = Path(__file__).parent
 OUT = HERE / "figures"
@@ -76,7 +76,7 @@ SOURCE_LABEL = {
 }
 
 
-def languages(presence: pd.DataFrame, files: pd.DataFrame) -> Path:
+def languages(files: pd.DataFrame) -> Path:
     """Deposits containing each language, by repository.
 
     Two repositories, two disciplines: Zenodo's verified collections are
@@ -174,9 +174,8 @@ def main() -> int:
     OUT.mkdir(exist_ok=True)
     files = pd.read_parquet(TALLY / "files.parquet")
     usage = pd.read_csv(TALLY / "usage_by_package.csv")
-    presence = pd.read_csv(TALLY / "language_presence.csv")
 
-    for path in (languages(presence, files), credit(usage)):
+    for path in (languages(files), credit(usage)):
         print(f"wrote {path.relative_to(HERE)}")
     return 0
 

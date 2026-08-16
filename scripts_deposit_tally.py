@@ -45,7 +45,7 @@ def summary() -> dict:
 
 def description(stats: dict) -> str:
     """Written from the bundle, so the deposit page cannot overstate it."""
-    with open(BUNDLE / "usage_by_package.csv", encoding="utf-8") as handle:
+    with (BUNDLE / "usage_by_package.csv").open(encoding="utf-8") as handle:
         top = max(csv.DictReader(handle), key=lambda r: int(r["n_deposits"]))
     by_source = stats["deposits_by_source"]
 

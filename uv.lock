@@ -383,6 +383,18 @@ wheels = [
 ]
 
 [[package]]
+name = "click"
+version = "8.4.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/76/d4/81420972a676e8ffea40450d8c8c92943e7218a78fe9b64359836cc9876b/click-8.4.2.tar.gz", hash = "sha256:9a6cea6e60b17ebe0a44c5cc636d94f09bd66142c1cd7d8b4cd731c4917a15f6", size = 338000, upload-time = "2026-06-24T17:45:15.148Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fb/e2/79c688af8b210d232694e31e59da9f6ec747bae31c3f5946e4e9b98860d5/click-8.4.2-py3-none-any.whl", hash = "sha256:e6f9f66136c816745b9d65817da91d61d957fb16e02e4dcd0552553c5a197b76", size = 119243, upload-time = "2026-06-24T17:45:13.73Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -629,6 +641,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/96/8e/709914eb2b5749865801041647dc7f4e6d00b549cfe88b65ca192995f07c/distlib-0.4.0.tar.gz", hash = "sha256:feec40075be03a04501a973d81f633735b4b69f98b05450592310c0f401a4e0d", size = 614605, upload-time = "2025-07-17T16:52:00.465Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/33/6b/e0547afaf41bf2c42e52430072fa5658766e3d65bd4b03a563d1b6336f57/distlib-0.4.0-py2.py3-none-any.whl", hash = "sha256:9659f7d87e46584a30b5780e43ac7a2143098441670ff0a49d5f9034c54a6c16", size = 469047, upload-time = "2025-07-17T16:51:58.613Z" },
+]
+
+[[package]]
+name = "docstring-parser-fork"
+version = "0.0.16"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/04/ce/48b17c6c24d0af112f73721a90fac245450e548b82b53169260720f60d07/docstring_parser_fork-0.0.16.tar.gz", hash = "sha256:9ecf861ceab8b87d1297a71001c15a1956ad02e87434ee6473643a5988094f7c", size = 36360, upload-time = "2026-07-03T07:27:46.668Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c1/69/427c34e61827818942b48ececd7c892b8f58ba4ce4cfc89ba9fd8dbe8a8d/docstring_parser_fork-0.0.16-py3-none-any.whl", hash = "sha256:c024c97af582d6acf85a14f0b332b3a2ab08626648d251c25e47191f33064386", size = 25253, upload-time = "2026-07-03T07:27:45.591Z" },
 ]
 
 [[package]]
@@ -1626,6 +1647,11 @@ wheels = [
 ]
 
 [[package]]
+name = "py-canon"
+version = "1.post7.dev0+4ce8b25"
+source = { git = "https://github.com/gojiplus/py-canon?rev=v1#4ce8b2571607ff871b5702b96e25becaf7b15e92" }
+
+[[package]]
 name = "py7zr"
 version = "1.1.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1782,6 +1808,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pydoclint"
+version = "0.9.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "docstring-parser-fork" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4c/46/e5043a43a127627c4eb901f511787096fe2b50d27bdf5e36dcc21e502dec/pydoclint-0.9.1.tar.gz", hash = "sha256:eb699ecf95124b8d0b881d55cd53cccaa567172005d1223ec91a0259b51a5650", size = 206434, upload-time = "2026-07-03T08:17:08.879Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bc/35/e2fa913ba2d692ccefbf2e21337fe3fd44200efd9a6ee1ba65766eff7d14/pydoclint-0.9.1-py3-none-any.whl", hash = "sha256:685b4a1c3c852045e4523b61d9c3f789672dfab3a454fe51a9e346c9e21dfcdb", size = 84702, upload-time = "2026-07-03T08:17:07.827Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1864,6 +1903,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/19/27/e564f33ea085c63d5540f707b31aeb50a4992eac2da655dc02435a760a07/pyrate_limiter-4.4.0.tar.gz", hash = "sha256:2c0c720c4fa16c5d8199e4821bf34507fb49c007a25b786cec6fb94ffd0844aa", size = 90955, upload-time = "2026-06-14T10:52:03.021Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2b/77/2b5ea2e5e343fd7f74ba9c50a282d7cb66d1be3d12bd647510338d78fcf1/pyrate_limiter-4.4.0-py3-none-any.whl", hash = "sha256:f738dfa3c7ac1222a5ea3d31e00cfd31b5592b13ade4077afe9e8ac6293381f5", size = 43102, upload-time = "2026-06-14T10:52:01.334Z" },
+]
+
+[[package]]
+name = "pyright"
+version = "1.1.411"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nodeenv" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7e/ab/265f7dc69d28113ebba19092e57b075f41543b2ed048429c5f56e2b88eac/pyright-1.1.411.tar.gz", hash = "sha256:d885a0551f2e763b089a02702174e7f4ba77548cddabc972ab86d1f7f1b0f998", size = 4112861, upload-time = "2026-06-25T02:14:06.37Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0a/49/385be530a6a5b78d1cbcd5c2e38debc8959a2fc6bdb716f4e581002979fc/pyright-1.1.411-py3-none-any.whl", hash = "sha256:dc7c72a8e2700c55baa127554040e067041ea53ccfd50bf96308cc4291c7d5d9", size = 6181526, upload-time = "2026-06-25T02:14:04.691Z" },
 ]
 
 [[package]]
@@ -2121,7 +2173,6 @@ wheels = [
 
 [[package]]
 name = "softverse"
-version = "2.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "charset-normalizer" },
@@ -2145,6 +2196,9 @@ dev = [
     { name = "matplotlib" },
     { name = "myst-parser" },
     { name = "pre-commit" },
+    { name = "py-canon" },
+    { name = "pydoclint" },
+    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -2155,6 +2209,7 @@ dev = [
 docs = [
     { name = "furo" },
     { name = "myst-parser" },
+    { name = "py-canon" },
     { name = "sphinx" },
     { name = "sphinx-copybutton" },
 ]
@@ -2186,6 +2241,9 @@ dev = [
     { name = "matplotlib", specifier = ">=3.11.1" },
     { name = "myst-parser" },
     { name = "pre-commit", specifier = ">=2.20.0" },
+    { name = "py-canon", git = "https://github.com/gojiplus/py-canon?rev=v1" },
+    { name = "pydoclint", specifier = ">=0.5" },
+    { name = "pyright", specifier = ">=1.1.390" },
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-cov", specifier = ">=6" },
     { name = "ruff", specifier = ">=0.14.6" },
@@ -2196,6 +2254,7 @@ dev = [
 docs = [
     { name = "furo" },
     { name = "myst-parser" },
+    { name = "py-canon", git = "https://github.com/gojiplus/py-canon?rev=v1" },
     { name = "sphinx", specifier = ">=8" },
     { name = "sphinx-copybutton" },
 ]

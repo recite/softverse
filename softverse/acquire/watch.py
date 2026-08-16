@@ -21,12 +21,15 @@ being told no, and the ledger means nothing is lost by stopping.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from softverse.acquire.http import FetchOutcome, PoliteClient, jittered
 from softverse.logging_setup import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 logger = get_logger(__name__)
 
@@ -51,6 +54,7 @@ class ProbeResult:
     waited_s: float
 
     def as_log(self) -> dict:
+        """The probe result as a flat dict, for one structured log record."""
         return {
             "ok": self.ok,
             "status": self.status,
@@ -69,6 +73,7 @@ class Watcher:
         sleeper: Callable[[float], None] = time.sleep,
         clock: Callable[[], datetime] = lambda: datetime.now(tz=UTC),
     ) -> None:
+        """Configure what to probe and how patiently."""
         self.client = client
         self.probe_url = probe_url
         # Injected so the loop is testable without waiting hours.
@@ -77,6 +82,7 @@ class Watcher:
         self.history: list[ProbeResult] = []
 
     def probe_once(self, waited_s: float = 0.0) -> ProbeResult:
+        """Probe the endpoint once and record the outcome."""
         outcome: FetchOutcome = self.client.probe(self.probe_url)
         result = ProbeResult(
             at=self._now(),

@@ -28,8 +28,8 @@ import zipfile
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from softverse.acquire.http import PoliteClient
 from softverse.acquire.state import DatasetRecord, Ledger, atomic_write_bytes
 from softverse.acquire.unpack import extract, relative_member_path
 from softverse.config import (
@@ -40,6 +40,9 @@ from softverse.config import (
 )
 from softverse.logging_setup import get_logger
 from softverse.model.enums import CollectionState
+
+if TYPE_CHECKING:
+    from softverse.acquire.http import PoliteClient
 
 logger = get_logger(__name__)
 
@@ -57,6 +60,7 @@ def repo_id_of(doi: str) -> str:
 
 
 def dataset_dir(root: Path, doi: str) -> Path:
+    """Where a dataset's files are stored under ``root``."""
     return root / repo_id_of(doi)
 
 
@@ -73,10 +77,12 @@ class CandidateFile:
 
     @property
     def suffix(self) -> str:
+        """The filename extension, lowercased."""
         return Path(self.filename).suffix.lower()
 
     @property
     def is_archive(self) -> bool:
+        """Whether this file is an archive worth unpacking."""
         return self.suffix in ARCHIVE_EXTENSIONS
 
     @property
@@ -477,25 +483,25 @@ def collect_dataset(
                 "archive extraction failed",
                 extra={"doi": doi, "archive": candidate.filename, "err": result.error},
             )
-        for path in result.files:
-            file_rows.append(
-                {
-                    "dataset_doi": doi,
-                    "dataverse_file_id": None,
-                    "container_file_id": candidate.file_id,
-                    "path_in_container": relative_member_path(path, unpack_root),
-                    "relative_path": relative_member_path(path, target),
-                    "filename": path.name,
-                    "size_bytes": path.stat().st_size,
-                    "md5_api": None,
-                    "sha256_local": hashlib.sha256(path.read_bytes()).hexdigest(),
-                    "md5_verified": None,
-                    "restricted": False,
-                    "directory_label": None,
-                    "download_ts": now,
-                    "local_path": str(path),
-                }
-            )
+        file_rows.extend(
+            {
+                "dataset_doi": doi,
+                "dataverse_file_id": None,
+                "container_file_id": candidate.file_id,
+                "path_in_container": relative_member_path(path, unpack_root),
+                "relative_path": relative_member_path(path, target),
+                "filename": path.name,
+                "size_bytes": path.stat().st_size,
+                "md5_api": None,
+                "sha256_local": hashlib.sha256(path.read_bytes()).hexdigest(),
+                "md5_verified": None,
+                "restricted": False,
+                "directory_label": None,
+                "download_ts": now,
+                "local_path": str(path),
+            }
+            for path in result.files
+        )
         record.n_fetched += 1
 
     if record.n_failed:
@@ -561,7 +567,7 @@ def collect(
             record, rows = collect_dataset(
                 client, doi, files_root, raw_root, archive_cap, base_url
             )
-        except Exception as exc:  # noqa: BLE001 - one bad dataset must not end the run
+        except Exception as exc:
             logger.exception("dataset failed", extra={"doi": doi})
             record = DatasetRecord(
                 dataset_doi=doi,
@@ -580,8 +586,8 @@ def collect(
 
 
 __all__ = [
-    "CandidateFile",
     "DEFAULT_ARCHIVE_CAP_BYTES",
+    "CandidateFile",
     "candidates_from",
     "collect",
     "collect_dataset",

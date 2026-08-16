@@ -12,7 +12,10 @@ table that cannot survive that is a table that will be misread.
 
 from __future__ import annotations
 
-import pandas as pd
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 #: Wrapped in a raw-LaTeX fence so pandoc passes it through untouched rather
 #: than trying to parse the tabular as markdown.

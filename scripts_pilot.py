@@ -10,9 +10,7 @@ v1 never checked. Run:
 from __future__ import annotations
 
 import csv
-import glob
 import json
-import os
 import random
 import sys
 from collections import Counter
@@ -34,9 +32,9 @@ KNOWN_TRUTH = (
 def frame() -> list[tuple[str, str]]:
     """(doi, journal) for every dataset in the sampling frame."""
     rows = []
-    for path in glob.glob(str(PATHS.frame / "*_datasets.csv")):
+    for path in PATHS.frame.glob("*_datasets.csv"):
         journal = Path(path).name.replace("_datasets.csv", "")
-        for row in csv.DictReader(open(path)):
+        for row in csv.DictReader(path.open()):
             ident = (row.get("identifier") or "").strip()
             if ident:
                 rows.append((f"doi:10.7910/DVN/{ident.split('/')[-1]}", journal))
@@ -56,7 +54,7 @@ def stratified(rows: list[tuple[str, str]], n: int) -> list[str]:
         journal = journals[i % len(journals)]
         pool = by_journal[journal]
         if pool:
-            picked.append(pool.pop(random.randrange(len(pool))))
+            picked.append(pool.pop(random.randrange(len(pool))))  # noqa: S311
         i += 1
         if i > n * 50:
             break
@@ -158,5 +156,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    os.makedirs(PILOT, exist_ok=True)
+    PILOT.mkdir(parents=True, exist_ok=True)
     raise SystemExit(main())

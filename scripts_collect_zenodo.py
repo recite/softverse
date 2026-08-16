@@ -25,7 +25,7 @@ ROOT = PATHS.root / "corpus" / "zenodo"
 
 def frame_communities() -> list[str]:
     """Zenodo collection ids from the verified frame."""
-    rows = csv.DictReader(open(PATHS.frame / "frame.csv", encoding="utf-8"))
+    rows = csv.DictReader((PATHS.frame / "frame.csv").open(encoding="utf-8"))
     return [r["collection_id"] for r in rows if r["source"] == "zenodo"]
 
 
@@ -57,7 +57,7 @@ def main() -> int:
         for slug in frame_communities():
             try:
                 declared[slug] = zenodo.verify_community(client, slug)
-            except zenodo.UnknownCommunity as exc:
+            except zenodo.UnknownCommunityError as exc:
                 logger.error(
                     "skipping community", extra={"slug": slug, "err": str(exc)}
                 )
@@ -117,9 +117,7 @@ def main() -> int:
         f"{len(ledger) - len(ledger.non_reconciling())}/{len(ledger)}"
     )
     skipped = ledger.skipped_archives()
-    blocked = [
-        r for r in ledger._records.values() if r.n_skipped_over_cap and r.n_fetched == 0
-    ]
+    blocked = [r for r in ledger.records() if r.n_skipped_over_cap and r.n_fetched == 0]
     print(
         f"archives skipped : {len(skipped)} "
         f"({sum(s['size_bytes'] for s in skipped) / 1e9:.1f} GB)"

@@ -28,6 +28,7 @@ class Paths:
 
     @property
     def data(self) -> Path:
+        """Where collected inputs live."""
         return self.root / "data"
 
     @property
@@ -47,6 +48,7 @@ class Paths:
 
     @property
     def registries(self) -> Path:
+        """Where the pinned registry snapshots live."""
         return self.root / "registries"
 
     @property
@@ -56,10 +58,12 @@ class Paths:
 
     @property
     def logs(self) -> Path:
+        """Where run logs are written."""
         return self.root / "build" / "logs"
 
     @property
     def release(self) -> Path:
+        """Where the tracked, publishable outputs are staged."""
         return self.root / "build" / "release"
 
 

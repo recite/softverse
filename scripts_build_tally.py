@@ -35,7 +35,6 @@ from __future__ import annotations
 
 import collections
 import csv
-import glob
 import json
 from pathlib import Path
 
@@ -71,8 +70,9 @@ def load_registry() -> tuple[Registry, frozenset[str]]:
     """Registries from the pinned snapshots, plus the SSC shipped-file set."""
 
     def names(registry: str) -> frozenset[str]:
-        newest = sorted(glob.glob(f"registries/snapshots/{registry}/*/names.json"))[-1]
-        return frozenset(json.load(open(newest)))
+        snapshots = Path("registries/snapshots") / registry
+        newest = sorted(snapshots.glob("*/names.json"))[-1]
+        return frozenset(json.loads(newest.read_text()))
 
     con = duckdb.connect()
     index = "registries/snapshots/ssc/stata_command_index.parquet"
@@ -101,9 +101,9 @@ def load_registry() -> tuple[Registry, frozenset[str]]:
             stata_commands={k: tuple(v) for k, v in commands.items()},
             stata_builtins=builtins(verified_snapshot=OFFICIAL_SNAPSHOT).forms,
             ssc_packages=packages,
-            lock_id=json.load(open("registries/registries.lock.json")).get("cran", "")[
-                :12
-            ],
+            lock_id=json.loads(Path("registries/registries.lock.json").read_text()).get(
+                "cran", ""
+            )[:12],
         ),
         shipped,
     )
@@ -133,7 +133,7 @@ def write_csv(rows: list[dict], path: Path) -> None:
     # then decides them, and the csv default is CRLF. Published data files got
     # CRLF while git stored them as LF, so a regenerated table never matched
     # its own committed copy and every diff was the whole file.
-    with open(path, "w", newline="", encoding="utf-8") as handle:
+    with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)

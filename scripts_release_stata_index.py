@@ -275,7 +275,7 @@ def main() -> int:
     if check.execute(q, ["regress"]).fetchall():
         problems.append("regress is official Stata and should not be in the index")
 
-    csv_rows = sum(1 for _ in open(OUT / "stata_command_index.csv")) - 1
+    csv_rows = sum(1 for _ in (OUT / "stata_command_index.csv").open()) - 1
     if csv_rows != n_mappings:
         problems.append(f"CSV has {csv_rows} rows, Parquet has {n_mappings}")
 

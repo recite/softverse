@@ -67,6 +67,8 @@ _BOMS = (
 
 @dataclass
 class Decoded:
+    """Text recovered from a file, with how it was decoded and how sure that is."""
+
     text: str
     encoding: str
     confidence: float

@@ -35,12 +35,16 @@ import csv
 import io
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from softverse.acquire.http import PoliteClient
 from softverse.logging_setup import get_logger
 from softverse.model.enums import CollectionKind, Source
-from softverse.sources.zenodo import UnknownCommunity, verify_community
+from softverse.sources.zenodo import UnknownCommunityError, verify_community
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from softverse.acquire.http import PoliteClient
 
 logger = get_logger(__name__)
 
@@ -124,7 +128,7 @@ def dataverse_rows(frame_dir: Path) -> list[FrameRow]:
     rows: list[FrameRow] = []
     for path in sorted(frame_dir.glob("*_datasets.csv")):
         alias = path.name.replace("_datasets.csv", "")
-        n = max(0, sum(1 for _ in open(path, encoding="utf-8", errors="replace")) - 1)
+        n = max(0, sum(1 for _ in path.open(encoding="utf-8", errors="replace")) - 1)
         rows.append(
             FrameRow(
                 collection_id=alias,
@@ -150,7 +154,7 @@ def zenodo_rows(client: PoliteClient) -> list[FrameRow]:
     for slug, journal, discipline in ZENODO_JOURNAL_COMMUNITIES:
         try:
             n = verify_community(client, slug)
-        except UnknownCommunity as exc:
+        except UnknownCommunityError as exc:
             logger.error(
                 "excluded from frame: community failed verification",
                 extra={"slug": slug, "err": str(exc)},
@@ -209,7 +213,7 @@ def write_frame(rows: list[FrameRow], path: Path) -> Path:
     able to read the whole thing and say "that one is in the wrong place."
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", newline="", encoding="utf-8") as handle:
+    with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(asdict(rows[0])))
         writer.writeheader()
         for row in rows:

@@ -25,13 +25,12 @@ import hashlib
 import json
 import threading
 import time
-from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from softverse.acquire.http import PoliteClient
 from softverse.acquire.state import DatasetRecord, Ledger, atomic_write_bytes
 from softverse.acquire.unpack import (
     extract,
@@ -46,6 +45,11 @@ from softverse.config import (
 from softverse.logging_setup import get_logger
 from softverse.model.enums import CollectionState, Source
 from softverse.sources.dataverse import is_wanted
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from softverse.acquire.http import PoliteClient
 
 logger = get_logger(__name__)
 
@@ -150,11 +154,14 @@ class ZenodoFile:
 
     @property
     def is_archive(self) -> bool:
+        """Whether this file is an archive worth unpacking."""
         return Path(self.key).suffix.lower() in ARCHIVE_EXTENSIONS
 
 
 @dataclass
 class ZenodoRecord:
+    """One Zenodo record: its identifiers, its metadata and its files."""
+
     record_id: str
     doi: str
     title: str
@@ -164,6 +171,7 @@ class ZenodoRecord:
 
     @property
     def year(self) -> int | None:
+        """Publication year, or None if the record gave no usable date."""
         if self.publication_date and self.publication_date[:4].isdigit():
             return int(self.publication_date[:4])
         return None
@@ -198,7 +206,7 @@ def parse_record(payload: dict) -> ZenodoRecord:
     )
 
 
-class UnknownCommunity(Exception):
+class UnknownCommunityError(Exception):
     """A community slug Zenodo does not recognise."""
 
 
@@ -214,11 +222,11 @@ def verify_community(client: PoliteClient, slug: str) -> int:
     wrong in a way that looks like abundance rather than error.
 
     Raises:
-        UnknownCommunity: if the slug is not a real community.
+        UnknownCommunityError: if the slug is not a real community.
     """
     outcome = client.get(f"{ZENODO_API}/communities/{slug}")
     if not outcome.ok:
-        raise UnknownCommunity(
+        raise UnknownCommunityError(
             f"{slug!r} is not a Zenodo community (HTTP {outcome.status}). "
             f"Filtering on it would return the entire repository."
         )
@@ -226,10 +234,10 @@ def verify_community(client: PoliteClient, slug: str) -> int:
         f"{ZENODO_API}/records", params={"communities": slug, "size": 1}
     )
     if not counted.ok or counted.content is None:
-        raise UnknownCommunity(f"could not count records for {slug!r}")
+        raise UnknownCommunityError(f"could not count records for {slug!r}")
     total = json.loads(counted.content)["hits"]["total"]
     if total > WHOLE_REPOSITORY_THRESHOLD:
-        raise UnknownCommunity(
+        raise UnknownCommunityError(
             f"{slug!r} returned {total:,} records, which is the whole "
             f"repository -- the community filter was ignored."
         )
@@ -312,6 +320,7 @@ class DiskBudget:
         reserve: int = MIN_FREE_BYTES,
         wait_seconds: float = WAIT_FOR_DISK_S,
     ) -> None:
+        """Track free disk space, holding ``reserve`` bytes back."""
         self._free = free
         self._reserve = reserve
         self._wait = wait_seconds
@@ -343,6 +352,7 @@ class DiskBudget:
             time.sleep(min(_DISK_POLL_S, max(0.0, deadline - time.monotonic())))
 
     def release(self, needed: int) -> None:
+        """Give ``needed`` bytes back to the pool after a download finishes."""
         with self._lock:
             self._committed = max(0, self._committed - needed)
 
@@ -508,22 +518,22 @@ def collect_record(
             # a re-downloadable file.
             archive_path.unlink(missing_ok=True)
             disk.release(item.size)
-            for path in result.files:
-                rows.append(
-                    _row(
-                        doi,
-                        record,
-                        path.name,
-                        relative_member_path(path, target),
-                        path.stat().st_size,
-                        None,
-                        None,
-                        hashlib.sha256(path.read_bytes()).hexdigest(),
-                        str(path),
-                        now,
-                        path_in_container=relative_member_path(path, unpack_root),
-                    )
+            rows.extend(
+                _row(
+                    doi,
+                    record,
+                    path.name,
+                    relative_member_path(path, target),
+                    path.stat().st_size,
+                    None,
+                    None,
+                    hashlib.sha256(path.read_bytes()).hexdigest(),
+                    str(path),
+                    now,
+                    path_in_container=relative_member_path(path, unpack_root),
                 )
+                for path in result.files
+            )
             state.n_fetched += 1
             continue
 
@@ -659,7 +669,7 @@ def collect(
     def one(record: ZenodoRecord) -> tuple[DatasetRecord, list[dict]]:
         try:
             return collect_record(client, record, files_root, archive_cap, disk)
-        except Exception as exc:  # noqa: BLE001 - one bad record must not end the run
+        except Exception as exc:
             logger.exception("zenodo record failed", extra={"record": record.record_id})
             return (
                 DatasetRecord(
@@ -761,14 +771,14 @@ def write_deposits(records: Iterable[ZenodoRecord], path: Path) -> int:
     """
     merged: dict[str, dict] = {}
     if path.exists():
-        with open(path, encoding="utf-8", newline="") as handle:
+        with path.open(encoding="utf-8", newline="") as handle:
             for row in csv.DictReader(handle):
                 merged[row["dataset_doi"]] = row
     for row in deposit_rows(records):
         merged[row["dataset_doi"]] = row
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8", newline="") as handle:
+    with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(DEPOSIT_FIELDS))
         writer.writeheader()
         writer.writerows(sorted(merged.values(), key=lambda r: r["dataset_doi"]))

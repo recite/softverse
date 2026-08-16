@@ -11,7 +11,6 @@ being exempt is not a licence to hammer it.
 from __future__ import annotations
 
 import csv
-import glob
 import json
 import sys
 from collections import Counter
@@ -28,9 +27,9 @@ OUT = PATHS.root / "corpus" / "dataverse_oai"
 
 def frame() -> tuple[list[str], dict[str, str]]:
     dois, journal_of = [], {}
-    for path in glob.glob(str(PATHS.frame / "*_datasets.csv")):
+    for path in PATHS.frame.glob("*_datasets.csv"):
         journal = Path(path).name.replace("_datasets.csv", "")
-        for row in csv.DictReader(open(path, encoding="utf-8", errors="replace")):
+        for row in csv.DictReader(path.open(encoding="utf-8", errors="replace")):
             ident = (row.get("identifier") or "").strip()
             if ident:
                 repo = ident.split("/")[-1]
@@ -51,7 +50,7 @@ def main() -> int:
     client.close()
 
     OUT.mkdir(parents=True, exist_ok=True)
-    with open(OUT / "candidates.csv", "w", newline="", encoding="utf-8") as fh:
+    with (OUT / "candidates.csv").open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)

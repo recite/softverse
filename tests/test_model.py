@@ -17,7 +17,7 @@ from softverse.model.enums import (
     NON_USE_CONSTRUCTS,
 )
 from softverse.model.io import (
-    SchemaViolation,
+    SchemaViolationError,
     cast_to_schema,
     read_table,
     reconcile,
@@ -106,7 +106,7 @@ def test_provisioning_constructs_are_separable_from_use():
 def test_first_class_languages_include_stata():
     """v1 shipped 22,333 Stata files' worth of nothing. Never again."""
     assert Language.STATA in FIRST_CLASS_LANGUAGES
-    assert FIRST_CLASS_LANGUAGES == {Language.R, Language.PYTHON, Language.STATA}
+    assert {Language.R, Language.PYTHON, Language.STATA} == FIRST_CLASS_LANGUAGES
     # MATLAB has no import statement and no resolvable registry.
     assert Language.MATLAB not in FIRST_CLASS_LANGUAGES
 
@@ -156,7 +156,7 @@ def test_pyarrow_alone_does_not_enforce_nullability():
 def test_validate_table_rejects_a_null_join_key():
     """The guarantee, enforced where it is actually enforced."""
     table = cast_to_schema([_mention_row(dataset_doi=None)], "mentions")
-    with pytest.raises(SchemaViolation, match="dataset_doi"):
+    with pytest.raises(SchemaViolationError, match="dataset_doi"):
         validate_table(table, "mentions")
 
 
@@ -168,7 +168,7 @@ def test_validate_table_rejects_unexpected_columns():
     table = cast_to_schema([_mention_row()], "mentions").append_column(
         "surprise", pa.array(["x"])
     )
-    with pytest.raises(SchemaViolation, match="unexpected columns"):
+    with pytest.raises(SchemaViolationError, match="unexpected columns"):
         validate_table(table, "mentions")
 
 
@@ -178,14 +178,14 @@ def test_write_table_roundtrips(tmp_path):
 
 
 def test_write_table_refuses_to_write_an_invalid_table(tmp_path):
-    with pytest.raises(SchemaViolation):
+    with pytest.raises(SchemaViolationError):
         write_table([_mention_row(collection_id=None)], "mentions", tmp_path)
     assert not (tmp_path / "mentions.parquet").exists()
 
 
 def test_reconcile_catches_a_shortfall():
     """The check whose absence let 26,681 files vanish from the v1 outputs."""
-    with pytest.raises(SchemaViolation, match="unaccounted: 3"):
+    with pytest.raises(SchemaViolationError, match="unaccounted: 3"):
         reconcile(10, {"analyzed": 5, "vendored": 2}, "files")
 
 
@@ -206,7 +206,8 @@ def test_collections_table_lets_other_sources_coexist():
     names = {f.name for f in schema_for("collections")}
     assert {"collection_id", "source", "kind", "journal_id"} <= names
     required = required_fields("collections")
-    assert "collection_id" in required and "source" in required
+    assert "collection_id" in required
+    assert "source" in required
     # Nullable by design: a Zenodo community has no journal.
     assert "journal_id" not in required
 

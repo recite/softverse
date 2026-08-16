@@ -62,9 +62,9 @@ NUMBER_WORD = {
 
 def load() -> tuple[dict, list[dict], list[dict]]:
     summary = json.loads((RELEASE / "summary.json").read_text())
-    with open(RELEASE / "usage_by_package.csv", encoding="utf-8") as handle:
+    with (RELEASE / "usage_by_package.csv").open(encoding="utf-8") as handle:
         usage = list(csv.DictReader(handle))
-    with open(RELEASE / "unknown_names.csv", encoding="utf-8") as handle:
+    with (RELEASE / "unknown_names.csv").open(encoding="utf-8") as handle:
         unknown = list(csv.DictReader(handle))
     return summary, usage, unknown
 

@@ -71,7 +71,7 @@ def write_frame(rows: list[dict], path, collected: list[str]) -> int:
     """
     existing: list[dict] = []
     if path.exists():
-        with open(path, encoding="utf-8") as handle:
+        with path.open(encoding="utf-8") as handle:
             existing = [
                 row
                 for row in csv.DictReader(handle)
@@ -79,7 +79,7 @@ def write_frame(rows: list[dict], path, collected: list[str]) -> int:
             ]
     merged = existing + rows
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", newline="", encoding="utf-8") as handle:
+    with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=FIELDS)
         writer.writeheader()
         writer.writerows(merged)
@@ -101,7 +101,7 @@ def journal_aliases() -> list[str]:
 
     frame_csv = PATHS.frame / "frame.csv"
     if frame_csv.exists():
-        with open(frame_csv, encoding="utf-8") as handle:
+        with frame_csv.open(encoding="utf-8") as handle:
             for row in csv.DictReader(handle):
                 if row.get("source") == "dataverse" and row.get("collection_id"):
                     aliases[row["collection_id"]] = None
@@ -114,7 +114,7 @@ def legacy_counts() -> dict[str, int]:
     for path in sorted(LEGACY_METADATA.rglob("*_datasets.csv")):
         if ".ipynb_checkpoints" in str(path):
             continue
-        with open(path, encoding="utf-8", errors="replace") as handle:
+        with path.open(encoding="utf-8", errors="replace") as handle:
             out[path.stem.replace("_datasets", "")] = sum(
                 1
                 for row in csv.DictReader(handle)
@@ -174,20 +174,20 @@ def main() -> int:
                         failed.append(alias)
             stats.incr("collections")
             stats.incr("deposits", len(datasets))
-            for entry in datasets:
-                rows.append(
-                    {
-                        "collection_id": alias,
-                        "source": "dataverse",
-                        "dataset_id": entry.get("id"),
-                        "persistent_id": entry.get("persistentUrl")
-                        or f"doi:{entry.get('authority')}/{entry.get('identifier')}",
-                        "protocol": entry.get("protocol"),
-                        "authority": entry.get("authority"),
-                        "identifier": entry.get("identifier"),
-                        "publication_date": entry.get("publicationDate"),
-                    }
-                )
+            rows.extend(
+                {
+                    "collection_id": alias,
+                    "source": "dataverse",
+                    "dataset_id": entry.get("id"),
+                    "persistent_id": entry.get("persistentUrl")
+                    or f"doi:{entry.get('authority')}/{entry.get('identifier')}",
+                    "protocol": entry.get("protocol"),
+                    "authority": entry.get("authority"),
+                    "identifier": entry.get("identifier"),
+                    "publication_date": entry.get("publicationDate"),
+                }
+                for entry in datasets
+            )
             was = before.get(alias)
             print(
                 f"  {alias:<28}{len(datasets):>8}"

@@ -61,7 +61,8 @@ def test_verified_communities_enter_the_frame(monkeypatch):
 def test_every_frame_row_states_why_it_is_included():
     """A row without a reason is a convenience sample of one."""
     rows = unlocated_rows()
-    assert rows and all(r.inclusion_reason for r in rows)
+    assert rows
+    assert all(r.inclusion_reason for r in rows)
 
 
 def test_unlocated_journals_are_rows_not_silence():
@@ -92,6 +93,6 @@ def test_frame_roundtrips_to_csv(tmp_path):
         [FrameRow("x", "zenodo", "journal", "J", "economics", "dcas")],
         tmp_path / "frame.csv",
     )
-    (row,) = list(csv.DictReader(open(path)))
+    (row,) = list(csv.DictReader(path.open()))
     assert row["collection_id"] == "x"
     assert row["inclusion_reason"] == "dcas"

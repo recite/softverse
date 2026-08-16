@@ -15,7 +15,7 @@ import scripts_collect_dataverse_frame as frame
 
 
 def _rows(path):
-    with open(path, encoding="utf-8") as handle:
+    with path.open(encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
 
 

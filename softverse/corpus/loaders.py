@@ -70,7 +70,7 @@ def _zenodo_deposits() -> dict[str, dict]:
             "--metadata-only to recover community and year"
         )
         return {}
-    with open(path, encoding="utf-8") as handle:
+    with path.open(encoding="utf-8") as handle:
         return {row["record_id"]: row for row in csv.DictReader(handle)}
 
 
@@ -129,7 +129,7 @@ def dataverse_metadata() -> dict[tuple[str, str], dict]:
         if ".ipynb_checkpoints" in str(path):
             continue
         journal = path.stem.replace("_datasets", "")
-        with open(path, encoding="utf-8", errors="replace") as handle:
+        with path.open(encoding="utf-8", errors="replace") as handle:
             for row in csv.DictReader(handle):
                 identifier = (row.get("identifier") or "").strip()
                 if identifier:

@@ -61,6 +61,8 @@ class Declaration:
 
 @dataclass(frozen=True)
 class ManifestRead:
+    """What one manifest said: its kind, its declarations and its signals."""
+
     kind: str
     declarations: list[Declaration] = field(default_factory=list)
     #: `r_version`, `python_version`, `stata_version`, `os`.

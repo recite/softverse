@@ -30,11 +30,14 @@ import hashlib
 import json
 import shutil
 from datetime import UTC, datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from softverse.config import PATHS
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 TALLY = PATHS.root / "build" / "tally"
 OUT = PATHS.root / "build" / "release" / "tally"
@@ -251,9 +254,9 @@ def summarize() -> dict:
         "sources": sorted(str(s) for s in deposits_by_source),
         "n_deposits": int(files["dataset_doi"].nunique()),
         "n_deposits_analyzable": int(analyzable["dataset_doi"].nunique()),
-        "n_files_analyzable": int(len(analyzable)),
-        "n_packages": int(len(usage)),
-        "n_unresolved_names": int(len(unknown)),
+        "n_files_analyzable": len(analyzable),
+        "n_packages": len(usage),
+        "n_unresolved_names": len(unknown),
         "n_collections": int(files["collection_id"].nunique()),
         "deposits_by_source": {str(k): int(v) for k, v in deposits_by_source.items()},
         "deposits_analyzable_by_source": {str(k): int(v) for k, v in by_source.items()},
@@ -487,7 +490,7 @@ def report(summary: dict) -> int:
         if source != shipped:
             problems.append(f"{name}: shipped copy differs from the tally")
 
-    with open(OUT / "usage_by_package.csv", encoding="utf-8") as handle:
+    with (OUT / "usage_by_package.csv").open(encoding="utf-8") as handle:
         usage = {(r["package"], r["language"]): r for r in csv.DictReader(handle)}
 
     # Fixed expectations, not spot checks: these are the numbers the paper

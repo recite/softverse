@@ -41,13 +41,16 @@ from __future__ import annotations
 import random
 import threading
 from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import httpx
 import stamina
 from pyrate_limiter import Duration, Limiter, Rate
 
 from softverse.logging_setup import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = get_logger(__name__)
 
@@ -67,7 +70,7 @@ _EMPTY_IS_THROTTLE = frozenset({200, 202})
 WAF_HEADER = "x-amzn-waf-action"
 
 
-class Throttled(Exception):
+class ThrottledError(Exception):
     """The server is refusing politely: a WAF challenge or an empty 2xx."""
 
 
@@ -83,6 +86,7 @@ class RateLimiter:
     """
 
     def __init__(self, rate_per_s: float = 2.0, per_hour: int | None = None) -> None:
+        """Set the steady rate and, optionally, a hard hourly ceiling."""
         self._rate = rate_per_s
         self._per_hour = per_hour
         self._lock = threading.Lock()
@@ -109,6 +113,7 @@ class RateLimiter:
 
     @property
     def rate(self) -> float:
+        """Requests per second this limiter is currently allowing."""
         return self._rate
 
     def acquire(self, name: str = "global") -> None:
@@ -146,10 +151,12 @@ class FetchOutcome:
 
     @property
     def forbidden(self) -> bool:
+        """Whether the server answered 403."""
         return self.status == 403
 
     @property
     def not_found(self) -> bool:
+        """Whether the server answered 404."""
         return self.status == 404
 
 
@@ -198,6 +205,7 @@ class PoliteClient:
         max_retries: int = 5,
         user_agent: str = "softverse/2.0 (research; github.com/recite/softverse)",
     ) -> None:
+        """Build the client, its limiter and its retry policy."""
         self.limiter = limiter or RateLimiter()
         self.max_retries = max_retries
         self._client = httpx.Client(
@@ -207,12 +215,15 @@ class PoliteClient:
         )
 
     def __enter__(self) -> PoliteClient:
+        """Enter the context manager, returning this client."""
         return self
 
     def __exit__(self, *exc: object) -> None:
+        """Close the underlying connection pool on the way out."""
         self.close()
 
     def close(self) -> None:
+        """Close the underlying connection pool."""
         self._client.close()
 
     def get(self, url: str, expect_content: bool = True, **kwargs) -> FetchOutcome:
@@ -225,7 +236,7 @@ class PoliteClient:
 
         try:
             for attempt in stamina.retry_context(
-                on=(httpx.HTTPError, Throttled),
+                on=(httpx.HTTPError, ThrottledError),
                 attempts=self.max_retries + 1,
                 wait_initial=2.0,
                 wait_max=120.0,
@@ -244,7 +255,7 @@ class PoliteClient:
                             retryable=True,
                             challenged=True,
                         )
-                        raise Throttled(last.error)
+                        raise ThrottledError(last.error)
 
                     if response.status_code in {200, 206}:
                         self._observe_rate_headers(response)
@@ -263,7 +274,7 @@ class PoliteClient:
                             error=f"HTTP {response.status_code}",
                             retryable=True,
                         )
-                        raise Throttled(last.error)
+                        raise ThrottledError(last.error)
 
                     # A definitive answer. Returning inside the retry context
                     # exits without another attempt, which is the point.
@@ -273,7 +284,7 @@ class PoliteClient:
                         error=f"HTTP {response.status_code}",
                         retryable=False,
                     )
-        except Throttled:
+        except ThrottledError:
             return last
         except httpx.HTTPError as exc:
             return FetchOutcome(
@@ -322,7 +333,7 @@ class PoliteClient:
 
         try:
             for attempt in stamina.retry_context(
-                on=(httpx.HTTPError, Throttled),
+                on=(httpx.HTTPError, ThrottledError),
                 attempts=self.max_retries + 1,
                 wait_initial=2.0,
                 wait_max=120.0,
@@ -352,7 +363,7 @@ class PoliteClient:
                                 error=f"HTTP {response.status_code}",
                                 retryable=True,
                             )
-                            raise Throttled(last.error)
+                            raise ThrottledError(last.error)
 
                         if response.status_code not in {200, 206}:
                             return FetchOutcome(
@@ -388,7 +399,7 @@ class PoliteClient:
                         self._observe_rate_headers(response)
                         part.replace(destination)
                         return FetchOutcome(ok=True, status=response.status_code)
-        except Throttled:
+        except ThrottledError:
             return last
         except httpx.HTTPError as exc:
             # Deliberately leaves the part file behind so the next attempt
@@ -437,4 +448,4 @@ class PoliteClient:
 
 def jittered(seconds: float, spread: float = 0.2) -> float:
     """A delay with +/- ``spread`` jitter, so retries do not synchronize."""
-    return seconds * (1 + random.uniform(-spread, spread))
+    return seconds * (1 + random.uniform(-spread, spread))  # noqa: S311

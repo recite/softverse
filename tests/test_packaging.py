@@ -11,6 +11,7 @@ These read the metadata rather than the source.
 
 from __future__ import annotations
 
+import re
 import tomllib
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -45,7 +46,8 @@ def test_project_urls_are_declared_where_the_standard_looks():
     """
     urls = PROJECT.get("urls", {})
     assert urls, "no [project.urls] table"
-    assert "Repository" in urls and "Documentation" in urls
+    assert "Repository" in urls
+    assert "Documentation" in urls
 
     stray = {"homepage", "repository", "documentation"} & set(PROJECT)
     assert not stray, f"non-standard keys under [project], silently dropped: {stray}"
@@ -100,27 +102,61 @@ def _without_comments(source: str) -> str:
     )
 
 
-def test_the_version_is_not_typed_in_two_places():
-    """`__init__.py` carried its own copy, free to drift from pyproject.
+def test_the_version_is_not_typed_anywhere():
+    """The git tag is the version; nothing in the tree may state one.
 
-    Checks for the release number specifically, not for any assignment to
-    `__version__`: the fallback used when the package is not installed has to
-    assign something, and an earlier version of this test failed on it.
+    This used to compare `__init__.py` against a static `project.version`,
+    because the risk was two copies drifting apart. Under the fleet standard
+    there is no copy to drift: the build resolves the version from the tag, so
+    the stronger invariant is that neither file names a release number at all.
 
     Comments are stripped first. What must not drift is a version the code
-    *uses*; a comment explaining why `EXTRACTOR_VERSION` moved off 2.0.0 has
-    to be free to name 2.0.0, and once the package version became 2.0.0 the
-    raw-text search failed on that prose.
+    *uses*, and the comment explaining why `EXTRACTOR_VERSION` moved off 2.0.0
+    has to stay free to say 2.0.0.
     """
-    source = _without_comments((ROOT / "softverse" / "__init__.py").read_text())
-    declared = PROJECT["version"]
-    assert declared not in source, (
-        f"{declared!r} is typed into __init__.py as well as pyproject.toml"
+    assert "version" in PROJECT.get("dynamic", []), (
+        "project.version should come from the git tag, not pyproject.toml"
     )
+    assert "version" not in PROJECT, "a static project.version is back"
 
+    source = _without_comments((ROOT / "softverse" / "__init__.py").read_text())
+    allowed = {
+        # A different number on purpose: it names the instrument that produced
+        # a mention row, not the release.
+        softverse_module().EXTRACTOR_VERSION,
+        # The sentinel for "running from a source tree with nothing
+        # installed", where `importlib.metadata` has nothing to report.
+        "0.0.0",
+    }
+    typed = [
+        v
+        for v in re.findall(r"""["'](\d+\.\d+\.\d+[^"']*)["']""", source)
+        if v not in allowed
+    ]
+    assert not typed, f"release numbers typed into __init__.py: {typed}"
+
+
+def softverse_module():
     import softverse
 
-    assert softverse.__version__ == declared
+    return softverse
+
+
+def test_the_installed_version_comes_from_the_tag():
+    """`git describe` and the installed metadata have to agree, or the wheel
+    CI builds is not the wheel this checkout describes."""
+    import subprocess
+
+    described = subprocess.run(
+        ["git", "describe", "--tags", "--abbrev=0"],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=ROOT,
+    ).stdout.strip()
+    if not described:
+        pytest.skip("no tags in this checkout")
+    assert softverse_module().__version__.startswith(described.lstrip("v"))
 
 
 def test_the_extractor_version_matches_the_released_data():

@@ -18,12 +18,15 @@ from __future__ import annotations
 
 import hashlib
 from collections import defaultdict
-from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from softverse.config import VENDOR_PATH_MARKERS
 from softverse.model.enums import VendorRule
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 #: A sha256 appearing in at least this many distinct deposits is, by
 #: construction, not bespoke research code. The corpus is its own reference set,
@@ -48,6 +51,7 @@ class Verdict:
 
     @property
     def in_analysis_set(self) -> bool:
+        """Whether this file counts: neither vendored nor a duplicate."""
         return not self.is_vendored and self.duplicate_of is None
 
 
@@ -108,8 +112,9 @@ def vendored_by_name(filename: str, ssc_shipped: frozenset[str]) -> VendorRule |
 
 
 def sha256_of(path: Path) -> str:
+    """The SHA-256 of ``path``, read in chunks so a large archive fits in memory."""
     digest = hashlib.sha256()
-    with open(path, "rb") as handle:
+    with path.open("rb") as handle:
         while chunk := handle.read(1 << 20):
             digest.update(chunk)
     return digest.hexdigest()

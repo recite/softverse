@@ -39,8 +39,8 @@ DATACITE = "https://api.datacite.org/dois/{doi}"
 #: accents far more often than in substance, so comparison is on a normalized
 #: form. Anything stricter produces false alarms that train you to ignore it.
 _STRIP = re.compile(r"[^a-z0-9 ]+")
-_ENTRY = re.compile(r"@(\w+)\s*\{\s*([^,]+),(.*?)\n\}", re.S)
-_FIELD = re.compile(r"(\w+)\s*=\s*[{\"](.+?)[}\"]\s*,?\s*$", re.M | re.S)
+_ENTRY = re.compile(r"@(\w+)\s*\{\s*([^,]+),(.*?)\n\}", re.DOTALL)
+_FIELD = re.compile(r"(\w+)\s*=\s*[{\"](.+?)[}\"]\s*,?\s*$", re.MULTILINE | re.DOTALL)
 
 
 #: LaTeX accent commands: \`e \'e \^e \"e \~n \=a \.z and \c{c} \v{s} \u{a}.
@@ -93,9 +93,12 @@ def parse_bib(text: str) -> list[Entry]:
     for kind, key, body in _ENTRY.findall(text):
         fields = {k.lower(): " ".join(v.split()) for k, v in _FIELD.findall(body)}
         doi = fields.get("doi")
-        if not doi and (url := fields.get("url", "")):
-            if match := re.search(r"(10\.\d{4,9}/\S+)", url):
-                doi = match.group(1)
+        if (
+            not doi
+            and (url := fields.get("url", ""))
+            and (match := re.search(r"(10\.\d{4,9}/\S+)", url))
+        ):
+            doi = match.group(1)
         entries.append(
             Entry(
                 key=key.strip(),
@@ -138,7 +141,9 @@ def page_title(client: httpx.Client, url: str) -> str | None:
         response = client.get(url)
         if response.status_code >= 400:
             return None
-        match = re.search(r"<title[^>]*>(.*?)</title>", response.text, re.S | re.I)
+        match = re.search(
+            r"<title[^>]*>(.*?)</title>", response.text, re.DOTALL | re.IGNORECASE
+        )
         return html.unescape(match.group(1)).strip() if match else None
     except httpx.HTTPError:
         return None

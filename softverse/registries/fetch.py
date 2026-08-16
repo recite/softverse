@@ -30,11 +30,14 @@ import re
 import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import httpx
 
 from softverse.logging_setup import get_logger, stage
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = get_logger(__name__)
 
@@ -216,6 +219,7 @@ class Snapshot:
 
     @property
     def sha256(self) -> str:
+        """Digest of the raw payload, which is what pins the snapshot."""
         return _sha256(self.raw)
 
     def write(self, root: Path) -> Path:
@@ -282,8 +286,11 @@ def fetch_cran_archive(client: httpx.Client) -> Snapshot:
 
 
 def fetch_bioconductor(client: httpx.Client) -> Snapshot:
+    """Snapshot the Bioconductor package names from its views index."""
     raw = _get(client, BIOC_VIEWS)
-    names = re.findall(r"^Package:\s*(\S+)", raw.decode("utf-8", "replace"), re.M)
+    names = re.findall(
+        r"^Package:\s*(\S+)", raw.decode("utf-8", "replace"), re.MULTILINE
+    )
     return Snapshot(
         registry="bioconductor",
         names=sorted(set(names)),

@@ -80,11 +80,12 @@ _CHROME_CANDIDATES = (
 
 #: Chrome renders a bare JSON document inside a `<pre>`. Everything else in
 #: the DOM is the shell the browser built around it.
-_PRE = re.compile(r"<pre[^>]*>(.*?)</pre>", re.S | re.I)
-_JSON = re.compile(r"[\{\[].*[\}\]]", re.S)
+_PRE = re.compile(r"<pre[^>]*>(.*?)</pre>", re.DOTALL | re.IGNORECASE)
+_JSON = re.compile(r"[\{\[].*[\}\]]", re.DOTALL)
 
 
 def find_browser() -> str | None:
+    """The first Chrome-family binary on this machine, or None if there is none."""
     for candidate in _CHROME_CANDIDATES:
         found = shutil.which(candidate)
         if found:
@@ -124,6 +125,7 @@ class BrowserClient:
         timeout_s: int = 600,
         runner=None,
     ) -> None:
+        """Configure the browser session."""
         self._token = token
         self._user_agent = user_agent
         self._limiter = limiter
@@ -132,7 +134,7 @@ class BrowserClient:
         self._runner = runner or self._run_chrome
 
     def _run_chrome(self, argv: list[str]) -> str:
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603
             argv, capture_output=True, text=True, timeout=self._timeout_s
         )
         return result.stdout
@@ -178,7 +180,7 @@ class BrowserClient:
         ]
         try:
             dom = self._runner(argv)
-        except Exception as exc:  # noqa: BLE001 - a missing browser is a result
+        except Exception as exc:
             # The token is in `target`; keep it out of the message.
             return FetchOutcome(ok=False, error=f"{type(exc).__name__}: {exc}")
 

@@ -31,12 +31,15 @@ fails loudly instead of silently returning zero mentions for every R file.
 from __future__ import annotations
 
 from functools import cache
+from typing import TYPE_CHECKING
 
-from tree_sitter import Node
 from tree_sitter_language_pack import get_parser
 
 from softverse.detect.types import ExtractResult, Mention, ParseReport
 from softverse.model.enums import Construct, Language, ParseStatus
+
+if TYPE_CHECKING:
+    from tree_sitter import Node
 
 #: Callee name -> construct, for calls whose first argument names a package.
 _LOADERS: dict[str, Construct] = {
@@ -215,9 +218,7 @@ def _mention(
     )
 
 
-def _handle_loader(
-    call: Node, source: bytes, callee: str, construct: Construct
-) -> list[Mention]:
+def _handle_loader(call: Node, source: bytes, construct: Construct) -> list[Mention]:
     """``library(x)`` / ``require("x")`` / ``requireNamespace("x", quietly=TRUE)``.
 
     Matched by node shape, so the trailing-argument form v1's regex missed
@@ -436,7 +437,7 @@ def extract(source: str | bytes) -> ExtractResult:
             callee, _namespace = _callee_name(node, data)
             if callee is not None:
                 if construct := _LOADERS.get(callee):
-                    mentions.extend(_handle_loader(node, data, callee, construct))
+                    mentions.extend(_handle_loader(node, data, construct))
                 elif callee in _MULTI_LOADERS:
                     mentions.extend(_handle_multi(node, data))
                 elif callee in _INSTALLERS:

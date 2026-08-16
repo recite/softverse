@@ -28,11 +28,14 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from softverse.acquire.http import PoliteClient
 from softverse.acquire.state import atomic_write_bytes
 from softverse.logging_setup import get_logger
 from softverse.sources.dataverse import is_wanted, repo_id_of
+
+if TYPE_CHECKING:
+    from softverse.acquire.http import PoliteClient
 
 logger = get_logger(__name__)
 
@@ -41,7 +44,7 @@ OAI_ENDPOINT = "https://dataverse.harvard.edu/oai"
 #: `<otherMat URI="...datafile/123" ...>` ... `<labl>name.R</labl>`. Non-greedy
 #: and DOTALL because the label often sits on the following line.
 _OTHER_MAT = re.compile(
-    r'<otherMat[^>]*URI="([^"]+)"[^>]*>.*?<labl>([^<]*)</labl>', re.S
+    r'<otherMat[^>]*URI="([^"]+)"[^>]*>.*?<labl>([^<]*)</labl>', re.DOTALL
 )
 _ERROR = re.compile(r'<error[^>]*code="([^"]+)"')
 _DATESTAMP = re.compile(r"<datestamp>([^<]+)</datestamp>")
@@ -61,6 +64,7 @@ class OAIManifest:
 
     @property
     def year(self) -> int | None:
+        """Publication year from the OAI datestamp, or None if it has none."""
         if self.datestamp and self.datestamp[:4].isdigit():
             return int(self.datestamp[:4])
         return None

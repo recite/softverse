@@ -13,8 +13,7 @@ and an example row rather than producing a quietly shorter output.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pyarrow as pa
 import pyarrow.compute as pc
@@ -23,10 +22,13 @@ import pyarrow.parquet as pq
 from softverse.logging_setup import get_logger
 from softverse.model.schemas import schema_for
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 logger = get_logger(__name__)
 
 
-class SchemaViolation(ValueError):
+class SchemaViolationError(ValueError):
     """A table does not satisfy its declared schema."""
 
 
@@ -40,16 +42,16 @@ def validate_table(table: pa.Table, name: str) -> None:
     - field types match
 
     Raises:
-        SchemaViolation: naming the column, the null count, and an example.
+        SchemaViolationError: naming the column, the null count, and an example.
     """
     schema = schema_for(name)
     declared = {f.name for f in schema}
     actual = set(table.column_names)
 
     if missing := declared - actual:
-        raise SchemaViolation(f"{name}: missing columns {sorted(missing)}")
+        raise SchemaViolationError(f"{name}: missing columns {sorted(missing)}")
     if extra := actual - declared:
-        raise SchemaViolation(f"{name}: unexpected columns {sorted(extra)}")
+        raise SchemaViolationError(f"{name}: unexpected columns {sorted(extra)}")
 
     problems: list[str] = []
     for field in schema:
@@ -63,7 +65,7 @@ def validate_table(table: pa.Table, name: str) -> None:
                     f" (first offending row: {example})"
                 )
     if problems:
-        raise SchemaViolation(
+        raise SchemaViolationError(
             f"{name}: non-nullable fields contain nulls.\n"
             + "\n".join(problems)
             + "\nA null join key is the defect that silently voided the v1 tally;"
@@ -160,12 +162,12 @@ def reconcile(
     nothing ever asserted that the pieces added up to the whole.
 
     Raises:
-        SchemaViolation: showing the shortfall and the breakdown.
+        SchemaViolationError: showing the shortfall and the breakdown.
     """
     summed = sum(parts.values())
     if abs(total - summed) > tolerance:
         breakdown = "\n".join(f"  {k}: {v:,}" for k, v in sorted(parts.items()))
-        raise SchemaViolation(
+        raise SchemaViolationError(
             f"{label}: reconciliation failed. total={total:,} but parts sum to "
             f"{summed:,} (unaccounted: {total - summed:,})\n{breakdown}"
         )

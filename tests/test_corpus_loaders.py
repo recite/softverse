@@ -98,7 +98,7 @@ def test_zenodo_deposits_carry_a_community_and_a_year():
     collection id across the whole corpus and a null year on every mention.
     This fails against the old ledger-only path and passes against the file.
     """
-    with open(loaders.ZENODO_ROOT / "deposits.csv", encoding="utf-8") as handle:
+    with (loaders.ZENODO_ROOT / "deposits.csv").open(encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
 
     assert len({r["collection_id"] for r in rows}) > 1

@@ -68,6 +68,14 @@ class JsonlFormatter(logging.Formatter):
     """One JSON object per line, with `extra=` fields promoted to top level."""
 
     def format(self, record: logging.LogRecord) -> str:
+        """Render ``record`` as one JSON line.
+
+        Args:
+            record: The log record.
+
+        Returns:
+            A single-line JSON object.
+        """
         payload: dict[str, Any] = {
             "ts": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "run_id": RUN_ID,
@@ -75,9 +83,13 @@ class JsonlFormatter(logging.Formatter):
             "logger": record.name,
             "msg": record.getMessage(),
         }
-        for key, value in record.__dict__.items():
-            if key not in _STANDARD_ATTRS and not key.startswith("_"):
-                payload[key] = value
+        payload.update(
+            {
+                key: value
+                for key, value in record.__dict__.items()
+                if key not in _STANDARD_ATTRS and not key.startswith("_")
+            }
+        )
         if record.exc_info:
             payload["exc"] = self.formatException(record.exc_info)
         return json.dumps(payload, default=str, ensure_ascii=False)
@@ -87,8 +99,16 @@ class ConsoleFormatter(logging.Formatter):
     """Compact human format; appends `extra` context as key=value pairs."""
 
     def format(self, record: logging.LogRecord) -> str:
+        """Render ``record`` for a terminal.
+
+        Args:
+            record: The log record.
+
+        Returns:
+            One line: time, level, logger, message, then `key=value` context.
+        """
         base = (
-            f"{datetime.fromtimestamp(record.created).strftime('%H:%M:%S')} "
+            f"{datetime.fromtimestamp(record.created, tz=UTC).strftime('%H:%M:%S')} "
             f"{record.levelname:<7} {record.name.removeprefix('softverse.'):<22} "
             f"{record.getMessage()}"
         )
@@ -172,10 +192,17 @@ class RunStats:
     started_at: float = field(default_factory=time.monotonic)
 
     def incr(self, key: str, n: int = 1) -> None:
+        """Add ``n`` to the tally under ``key``.
+
+        Args:
+            key: The counter name.
+            n: How much to add.
+        """
         self.counts[key] += n
 
     @property
     def elapsed_s(self) -> float:
+        """Seconds since this tally was created."""
         return time.monotonic() - self.started_at
 
     def check_total(self, total_key: str, part_keys: list[str]) -> None:
@@ -196,7 +223,8 @@ class RunStats:
         """Emit the tally as one structured record."""
         logger = logger or logging.getLogger("softverse.stats")
         logger.info(
-            f"{self.stage} complete",
+            "%s complete",
+            self.stage,
             extra={
                 "stage": self.stage,
                 "elapsed_s": round(self.elapsed_s, 1),
@@ -215,11 +243,11 @@ def stage(name: str, logger: logging.Logger | None = None):
     """
     logger = logger or logging.getLogger("softverse.stage")
     stats = RunStats(stage=name)
-    logger.info(f"{name} starting", extra={"stage": name})
+    logger.info("%s starting", name, extra={"stage": name})
     try:
         yield stats
     except Exception:
-        logger.exception(f"{name} failed", extra={"stage": name})
+        logger.exception("%s failed", name, extra={"stage": name})
         stats.log(logger)
         raise
     else:

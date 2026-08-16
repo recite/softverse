@@ -4,38 +4,27 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+  schedule:
+    - cron: "17 6 * * 1"  # weekly: surface ecosystem drift on quiet repos
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ["3.11", "3.12", "3.13"]
-    steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-      - run: uv python install ${{ matrix.python-version }}
-      - run: uv sync --all-extras
-      - name: Lint
-        run: |
-          uv run ruff check .
-          uv run ruff format --check .
-      - name: Tests
-        run: uv run pytest --cov=softverse --cov-report=term-missing
-
-  bibliography:
-    # Kept separate because it needs the network: a fabricated citation is the
-    # one error a reader will catch and never forgive, and it is entirely
-    # machine checkable, so it is checked rather than trusted.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
-      - run: uv python install 3.12
-      - run: uv sync --all-extras
-      - name: Verify every DOI resolves and every title matches
-        run: uv run python paper/validate_bib.py
+  ci:
+    uses: gojiplus/py-canon/.github/workflows/reusable-ci.yml@v1
+    with:
+      wheel-import: softverse
+      coverage-floor: 0
+      # Wider than the canon default of floor-and-ceiling on ubuntu alone.
+      # This package parses source with `ast` and `tree-sitter` and lexes
+      # Stata by hand, so a grammar change between minor Pythons is a real
+      # failure mode; and it reads deposit archives whose filenames arrive in
+      # whatever encoding the author's machine used, which is where macOS and
+      # Linux disagree. `_preserve_ci_inputs` carries these across an adopt.
+      python-versions: '["3.11", "3.12", "3.13", "3.14"]'
+      os: '["ubuntu-latest", "macos-latest"]'

@@ -28,11 +28,14 @@ deliberately, and here there is nothing on the other side of it.
 from __future__ import annotations
 
 import tarfile
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from softverse.config import PATHS
 from softverse.corpus.loaders import dataverse_legacy_corpus
 from softverse.logging_setup import get_logger, setup_logging
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = get_logger(__name__)
 

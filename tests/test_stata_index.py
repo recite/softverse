@@ -56,7 +56,8 @@ def test_parses_metadata():
     pkg = parse_pkg(ESTOUT_PKG, "estout")
     assert pkg.package == "estout"
     assert pkg.distribution_date == date(2026, 4, 13)
-    assert pkg.author is not None and "Ben Jann" in pkg.author
+    assert pkg.author is not None
+    assert "Ben Jann" in pkg.author
 
 
 def test_ado_files_ignore_directory_prefixes():

@@ -256,7 +256,7 @@ _WORD_BEFORE_BRACE = frozenset("_\\}")
 
 
 def _brace_is_word_internal(cleaned: str, i: int, buffer: list[str]) -> bool:
-    """True when the brace at ``i`` belongs to a word, not to a block.
+    r"""True when the brace at ``i`` belongs to a word, not to a block.
 
     Quoted and parenthesised braces are already handled by the string and paren
     guards. This covers the remaining case: raw LaTeX at the top level, which
