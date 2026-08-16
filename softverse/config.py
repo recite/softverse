@@ -111,6 +111,12 @@ def require_credential(name: str, why: str) -> str:
     Args:
         name: Environment variable name.
         why: What breaks without it, included in the error.
+
+    Returns:
+        The credential's value.
+
+    Raises:
+        RuntimeError: if the variable is unset, saying where to put it.
     """
     value = credential(name)
     if not value:

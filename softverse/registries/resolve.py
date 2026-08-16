@@ -195,11 +195,9 @@ class Registry:
         packages = self.stata_commands.get(lowered)
         if not packages:
             return Resolved(Resolution.UNKNOWN, None, None)
-        if len(packages) > 1:
-            return Resolved(
-                Resolution.AMBIGUOUS, None, Ecosystem.SSC, candidates=packages
-            )
-        return Resolved(Resolution.KNOWN_CURRENT, packages[0], Ecosystem.SSC)
+        if len(packages) == 1:
+            return Resolved(Resolution.KNOWN_CURRENT, packages[0], Ecosystem.SSC)
+        return Resolved(Resolution.AMBIGUOUS, None, Ecosystem.SSC, candidates=packages)
 
     # -- Dispatch ----------------------------------------------------------
 

@@ -208,6 +208,10 @@ class RunStats:
     def check_total(self, total_key: str, part_keys: list[str]) -> None:
         """Assert ``total_key`` equals the sum of ``part_keys``.
 
+        Args:
+            total_key: The counter that should account for the others.
+            part_keys: The counters that should add up to it.
+
         Raises:
             ValueError: if they disagree, naming the shortfall.
         """

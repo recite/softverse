@@ -41,6 +41,10 @@ def validate_table(table: pa.Table, name: str) -> None:
     - no unexpected columns
     - field types match
 
+    Args:
+        table: The table to check.
+        name: Table name, used to look up the declared schema.
+
     Raises:
         SchemaViolationError: naming the column, the null count, and an example.
     """
@@ -75,8 +79,11 @@ def validate_table(table: pa.Table, name: str) -> None:
 
 def _first_null_row(table: pa.Table, column: str) -> dict[str, Any]:
     """Return a small dict describing the first row where ``column`` is null."""
-    mask = pc.is_null(table.column(column))
-    indices = pc.indices_nonzero(mask)
+    # pyarrow.compute builds its namespace at import time from the C++ kernel
+    # registry, so a type checker reading the source finds neither of these
+    # even though both exist at runtime (verified against pyarrow 25.0.1).
+    mask = pc.is_null(table.column(column))  # type: ignore[attr-defined]
+    indices = pc.indices_nonzero(mask)  # type: ignore[attr-defined]
     if not len(indices):
         return {}
     row = table.slice(indices[0].as_py(), 1).to_pylist()[0]
@@ -116,26 +123,28 @@ def write_table(
     Returns:
         The path written.
     """
-    if isinstance(table, list):
-        table = cast_to_schema(table, name)
-    validate_table(table, name)
+    # A separate name, not a reassignment: `table` is declared as a union, so
+    # everything after it stays a union to a reader and to a type checker,
+    # and `table.num_rows` below reads as an attribute on a list.
+    arrow = cast_to_schema(table, name) if isinstance(table, list) else table
+    validate_table(arrow, name)
 
     directory.mkdir(parents=True, exist_ok=True)
     if partition_cols:
         target = directory / name
         pq.write_to_dataset(
-            table,
+            arrow,
             root_path=str(target),
             partition_cols=partition_cols,
             compression="zstd",
         )
     else:
         target = directory / f"{name}.parquet"
-        pq.write_table(table, target, compression="zstd")
+        pq.write_table(arrow, target, compression="zstd")
 
     logger.info(
         "wrote table",
-        extra={"table": name, "rows": table.num_rows, "path": str(target)},
+        extra={"table": name, "rows": arrow.num_rows, "path": str(target)},
     )
     return target
 
@@ -160,6 +169,12 @@ def reconcile(
     The check v1 never made. Between its source archive and its published CSV,
     26,681 files and 4,189 repositories disappeared with no record, because
     nothing ever asserted that the pieces added up to the whole.
+
+    Args:
+        total: The count everything should add up to.
+        parts: Named components of that total.
+        label: What is being reconciled, used in the error and the log.
+        tolerance: Permitted absolute difference, normally zero.
 
     Raises:
         SchemaViolationError: showing the shortfall and the breakdown.

@@ -213,6 +213,18 @@ class UnknownCommunityError(Exception):
 def verify_community(client: PoliteClient, slug: str) -> int:
     """Confirm a community exists, returning its record count.
 
+    Args:
+        client: The HTTP client to ask with.
+        slug: The community identifier to verify.
+
+    Returns:
+        How many records the community holds.
+
+    Raises:
+        UnknownCommunityError: if the slug names no community, if its records
+            cannot be counted, or if the count is large enough to mean the
+            filter was ignored and the whole archive came back.
+
     **This guard is not paranoia.** Zenodo does not reject an unknown
     ``communities=`` value -- it ignores the filter and returns the entire
     repository. Measured: ``communities=restud`` and ``communities=aeaje``
