@@ -88,14 +88,31 @@ def test_no_dependency_is_declared_without_being_imported():
     assert not unused, f"declared but never imported: {unused}"
 
 
+def _without_comments(source: str) -> str:
+    """`source` with `#` comments removed, read off the token stream."""
+    import io
+    import tokenize
+
+    return "".join(
+        token.string
+        for token in tokenize.generate_tokens(io.StringIO(source).readline)
+        if token.type != tokenize.COMMENT
+    )
+
+
 def test_the_version_is_not_typed_in_two_places():
     """`__init__.py` carried its own copy, free to drift from pyproject.
 
     Checks for the release number specifically, not for any assignment to
     `__version__`: the fallback used when the package is not installed has to
     assign something, and an earlier version of this test failed on it.
+
+    Comments are stripped first. What must not drift is a version the code
+    *uses*; a comment explaining why `EXTRACTOR_VERSION` moved off 2.0.0 has
+    to be free to name 2.0.0, and once the package version became 2.0.0 the
+    raw-text search failed on that prose.
     """
-    source = (ROOT / "softverse" / "__init__.py").read_text()
+    source = _without_comments((ROOT / "softverse" / "__init__.py").read_text())
     declared = PROJECT["version"]
     assert declared not in source, (
         f"{declared!r} is typed into __init__.py as well as pyproject.toml"

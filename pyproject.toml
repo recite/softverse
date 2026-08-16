@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "softverse"
-version = "2.0.0.dev0"
+version = "2.0.0"
 description = "Measure which software social science replication code loads"
 authors = [{name = "Gaurav Sood", email = "gsood07@gmail.com"}]
 readme = "readme.md"

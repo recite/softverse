@@ -1662,6 +1662,7 @@ We,stata,4
 sitsr,r,4
 quanteda.sentiment,r,4
 dateofreceiptofproposalforworkfr,stata,4
+KBAL,r,4
 corr_dnpS,stata,4
 corr_dnpA,stata,4
 disapproving_past30,stata,4
@@ -2065,7 +2066,6 @@ LSS,r,3
 vdem,r,3
 countfit,stata,3
 MapColoring,r,3
-KBAL,r,3
 http,stata,3
 acprplot,stata,3
 icelandicTextList,python,3
@@ -2081,7 +2081,6 @@ textscore,stata,3
 dependld,stata,3
 bn_cab_xoka_gd_zslag,stata,3
 eprobit,stata,3
-,r,3
 treat_knowgap2_high,stata,3
 treat_primcanddropped,stata,3
 treat_nrmpref_low,stata,3
@@ -6512,6 +6511,7 @@ train_configurations,python,1
 rword2vec,r,1
 ext,stata,1
 libeff1,stata,1
+zipWRUext,r,1
 fig3_data,python,1
 tweetscores,r,1
 netlit,r,1

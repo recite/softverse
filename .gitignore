@@ -106,7 +106,12 @@ monitor_collection.py
 # refuses outright, and it is in the bundle because Zenodo should carry the
 # rows the aggregates are sums of. The site and the paper read only the CSVs
 # and `summary.json`, so a clone still builds everything it needs to.
-/build/release/tally/*.parquet
+#
+# Named individually rather than `*.parquet`: the aggregate tables also ship
+# as Parquet now, and those are tens of kilobytes and worth tracking, since
+# they are the copy that survives a round trip with its types intact.
+/build/release/tally/mentions.parquet
+/build/release/tally/files.parquet
 /registries/snapshots/
 /outputs/
 

@@ -39,13 +39,22 @@ from softverse.config import PATHS
 TALLY = PATHS.root / "build" / "tally"
 OUT = PATHS.root / "build" / "release" / "tally"
 
+#: Each aggregate ships as CSV and as Parquet. The CSV is for a person
+#: opening it; the Parquet is for anything reading it as data, and it is not
+#: redundant. `usage_by_function` records a call to `numpy.NaN`, a real numpy
+#: attribute, which pandas reads back out of the CSV as a missing value.
+AGGREGATES = (
+    "usage_by_package",
+    "usage_by_package_year",
+    "usage_by_collection",
+    "usage_by_function",
+    "unknown_names",
+    "language_presence",
+)
+
 TABLES = (
-    "usage_by_package.csv",
-    "usage_by_package_year.csv",
-    "usage_by_collection.csv",
-    "usage_by_function.csv",
-    "unknown_names.csv",
-    "language_presence.csv",
+    *(f"{name}.csv" for name in AGGREGATES),
+    *(f"{name}.parquet" for name in AGGREGATES),
     # The atomic record, which the aggregates above are all sums of. Held back
     # until now, which is why the one project consuming this corpus re-parsed
     # 217,573 files to recover what the build had already computed.

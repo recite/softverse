@@ -5,7 +5,7 @@ with published papers, at journals whose data-and-code policy the Social
 Science Data Editors record as *actively verified*.
 
 **3,223 packages · 8,349 deposits with analyzable
-code · 8,685 deposits collected · built 2026-08-15**
+code · 8,685 deposits collected · built 2026-08-16**
 
 A count here is the number of deposits whose code loads the package. Adding
 one to it takes a paper published at a journal that checks its authors' code,

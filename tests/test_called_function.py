@@ -149,3 +149,34 @@ def test_two_names_in_one_import_get_distinct_uids():
         for m in result.mentions
     }
     assert len(uids) == len(result.mentions)
+
+
+def install_names(source: str) -> list[str]:
+    return [
+        m.raw_name
+        for m in r.extract(source.encode()).mentions
+        if str(m.construct).endswith("install")
+    ]
+
+
+def test_install_github_accepts_a_pasted_url():
+    """`split("/")[1]` on a URL is the empty string between the scheme's own
+    slashes, so three deposits contributed a package named "" to the
+    published unresolved-names table."""
+    assert install_names('install_github("https://github.com/cran/ivpack")') == [
+        "ivpack"
+    ]
+
+
+def test_install_github_still_reads_user_repo():
+    assert install_names('install_github("hadley/dplyr")') == ["dplyr"]
+    assert install_names('install_github("hadley/dplyr@v1.0")') == ["dplyr"]
+    assert install_names('install_github("user/repo/subdir")') == ["repo"]
+
+
+def test_install_target_with_no_package_is_dropped_not_blank():
+    assert install_names('install_github("https://github.com/")') == []
+
+
+def test_install_packages_is_unaffected():
+    assert install_names('install.packages("dplyr")') == ["dplyr"]

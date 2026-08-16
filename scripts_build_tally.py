@@ -40,6 +40,7 @@ import json
 from pathlib import Path
 
 import duckdb
+import pandas as pd
 
 from softverse.build.pipeline import (
     build,
@@ -109,14 +110,34 @@ def load_registry() -> tuple[Registry, frozenset[str]]:
 
 
 def write_csv(rows: list[dict], path: Path) -> None:
+    """Write an aggregate table as CSV, and as Parquet beside it.
+
+    Both, because the two readers want different things and the tables are
+    small enough that choosing is a false economy. A person checking whether
+    their package is counted correctly opens the CSV, in a browser or a
+    spreadsheet, and GitHub renders it as a searchable table; anything loading
+    it as data wants the Parquet, where the types are in the file rather than
+    in a sidecar.
+
+    The types do currently survive a CSV round trip, but only because no
+    column has a null: one null in an integer column and pandas reads the
+    whole column as float, so `first_year` comes back 2016.0. That is a
+    property of today's data rather than of the format, which is the argument
+    for not relying on it.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     if not rows:
         path.write_text("")
         return
+    # `newline=""` stops the module rewriting line endings; `lineterminator`
+    # then decides them, and the csv default is CRLF. Published data files got
+    # CRLF while git stored them as LF, so a regenerated table never matched
+    # its own committed copy and every diff was the whole file.
     with open(path, "w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
+    pd.DataFrame(rows).to_parquet(path.with_suffix(".parquet"), index=False)
 
 
 def main() -> int:

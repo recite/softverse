@@ -23,4 +23,9 @@ except PackageNotFoundError:  # running from a source tree with nothing installe
 #: the instrument that produced it, so it must change when the extractor
 #: changes and hold still when the release number moves for any other reason.
 #: Tying the two would silently restamp a corpus that was never re-parsed.
-EXTRACTOR_VERSION = "2.0.0"
+#: 2.1.0 records the called function and reads Python attribute calls through
+#: the file's alias map, so it emits a column and 100,347 mentions that 2.0.0
+#: never produced. Leaving the stamp at 2.0.0 would have given two different
+#: extractors one name across two published releases, which is the single
+#: thing this constant exists to prevent.
+EXTRACTOR_VERSION = "2.1.0"

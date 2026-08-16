@@ -325,9 +325,19 @@ def _handle_installer(call: Node, source: bytes, callee: str) -> list[Mention]:
         if literal is None:
             continue
         if callee.startswith("install_") and "/" in literal:
-            # "user/repo" or "user/repo@ref" or "user/repo/subdir"
-            repo = literal.split("/")[1].split("@")[0]
-            out.append(_mention(repo, Construct.INSTALL, value, source))
+            # "user/repo", "user/repo@ref", "user/repo/subdir" and -- because
+            # people paste the address bar -- "https://github.com/user/repo".
+            # On the URL form `split("/")[1]` is the empty string between the
+            # scheme's own slashes, so three deposits contributed a package
+            # named "" that reached the published unresolved-names table.
+            path = literal
+            if "://" in path:
+                path = path.split("://", 1)[1]
+                path = path.split("/", 1)[1] if "/" in path else ""
+            parts = [p for p in path.split("/") if p]
+            repo = parts[1].split("@")[0] if len(parts) > 1 else ""
+            if repo:
+                out.append(_mention(repo, Construct.INSTALL, value, source))
         else:
             out.append(_mention(literal, Construct.INSTALL, value, source))
         break
