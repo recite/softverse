@@ -1,0 +1,43 @@
+name: Bibliography
+
+# Not a canon workflow, and deliberately outside the CI matrix. It needs the
+# network: it resolves every DOI in the paper and compares the returned title
+# against the one cited. A fabricated citation is the one error a reader will
+# catch and never forgive, and it is entirely machine checkable, so it is
+# checked rather than trusted. Running it inside the test matrix would put a
+# network call in five parallel jobs and make an offline `pytest` fail.
+#
+# It used to be a second job inside ci.yml, which the fleet standard replaces
+# with a caller, so keeping it there would have deleted it silently.
+
+on:
+  push:
+    branches: [main]
+    paths: ["paper/**"]
+  pull_request:
+    paths: ["paper/**"]
+  schedule:
+    # Weekly: a DOI that stops resolving is worth hearing about before a
+    # referee finds it, and nothing else here changes on its own.
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bibliography-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bibliography:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --all-groups
+      - name: Verify every DOI resolves and every title matches
+        run: uv run python paper/validate_bib.py

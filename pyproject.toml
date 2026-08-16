@@ -7,7 +7,7 @@ name = "softverse"
 version = "2.0.0"
 description = "Measure which software social science replication code loads"
 authors = [{name = "Gaurav Sood", email = "gsood07@gmail.com"}]
-readme = "readme.md"
+readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["research", "software", "citations", "replication", "dataverse", "zenodo"]
@@ -50,28 +50,33 @@ Repository = "https://github.com/recite/softverse"
 Issues = "https://github.com/recite/softverse/issues"
 Data = "https://recite.github.io/softverse/data/"
 
-[project.optional-dependencies]
-dev = [
-    "ruff>=0.14.6",
-    "pytest>=7.0.0",
-    "pytest-cov>=3.0.0",
-    "pre-commit>=2.20.0",
-    "sphinx>=5.0.0",
-    "furo>=2022.6.21",
-    "myst-parser>=4.0.0",
-]
-
+# Groups, not extras. The same dev list used to sit in both
+# `[project.optional-dependencies]` and here, so installing one or the other
+# gave different environments; a dev dependency is not part of what this
+# package offers its users, which is what an extra means.
+#
+# `docs` is separate because the documentation build installs only that group
+# and the project itself. Anything `docs/conf.py` reaches for at build time
+# has to resolve from here.
 [dependency-groups]
 dev = [
     "ruff>=0.14.6",
-    "pytest>=7.0.0",
-    "pytest-cov>=3.0.0",
     "pre-commit>=2.20.0",
-    "sphinx>=5.0.0",
-    "furo>=2022.6.21",
-    "myst-parser>=4.0.0",
     "twine>=6.2.0",
+    # The paper's figures, not the package's.
     "matplotlib>=3.11.1",
+    { include-group = "test" },
+    { include-group = "docs" },
+]
+test = [
+    "pytest>=8",
+    "pytest-cov>=6",
+]
+docs = [
+    "sphinx>=8",
+    "furo",
+    "myst-parser",
+    "sphinx-copybutton",
 ]
 
 
@@ -116,9 +121,10 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-
-["F401"]  # imported but unused
-"softverse/analyzers/import_analyzer.py" = ["E501"]  # long lines in R code templates
+# The stdout of these scripts is their product, not debug output: the tally
+# prints the top packages, the release prints what it verified. `print` is
+# the interface.
+"scripts_*.py" = ["T201"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["softverse"]

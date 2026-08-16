@@ -1,10 +1,23 @@
 """Configuration file for the Sphinx documentation builder."""
 
 import importlib.metadata
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.abspath(".."))
+# Relative to this file, not to the working directory. `abspath("..")` is the
+# parent of wherever sphinx-build happened to be invoked from, which is the
+# repo's parent when it runs from the root, and the import below has to find
+# `scripts_build_site.py` at the repo root every time.
+_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT))
+
+# The site is generated, not checked in: `docs/index.md`, the data directory
+# and the lookup page are all built from the released tables. The fleet's
+# docs workflow runs `sphinx-build` with no pre-build hook, so this runs here,
+# which Sphinx reads before it discovers sources.
+from scripts_build_site import generate  # noqa: E402
+
+generate()
 
 project = "Softverse"
 copyright = "2026, Gaurav Sood"

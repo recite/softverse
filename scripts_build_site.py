@@ -144,10 +144,23 @@ def _data_index() -> str:
     )
 
 
-def main() -> int:
+def generate() -> None:
+    """Produce everything the site serves, or raise saying why not.
+
+    Called from `docs/conf.py` as well as from `main()`. The fleet's docs
+    workflow runs `sphinx-build` directly and offers no hook for a pre-build
+    step, so a site that needs files generating has to generate them from
+    `conf.py`, which Sphinx reads before it goes looking for sources. That is
+    early enough: `docs/index.md` is written here and discovered afterwards.
+
+    Raises:
+        FileNotFoundError: if the released tables this reads are absent.
+        RuntimeError: if the package lookup page fails to build.
+    """
     if not (RELEASE / "summary.json").exists():
-        print("no released tables; run scripts_release_tally.py first")
-        return 1
+        raise FileNotFoundError(
+            f"no released tables under {RELEASE}; run scripts_release_tally.py"
+        )
 
     summary, usage, unknown = load()
     (DOCS / "index.md").write_text(landing(summary, usage, unknown))
@@ -156,8 +169,15 @@ def main() -> int:
     from scripts_build_lookup import main as build_lookup
 
     if build_lookup(out=EXTRA / "lookup") != 0:
-        return 1
+        raise RuntimeError("the package lookup page did not build")
 
+
+def main() -> int:
+    try:
+        generate()
+    except (FileNotFoundError, RuntimeError) as exc:
+        print(exc)
+        return 1
     print(f"staged {EXTRA.relative_to(PATHS.root)}")
     return 0
 

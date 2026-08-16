@@ -47,9 +47,11 @@ $(MD): $(PAPER) build/tally/mentions.parquet
 # Built from empty every time. Sphinx leaves the HTML for a source you have
 # deleted sitting in the output directory, so an incremental build happily
 # redeploys a page you removed.
+# Generation happens inside docs/conf.py, so this is the same command the
+# fleet's docs workflow runs. Building it a second way here is how a site that
+# works locally starts failing in CI.
 site:
 	rm -rf docs/_build
-	uv run python scripts_build_site.py
 	uv run sphinx-build -b html -W --keep-going docs docs/_build/html
 	@echo "built docs/_build/html"
 
