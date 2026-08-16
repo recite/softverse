@@ -26,6 +26,7 @@ import json
 import subprocess
 import sys
 import tempfile
+from collections import Counter
 from pathlib import Path
 
 import duckdb
@@ -192,17 +193,38 @@ def main() -> int:
             "n_perfect_agreement": sum(1 for r in subset if r["jaccard"] == 1.0),
         }
 
+    # Both lists are samples, capped at 50, and the counts beside them are
+    # the totals. Worth saying out loud: diffing two runs' `disagreements` or
+    # `renv_read_nothing` compares the samples, not the populations, so
+    # deposits appear to arrive and leave when only the ordering moved. Only
+    # the aggregate fields are comparable across runs.
     report = {
         "by_source": by_source,
         "n_renv_read_nothing": len(unreadable),
-        "renv_read_nothing": unreadable[:50],
+        "renv_read_nothing_sample": unreadable[:50],
         "n_deposits_compared": len(rows),
         "n_skipped": skipped,
         "mean_jaccard": mean_jaccard,
         "pooled_jaccard": pooled,
         "n_perfect_agreement": sum(1 for r in rows if r["jaccard"] == 1.0),
+        "n_disagreements": len(disagreements),
+        # Summed over every disagreement, not over the sample below. The
+        # direction of the residual is the interesting part of this
+        # comparison, and computing it from the worst 50 measures the tail.
+        "n_ours_only": sum(len(r["ours_only"]) for r in disagreements),
+        "n_renv_only": sum(len(r["renv_only"]) for r in disagreements),
+        # Which packages, not just how many. A residual that is one package
+        # repeated across hundreds of deposits is a rule difference; a
+        # residual spread thinly over hundreds of packages is a recall
+        # problem, and the totals alone cannot tell those apart.
+        "top_renv_only": Counter(
+            p for r in disagreements for p in r["renv_only"]
+        ).most_common(20),
+        "top_ours_only": Counter(
+            p for r in disagreements for p in r["ours_only"]
+        ).most_common(20),
         "renv_version": _renv_version(),
-        "disagreements": disagreements[:50],
+        "disagreements_sample": disagreements[:50],
     }
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "renv_agreement.json").write_text(json.dumps(report, indent=1) + "\n")

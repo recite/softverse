@@ -440,12 +440,21 @@ renv_pooled_jaccard = _renv["pooled_jaccard"]
 renv_perfect_share = _renv["n_perfect_agreement"] / _renv["n_deposits_compared"]
 renv_version = _renv["renv_version"]
 n_renv_unreadable = _renv["n_renv_read_nothing"]
-# The direction of the residual disagreement, which says more than its size:
-# where the two differ, it is mostly because this extractor found a package
-# renv did not.
-_dis = _renv["disagreements"]
-n_renv_ours_only = sum(len(r["ours_only"]) for r in _dis)
-n_renv_theirs_only = sum(len(r["renv_only"]) for r in _dis)
+# The direction of the residual disagreement. Summed over every disagreement
+# rather than over the 50 worst, which the artifact also carries: selecting on
+# lowest Jaccard selects for deposits where renv read almost nothing, and the
+# tail leans the opposite way to the population it is drawn from.
+n_renv_ours_only = _renv["n_ours_only"]
+n_renv_theirs_only = _renv["n_renv_only"]
+# Most of what renv names and this extractor does not is base R, which the
+# resolver classifies and drops and renv reports like any other package. The
+# same `BASE_R` set the resolver uses, so the two cannot drift apart.
+from softverse.registries.fetch import BASE_R  # noqa: E402
+
+# A lower bound: the artifact records the twenty commonest, so base packages
+# below that cut are not counted here and the true share is higher.
+n_renv_only_base = sum(n for name, n in _renv["top_renv_only"] if name in BASE_R)
+share_renv_only_base = n_renv_only_base / n_renv_theirs_only
 
 # Named in Limitations: Stata keywords reaching command position. Computed,
 # so that closing one of the gaps shows up here rather than leaving a stale
@@ -1058,13 +1067,18 @@ read, and scoring them would measure a decoding difference as a
 disagreement. This is the treatment the oracle already gives files R cannot
 parse.
 
-Where the two do disagree, the direction is one-sided: across the worst
-cases this extractor found `{python} f"{n_renv_ours_only:,}"` packages renv
-did not, against `{python} f"{n_renv_theirs_only:,}"` the other way. The
-pattern behind them is the same decoding problem, partially masked: in the
-worst Zenodo deposit renv reports a single package, and every one of its
-twenty-three R files carries bytes outside ASCII. Read that way, the figures
-above bound agreement from below.
+Where the two disagree, most of the gap is a difference in what counts as a
+package, not a miss. renv names `{python} f"{n_renv_theirs_only:,}"` packages
+this extractor does not, and at least
+`{python} f"{share_renv_only_base:.0%}"` of those are base R: `grid`,
+`parallel`, `stats`, packages that ship with the language, which the resolver
+classifies as base and drops and renv reports like any other dependency. Most
+of the remainder is `rmarkdown` and `knitr`, which renv infers from a `.Rmd`
+being present, not from a line of code loading them. In the other direction
+this extractor names `{python} f"{n_renv_ours_only:,}"` renv does not, spread
+thinly over ordinary third-party packages instead of concentrated in a
+category. The agreement figures above are therefore conservative: they charge
+this extractor for a filter it applies on purpose.
 
 This is convergent validity, and it is weaker than accuracy. `renv` performs
 the same kind of static scan over the same files and shares the same blind

@@ -2,9 +2,9 @@
  "by_source": {
   "dataverse_legacy": {
    "n_deposits_compared": 2967,
-   "mean_jaccard": 0.9672543089676019,
-   "pooled_jaccard": 0.9651741293532339,
-   "n_perfect_agreement": 2258
+   "mean_jaccard": 0.967233243918731,
+   "pooled_jaccard": 0.9651427456591013,
+   "n_perfect_agreement": 2257
   },
   "zenodo": {
    "n_deposits_compared": 369,
@@ -15,34 +15,6 @@
  },
  "n_renv_read_nothing": 63,
  "renv_read_nothing": [
-  {
-   "dataset_doi": "doi:10.7910/DVN/TRLSJA",
-   "n_ours": 9
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/MZUOWG",
-   "n_ours": 13
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/VW1HUF",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/84NYFE",
-   "n_ours": 8
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/VTA5OA",
-   "n_ours": 8
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/2RORMS",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/IRUDXK",
-   "n_ours": 1
-  },
   {
    "dataset_doi": "doi:10.7910/DVN/H6RZA7",
    "n_ours": 16
@@ -60,108 +32,16 @@
    "n_ours": 6
   },
   {
-   "dataset_doi": "zenodo:7064906",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "zenodo:14929025",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/FRPRDP",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/SJ4IMB",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "zenodo:13981874",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/95LWQN",
-   "n_ours": 5
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/FAA9EA",
-   "n_ours": 5
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/ZH5YFY",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/RYUUB9",
-   "n_ours": 9
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/HRLHA4",
-   "n_ours": 14
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/OJWRWM",
-   "n_ours": 1
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/SCXPHI",
-   "n_ours": 10
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/FEQSC7",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/OKZOUX",
+   "dataset_doi": "doi:10.7910/DVN/DAGL4S",
    "n_ours": 7
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/W8TQHB",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/DDOFPS",
-   "n_ours": 14
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/ZCLECH",
-   "n_ours": 5
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/WKR2KV",
-   "n_ours": 27
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/OXBYO7",
+   "dataset_doi": "doi:10.7910/DVN/ZMZDHG",
    "n_ours": 2
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/RTB1IG",
-   "n_ours": 5
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/4NUQE3",
-   "n_ours": 5
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/6MRVOM",
-   "n_ours": 6
-  },
-  {
-   "dataset_doi": "zenodo:14427583",
-   "n_ours": 15
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/5DEGYP",
-   "n_ours": 4
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/L8YEDW",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/08RCPK",
-   "n_ours": 6
+   "dataset_doi": "doi:10.7910/DVN/KGIBK5",
+   "n_ours": 1
   },
   {
    "dataset_doi": "doi:10.7910/DVN/RLXYCJ",
@@ -184,16 +64,8 @@
    "n_ours": 4
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/DAGL4S",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/KGIBK5",
-   "n_ours": 1
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/ZMZDHG",
-   "n_ours": 2
+   "dataset_doi": "zenodo:7064906",
+   "n_ours": 3
   },
   {
    "dataset_doi": "doi:10.7910/DVN/BE99YA",
@@ -204,6 +76,118 @@
    "n_ours": 6
   },
   {
+   "dataset_doi": "doi:10.7910/DVN/SCXPHI",
+   "n_ours": 10
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FEQSC7",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OKZOUX",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/W8TQHB",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/TRLSJA",
+   "n_ours": 9
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/MZUOWG",
+   "n_ours": 13
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/VW1HUF",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/84NYFE",
+   "n_ours": 8
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/VTA5OA",
+   "n_ours": 8
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/IRUDXK",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/2RORMS",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "zenodo:14929025",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "zenodo:13981874",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FRPRDP",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SJ4IMB",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SJI4IA",
+   "n_ours": 22
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/B4XDZP",
+   "n_ours": 21
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/LLRLQB",
+   "n_ours": 17
+  },
+  {
+   "dataset_doi": "zenodo:8168773",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/24497",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/95LWQN",
+   "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FAA9EA",
+   "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZH5YFY",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/6MRVOM",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "zenodo:14427583",
+   "n_ours": 15
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/5DEGYP",
+   "n_ours": 4
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/08RCPK",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/L8YEDW",
+   "n_ours": 2
+  },
+  {
    "dataset_doi": "doi:10.7910/DVN/DO43V5",
    "n_ours": 13
   },
@@ -212,41 +196,33 @@
    "n_ours": 40
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/SJI4IA",
-   "n_ours": 22
+   "dataset_doi": "doi:10.7910/DVN/DDOFPS",
+   "n_ours": 14
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZCLECH",
+   "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/WKR2KV",
+   "n_ours": 27
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OXBYO7",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/4NUQE3",
+   "n_ours": 5
   }
  ],
  "n_deposits_compared": 3336,
  "n_skipped": 0,
- "mean_jaccard": 0.9610918812927886,
- "pooled_jaccard": 0.947998360431753,
- "n_perfect_agreement": 2457,
+ "mean_jaccard": 0.9610731462807981,
+ "pooled_jaccard": 0.9479724560061209,
+ "n_perfect_agreement": 2456,
  "renv_version": "1.2.3",
  "disagreements": [
-  {
-   "dataset_doi": "zenodo:19866751",
-   "jaccard": 0.0,
-   "ours_only": [
-    "dplyr",
-    "foreign",
-    "ggplot2",
-    "haven",
-    "ivreg",
-    "lmtest",
-    "renv",
-    "rstudioapi",
-    "sandwich",
-    "tidyr"
-   ],
-   "renv_only": [
-    "utils"
-   ],
-   "n_ours": 10,
-   "n_renv": 1,
-   "n_shared": 0,
-   "n_union": 11,
-   "source": "zenodo"
-  },
   {
    "dataset_doi": "zenodo:14871772",
    "jaccard": 0.0,
@@ -300,6 +276,30 @@
    "source": "zenodo"
   },
   {
+   "dataset_doi": "zenodo:19866751",
+   "jaccard": 0.0,
+   "ours_only": [
+    "dplyr",
+    "foreign",
+    "ggplot2",
+    "haven",
+    "ivreg",
+    "lmtest",
+    "renv",
+    "rstudioapi",
+    "sandwich",
+    "tidyr"
+   ],
+   "renv_only": [
+    "utils"
+   ],
+   "n_ours": 10,
+   "n_renv": 1,
+   "n_shared": 0,
+   "n_union": 11,
+   "source": "zenodo"
+  },
+  {
    "dataset_doi": "zenodo:10145562",
    "jaccard": 0.034482758620689655,
    "ours_only": [
@@ -340,41 +340,6 @@
    "source": "zenodo"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/VAOEHQ",
-   "jaccard": 0.041666666666666664,
-   "ours_only": [
-    "MASS",
-    "MatrixModels",
-    "car",
-    "conquer",
-    "cowplot",
-    "doParallel",
-    "foreach",
-    "foreign",
-    "gbm",
-    "ggplot2",
-    "glmnet",
-    "lfe",
-    "matrixStats",
-    "nnet",
-    "randomForest",
-    "readstata13",
-    "rpart",
-    "sandwich",
-    "xtable",
-    "~/SparseM_1.81.zip",
-    "~/fansi_0.5.0.zip",
-    "~/multcomp_1.4-17.zip",
-    "~/quantreg_5.85.zip"
-   ],
-   "renv_only": [],
-   "n_ours": 24,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 24,
-   "source": "dataverse_legacy"
-  },
-  {
    "dataset_doi": "zenodo:14927953",
    "jaccard": 0.041666666666666664,
    "ours_only": [
@@ -408,6 +373,41 @@
    "n_shared": 1,
    "n_union": 24,
    "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/VAOEHQ",
+   "jaccard": 0.041666666666666664,
+   "ours_only": [
+    "MASS",
+    "MatrixModels",
+    "car",
+    "conquer",
+    "cowplot",
+    "doParallel",
+    "foreach",
+    "foreign",
+    "gbm",
+    "ggplot2",
+    "glmnet",
+    "lfe",
+    "matrixStats",
+    "nnet",
+    "randomForest",
+    "readstata13",
+    "rpart",
+    "sandwich",
+    "xtable",
+    "~/SparseM_1.81.zip",
+    "~/fansi_0.5.0.zip",
+    "~/multcomp_1.4-17.zip",
+    "~/quantreg_5.85.zip"
+   ],
+   "renv_only": [],
+   "n_ours": 24,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 24,
+   "source": "dataverse_legacy"
   },
   {
    "dataset_doi": "doi:10.7910/DVN/T5DKRO",
@@ -668,21 +668,6 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/J4WZGT",
-   "jaccard": 0.4,
-   "ours_only": [
-    "ggplot",
-    "readstata13",
-    "readxl"
-   ],
-   "renv_only": [],
-   "n_ours": 5,
-   "n_renv": 2,
-   "n_shared": 2,
-   "n_union": 5,
-   "source": "dataverse_legacy"
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/0DE35E",
    "jaccard": 0.4,
    "ours_only": [
@@ -698,6 +683,21 @@
    "n_renv": 4,
    "n_shared": 4,
    "n_union": 10,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/J4WZGT",
+   "jaccard": 0.4,
+   "ours_only": [
+    "ggplot",
+    "readstata13",
+    "readxl"
+   ],
+   "renv_only": [],
+   "n_ours": 5,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 5,
    "source": "dataverse_legacy"
   },
   {
@@ -906,32 +906,6 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/CGHTPZ",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "methods"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/UFZTYU",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "compiler"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/1YG7BI",
    "jaccard": 0.5,
    "ours_only": [],
@@ -990,6 +964,45 @@
    "source": "dataverse_legacy"
   },
   {
+   "dataset_doi": "doi:10.7910/DVN/TLPMVI",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:14156677",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/RQNVFW",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
    "dataset_doi": "doi:10.7910/DVN/NEC17Z",
    "jaccard": 0.5,
    "ours_only": [],
@@ -1003,11 +1016,53 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/RQNVFW",
+   "dataset_doi": "doi:10.7910/DVN/N5IF8R",
+   "jaccard": 0.5,
+   "ours_only": [
+    "SPDDD_0.14.tar.gz",
+    "corpcor"
+   ],
+   "renv_only": [
+    "grid"
+   ],
+   "n_ours": 5,
+   "n_renv": 4,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:14792036",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
-    "parallel"
+    "rmarkdown"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/CGHTPZ",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "methods"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/UFZTYU",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "compiler"
    ],
    "n_ours": 1,
    "n_renv": 2,
@@ -1046,11 +1101,26 @@
    "source": "zenodo"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/JJMCTA",
+   "dataset_doi": "zenodo:8380044",
+   "jaccard": 0.5,
+   "ours_only": [
+    "Rcpp",
+    "rgdal",
+    "sf"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/2IO3DL",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
-    "methods"
+    "grid"
    ],
    "n_ours": 1,
    "n_renv": 2,
@@ -1059,20 +1129,21 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/ZNOX0G",
+   "dataset_doi": "doi:10.7910/DVN/RGIMXH",
    "jaccard": 0.5,
-   "ours_only": [
-    "textables"
+   "ours_only": [],
+   "renv_only": [
+    "grid",
+    "splines"
    ],
-   "renv_only": [],
    "n_ours": 2,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 2,
+   "n_renv": 4,
+   "n_shared": 2,
+   "n_union": 4,
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "zenodo:14792036",
+   "dataset_doi": "zenodo:1116352",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
@@ -1085,14 +1156,14 @@
    "source": "zenodo"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/S73SLI",
+   "dataset_doi": "doi:10.7910/DVN/JJMCTA",
    "jaccard": 0.5,
-   "ours_only": [
-    "RSiena_1.1-276.zip"
+   "ours_only": [],
+   "renv_only": [
+    "methods"
    ],
-   "renv_only": [],
-   "n_ours": 2,
-   "n_renv": 1,
+   "n_ours": 1,
+   "n_renv": 2,
    "n_shared": 1,
    "n_union": 2,
    "source": "dataverse_legacy"
@@ -1156,48 +1227,6 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "zenodo:14156677",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "parallel"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/TLPMVI",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "parallel"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/N5IF8R",
-   "jaccard": 0.5,
-   "ours_only": [
-    "SPDDD_0.14.tar.gz",
-    "corpcor"
-   ],
-   "renv_only": [
-    "grid"
-   ],
-   "n_ours": 5,
-   "n_renv": 4,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "dataverse_legacy"
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/QKCICV",
    "jaccard": 0.5,
    "ours_only": [
@@ -1224,45 +1253,16 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "zenodo:8380044",
+   "dataset_doi": "doi:10.7910/DVN/S73SLI",
    "jaccard": 0.5,
    "ours_only": [
-    "Rcpp",
-    "rgdal",
-    "sf"
+    "RSiena_1.1-276.zip"
    ],
    "renv_only": [],
-   "n_ours": 6,
-   "n_renv": 3,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/2IO3DL",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "grid"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
+   "n_ours": 2,
+   "n_renv": 1,
    "n_shared": 1,
    "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/RGIMXH",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "grid",
-    "splines"
-   ],
-   "n_ours": 2,
-   "n_renv": 4,
-   "n_shared": 2,
-   "n_union": 4,
    "source": "dataverse_legacy"
   }
  ]
