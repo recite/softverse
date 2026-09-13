@@ -87,12 +87,14 @@ def test_a_zip_gives_up_its_code_for_a_fraction_of_its_size(tmp_path, serve):
         zf.writestr("pkg/code.zip", inner.getvalue())
         zf.writestr("pkg/big_data.zip", _incompressible(6 * 1024 * 1024))
     entry = serve("replication.zip", buf.getvalue())
+    throttled = []
 
     outcome = dataverse_oversized.recover(
-        DOI, entry, tmp_path / "files", {}, lambda: None
+        DOI, entry, tmp_path / "files", {}, lambda: throttled.append(1)
     )
 
     assert outcome.error is None
+    assert len(throttled) == 1, "only the Dataverse request waits on the limiter"
     assert sorted(r["filename"] for r in outcome.rows) == ["analysis.R", "code.do"]
     assert outcome.nested_skipped == 1, "the 6 MB nested archive is not fetched"
     assert outcome.transferred_bytes < 200_000, outcome.transferred_bytes
