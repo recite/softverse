@@ -61,11 +61,6 @@ class Paths:
         """Where run logs are written."""
         return self.root / "build" / "logs"
 
-    @property
-    def release(self) -> Path:
-        """Where the tracked, publishable outputs are staged."""
-        return self.root / "build" / "release"
-
 
 PATHS = Paths()
 

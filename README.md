@@ -53,7 +53,7 @@ very different sizes.
 The Dataverse material is a January 2024 scrape that collected only `.do`,
 `.r` and `.py` files, so a package used mainly inside notebooks or knitr
 documents is under-counted on that side. That is checked rather than
-asserted: `scripts_release_tally.py` recomputes the whole ranking restricted
+asserted: `scripts/release_tally.py` recomputes the whole ranking restricted
 to the file types both halves collected, and fails if the ordering moves.
 
 ## Using it as a library
@@ -79,7 +79,7 @@ print(result.report.status)        # ParseStatus.OK
 Resolution needs the registry snapshots, which the quick start below builds:
 
 ```python
-from scripts_build_tally import load_registry
+from softverse.registries.load import load_registry
 from softverse.model.enums import Language
 
 registry, _shipped = load_registry()
@@ -100,23 +100,23 @@ uv sync --all-extras
 uv run python -c "from softverse.registries.fetch import fetch_all; from pathlib import Path; fetch_all(Path('registries/snapshots'))"
 
 # Collect. Incremental by default: only deposits never successfully fetched.
-uv run python scripts_collect_zenodo.py
-uv run python scripts_collect_zenodo.py --fresh          # full re-scrape
-uv run python scripts_collect_zenodo.py --metadata-only  # community and year only
+uv run python scripts/collect_zenodo.py
+uv run python scripts/collect_zenodo.py --fresh          # full re-scrape
+uv run python scripts/collect_zenodo.py --metadata-only  # community and year only
 
 # Unpack the 2024 Harvard Dataverse scrape into the corpus.
-uv run python scripts_ingest_dataverse_legacy.py
+uv run python scripts/ingest_dataverse_legacy.py
 
 # Tally every source in one pass. Safe to run mid-collection; it describes
 # whatever is on disk.
-uv run python scripts_build_tally.py
+uv run python scripts/build_tally.py
 ```
 
 Softverse produces four things, and they are worth naming separately because
 only two of them are published.
 
 The **corpus** is the code itself: 217,573 files from 22,346 deposits, kept on
-disk under `corpus/` and mirrored by `scripts_corpus_view.py` into the layout
+disk under `corpus/` and mirrored by `scripts/corpus_view.py` into the layout
 other projects read. It is far too large to publish and is rebuilt by the
 ingest scripts above.
 
@@ -198,17 +198,23 @@ ways that silently invalidated its published numbers.
 ## Repository layout
 
 ```
-softverse/
+softverse/          the package
   frame.py          the sampling frame, verified
   sources/          zenodo, osf, dataverse, dataverse_oai
   acquire/          http (rate limits, retries), state (ledger), unpack
-  detect/           r, python_, stata, notebooks, dispatch
-  registries/       snapshot fetch + resolution
+  detect/           r, python_, stata, notebooks, manifests, dispatch
+  registries/       snapshot fetch, loading, resolution
   stata/            command index, builtins, lexer
-  corpus/           vendored-library and duplicate rules
+  corpus/           loaders, vendored-library and duplicate rules
   build/            pipeline and aggregation
-paper/              manuscript (Quarto) + validate_bib.py
+  release/          Zenodo deposits
+scripts/            entry points: collect, tally, release, deposit, validate
 data/frame/         the frame, human-readable
+data/tally/         the released tables (the site and Zenodo read these)
+registries/         registries.lock.json; snapshots are fetched, not tracked
+paper/              manuscript (Quarto) + validate_bib.py
+docs/               Sphinx site, generated from data/tally/
+build/              pipeline output, untracked
 ```
 
 ## Author

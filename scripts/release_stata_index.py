@@ -1,6 +1,6 @@
 """Package the Stata command→package index for release.
 
-    uv run python scripts_release_stata_index.py
+    uv run python scripts/release_stata_index.py
 
 Writes `build/release/stata-index/`: Parquet plus a CSV mirror, the ambiguous
 commands, the curated builtin list, a data descriptor, and a frictionless

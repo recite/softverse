@@ -1,8 +1,8 @@
 """Stage everything the documentation site serves.
 
-    uv run python scripts_build_site.py
+    uv run python scripts/build_site.py
 
-Reads only `build/release/tally/`, which is tracked, so this runs in CI where
+Reads only `data/tally/`, which is tracked, so this runs in CI where
 the 57 GB of collected deposits and the 57 MB of Parquet derived from them do
 not exist. Writes:
 
@@ -29,7 +29,7 @@ import shutil
 
 from softverse.config import PATHS
 
-RELEASE = PATHS.root / "build" / "release" / "tally"
+RELEASE = PATHS.root / "data" / "tally"
 DOCS = PATHS.root / "docs"
 EXTRA = DOCS / "_extra"
 PDF = PATHS.root / "paper" / "softverse.pdf"
@@ -159,14 +159,14 @@ def generate() -> None:
     """
     if not (RELEASE / "summary.json").exists():
         raise FileNotFoundError(
-            f"no released tables under {RELEASE}; run scripts_release_tally.py"
+            f"no released tables under {RELEASE}; run scripts/release_tally.py"
         )
 
     summary, usage, unknown = load()
     (DOCS / "index.md").write_text(landing(summary, usage, unknown))
     stage()
 
-    from scripts_build_lookup import main as build_lookup
+    from build_lookup import main as build_lookup
 
     if build_lookup(out=EXTRA / "lookup") != 0:
         raise RuntimeError("the package lookup page did not build")

@@ -1,6 +1,6 @@
 """Expose the corpus in the layout sibling projects expect.
 
-    uv run python scripts_corpus_view.py
+    uv run python scripts/corpus_view.py
 
 Writes `outputs/scripts/<source>/<deposit>/<script>` as symlinks to the files
 under `corpus/`, and copies the Dataverse journal metadata beside them.

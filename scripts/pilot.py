@@ -4,7 +4,7 @@ The full run is ~8 hours. A bug found at hour seven is expensive, so this
 exercises every code path on a stratified sample and checks the invariants that
 v1 never checked. Run:
 
-    uv run python scripts_pilot.py [n]
+    uv run python scripts/pilot.py [n]
 """
 
 from __future__ import annotations

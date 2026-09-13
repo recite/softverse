@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import csv
 
-import scripts_collect_dataverse_frame as frame
+import collect_dataverse_frame as frame
 
 
 def _rows(path):

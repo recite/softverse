@@ -1,8 +1,8 @@
 """Create, and on request publish, the Zenodo deposit for the per-package counts.
 
-    uv run python scripts_deposit_tally.py             # create/update the draft
-    uv run python scripts_deposit_tally.py --show      # print its state
-    uv run python scripts_deposit_tally.py --publish   # mint the DOI
+    uv run python scripts/deposit_tally.py             # create/update the draft
+    uv run python scripts/deposit_tally.py --show      # print its state
+    uv run python scripts/deposit_tally.py --publish   # mint the DOI
 
 The tables are already served at https://recite.github.io/softverse/data/,
 which is convenient and not archival: a GitHub Pages URL is whatever the
@@ -23,7 +23,7 @@ from pathlib import Path
 from softverse.config import PATHS, credential
 from softverse.release.zenodo_deposit import Deposit, run
 
-BUNDLE = PATHS.root / "build" / "release" / "tally"
+BUNDLE = PATHS.root / "data" / "tally"
 
 TITLE = (
     "Validated use: per-package counts of software loaded by "
@@ -145,7 +145,7 @@ def main() -> int:
         print("ZENODO_API_TOKEN is not set")
         return 1
     if not (BUNDLE / "summary.json").exists():
-        print(f"no bundle at {BUNDLE}; run scripts_release_tally.py first")
+        print(f"no bundle at {BUNDLE}; run scripts/release_tally.py first")
         return 1
 
     stats = summary()

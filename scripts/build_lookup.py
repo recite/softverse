@@ -1,6 +1,6 @@
 """Build the package lookup page.
 
-    uv run python scripts_build_lookup.py
+    uv run python scripts/build_lookup.py
 
 Writes `build/lookup/index.html`, a single self-contained file with every
 package's validated-use count embedded.
@@ -10,7 +10,7 @@ is the part that makes that not true of ours. A software author, or somebody
 evaluating one, should be able to type a package name and get the number
 rather than take a table's word for the top ten.
 
-Counts come from `build/release/tally/`, which is the tracked copy of the
+Counts come from `data/tally/`, which is the tracked copy of the
 tables the paper's own exhibits are built from, so the page and the paper
 cannot disagree, and the page can be built anywhere the repository is.
 
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
-TALLY = PATHS.root / "build" / "release" / "tally"
+TALLY = PATHS.root / "data" / "tally"
 OUT = PATHS.root / "build" / "lookup"
 
 #: Names shown to a reader rather than column names from the pipeline.
@@ -398,7 +398,7 @@ render();
 def main(out: Path = OUT) -> int:
     setup_logging("INFO", log_dir=PATHS.logs, stage="lookup")
     if not (TALLY / "usage_by_package.csv").exists():
-        print("no released tables; run scripts_release_tally.py first")
+        print("no released tables; run scripts/release_tally.py first")
         return 1
 
     data = rows()

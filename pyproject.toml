@@ -141,7 +141,7 @@ convention = "google"
 # S603/S607 flag `subprocess.run(["Rscript", ...])`. The argv is a fixed list
 # with no shell, and the bare name is deliberate: resolving `Rscript` through
 # PATH is what lets the validation run on a laptop and a runner alike.
-"scripts_*.py" = ["T201", "S608", "D", "S603", "S607"]
+"scripts/**" = ["T201", "S608", "D", "S603", "S607"]
 "paper/**" = ["T201", "D"]
 # Progress for an interactive upload: which draft it reused, each file as it
 # goes up, and the DOI at the end. Ruff's fix for `print` is to delete the
@@ -155,6 +155,9 @@ split-on-trailing-comma = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# The scripts import one another by bare name, which is how Python resolves
+# them when one is run directly; tests import them the same way.
+pythonpath = ["scripts"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

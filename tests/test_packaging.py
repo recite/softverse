@@ -73,7 +73,9 @@ def test_no_dependency_is_declared_without_being_imported():
         "zenodo-client": "zenodo_client",
         "tree-sitter-language-pack": "tree_sitter_language_pack",
     }
-    sources = list((ROOT / "softverse").rglob("*.py")) + list(ROOT.glob("scripts_*.py"))
+    sources = list((ROOT / "softverse").rglob("*.py")) + list(
+        (ROOT / "scripts").glob("*.py")
+    )
     imported: set[str] = set()
     for path in sources:
         for node in ast.walk(ast.parse(path.read_text())):

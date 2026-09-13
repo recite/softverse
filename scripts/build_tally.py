@@ -1,6 +1,6 @@
 """Build the library-usage tally from whatever has been collected so far.
 
-    uv run python scripts_build_tally.py
+    uv run python scripts/build_tally.py
 
 Runs against the corpus on disk at the moment you invoke it, so it is safe to
 run while collection is still going -- the numbers simply describe less of the
@@ -36,9 +36,8 @@ from __future__ import annotations
 import collections
 import csv
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-import duckdb
 import pandas as pd
 
 from softverse.build.pipeline import (
@@ -51,62 +50,14 @@ from softverse.corpus.loaders import full_corpus
 from softverse.logging_setup import get_logger, setup_logging
 from softverse.model.enums import NON_USE_CONSTRUCTS, Resolution
 from softverse.model.io import write_table
-from softverse.registries.resolve import Registry
-from softverse.stata.builtins import builtins
+from softverse.registries.load import load_registry
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = get_logger(__name__)
 
-#: Commands checked one by one against StataCorp's help server. Widens the
-#: curated builtin list by 165 official commands that were otherwise reported
-#: as resolving to no registry. Built by scripts_verify_stata_official.py; the
-#: tally falls back to the curated list alone if it is absent.
-OFFICIAL_SNAPSHOT = (
-    PATHS.root / "registries" / "snapshots" / "stata_official" / "official.json"
-)
 OUT = PATHS.root / "build" / "tally"
-
-
-def load_registry() -> tuple[Registry, frozenset[str]]:
-    """Registries from the pinned snapshots, plus the SSC shipped-file set."""
-
-    def names(registry: str) -> frozenset[str]:
-        snapshots = Path("registries/snapshots") / registry
-        newest = sorted(snapshots.glob("*/names.json"))[-1]
-        return frozenset(json.loads(newest.read_text()))
-
-    con = duckdb.connect()
-    index = "registries/snapshots/ssc/stata_command_index.parquet"
-    commands: dict[str, list[str]] = {}
-    for command, package in con.execute(
-        f"SELECT lower(command), package FROM '{index}' WHERE NOT is_helper"
-    ).fetchall():
-        commands.setdefault(command, []).append(package)
-    shipped = frozenset(
-        r[0].lower()
-        for r in con.execute(f"SELECT DISTINCT command FROM '{index}'").fetchall()
-    )
-    # Package names, a different namespace from command names: `ssc install
-    # blindschemes` names a package that exposes no command of that name.
-    packages = frozenset(
-        r[0].lower()
-        for r in con.execute(f"SELECT DISTINCT package FROM '{index}'").fetchall()
-    )
-    return (
-        Registry(
-            cran=names("cran"),
-            cran_archive=names("cran_archive"),
-            bioconductor=names("bioconductor"),
-            pypi=names("pypi"),
-            julia=names("julia_general"),
-            stata_commands={k: tuple(v) for k, v in commands.items()},
-            stata_builtins=builtins(verified_snapshot=OFFICIAL_SNAPSHOT).forms,
-            ssc_packages=packages,
-            lock_id=json.loads(Path("registries/registries.lock.json").read_text()).get(
-                "cran", ""
-            )[:12],
-        ),
-        shipped,
-    )
 
 
 def write_csv(rows: list[dict], path: Path) -> None:

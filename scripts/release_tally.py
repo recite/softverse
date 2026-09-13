@@ -1,8 +1,8 @@
 """Package the per-package counts for release.
 
-    uv run python scripts_release_tally.py
+    uv run python scripts/release_tally.py
 
-Writes `build/release/tally/`: the aggregate tables, the mention rows they
+Writes `data/tally/`: the aggregate tables, the mention rows they
 are sums of, a summary of the corpus they were computed on, and a
 frictionless datapackage. The Parquet is deliberately untracked; git carries
 the 150 KB of CSV that the site and the paper read, and Zenodo carries the
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 TALLY = PATHS.root / "build" / "tally"
-OUT = PATHS.root / "build" / "release" / "tally"
+OUT = PATHS.root / "data" / "tally"
 
 #: Each aggregate ships as CSV and as Parquet. The CSV is for a person
 #: opening it; the Parquet is for anything reading it as data, and it is not
@@ -157,8 +157,8 @@ CC0.
 ## Regenerating
 
 ```bash
-uv run python scripts_build_tally.py     # needs the collected corpus
-uv run python scripts_release_tally.py
+uv run python scripts/build_tally.py     # needs the collected corpus
+uv run python scripts/release_tally.py
 ```
 
 Produced by [softverse](https://github.com/recite/softverse).
@@ -278,7 +278,7 @@ def environment_coverage() -> dict:
 
 def main() -> int:
     if not (TALLY / "usage_by_package.csv").exists():
-        print("no tally; run scripts_build_tally.py first")
+        print("no tally; run scripts/build_tally.py first")
         return 1
 
     # A sparse table without its denominator is worse than no table: it reads
@@ -286,7 +286,7 @@ def main() -> int:
     if not environment_coverage():
         print(
             "environment_signals ships without a coverage denominator; "
-            "rerun scripts_build_tally.py to write environment_coverage.json"
+            "rerun scripts/build_tally.py to write environment_coverage.json"
         )
         return 1
 

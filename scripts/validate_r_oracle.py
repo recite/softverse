@@ -1,6 +1,6 @@
 """Measure the R extractor against R's own parser.
 
-    uv run python scripts_validate_r_oracle.py [--limit N]
+    uv run python scripts/validate_r_oracle.py [--limit N]
 
 Writes `build/validation/r_oracle.json`.
 

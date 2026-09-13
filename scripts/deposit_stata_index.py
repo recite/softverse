@@ -1,14 +1,14 @@
 """Create, and on request publish, the Zenodo deposit for the Stata index.
 
-    uv run python scripts_deposit_stata_index.py             # create/update the draft
-    uv run python scripts_deposit_stata_index.py --show      # print its state
-    uv run python scripts_deposit_stata_index.py --publish   # mint the DOI
+    uv run python scripts/deposit_stata_index.py             # create/update the draft
+    uv run python scripts/deposit_stata_index.py --show      # print its state
+    uv run python scripts/deposit_stata_index.py --publish   # mint the DOI
 
 Version 1.0 published with two creators. A published record cannot be edited,
 so the correction to sole authorship is a new version:
 
-    uv run python scripts_deposit_stata_index.py --new-version
-    uv run python scripts_deposit_stata_index.py --new-version --publish
+    uv run python scripts/deposit_stata_index.py --new-version
+    uv run python scripts/deposit_stata_index.py --new-version --publish
 
 The concept DOI 10.5281/zenodo.21926099 keeps resolving to the latest, and
 version 1.0 stays in the record's history rather than disappearing.
@@ -128,7 +128,7 @@ def main() -> int:
         print("ZENODO_API_TOKEN is not set")
         return 1
     if not BUNDLE.exists():
-        print(f"no bundle at {BUNDLE}; run scripts_release_stata_index.py first")
+        print(f"no bundle at {BUNDLE}; run scripts/release_stata_index.py first")
         return 1
 
     spec = Deposit(TITLE, BUNDLE, METADATA, PUBLISHED_RECORD)

@@ -1,6 +1,6 @@
 """Enumerate the Harvard Dataverse journal collections.
 
-    uv run python scripts_collect_dataverse_frame.py [--limit N] [alias ...]
+    uv run python scripts/collect_dataverse_frame.py [--limit N] [alias ...]
 
 Writes `data/frame/dataverse_deposits.csv`: every deposit in every journal
 dataverse, with its DOI and the collection it belongs to.

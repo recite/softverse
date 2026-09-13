@@ -39,7 +39,7 @@ $(PDF): $(MD) $(BIB) $(FIGS) paper/preamble.tex
 $(MD): $(PAPER) build/tally/mentions.parquet
 	uv run python paper/render_paper.py $(MD)
 
-# The site. Reads only `build/release/tally/`, which is tracked, so this is
+# The site. Reads only `data/tally/`, which is tracked, so this is
 # the same command locally and in CI, where nothing under `build/tally/`
 # exists. `-W` is the point: the site that shipped before this had a toctree
 # pointing at nine pages nobody ever wrote, and Sphinx warned about it on
@@ -58,7 +58,7 @@ site:
 # Refreshes the tracked tables from the pipeline output. Needs the corpus, so
 # it runs here and never in CI.
 release-tables:
-	uv run python scripts_release_tally.py
+	uv run python scripts/release_tally.py
 
 check:
 	uv run python paper/check_paper.py

@@ -14,15 +14,16 @@ from py_canon.sphinx import configure
 
 # Relative to this file, not to the working directory: `sphinx-build` runs
 # from the repo root, so `abspath("..")` would point at the repo's parent and
-# the import below would not find `scripts_build_site.py`.
+# the import below would not find `scripts/build_site.py`. The scripts import
+# one another by bare name, as they do when run directly.
 _ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(_ROOT))
+sys.path.insert(0, str(_ROOT / "scripts"))
 
-from scripts_build_site import generate  # noqa: E402
+from build_site import generate  # noqa: E402
 
 # The site is generated rather than checked in: `docs/index.md`, the released
 # tables under `_extra/data/`, the lookup page and the paper are all built
-# from `build/release/tally/`. The fleet's docs workflow runs `sphinx-build`
+# from `data/tally/`. The fleet's docs workflow runs `sphinx-build`
 # directly and offers no pre-build hook, so this happens here, which Sphinx
 # reads before it goes looking for sources. sharepack does the same thing for
 # the same reason.

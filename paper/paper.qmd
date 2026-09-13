@@ -427,7 +427,7 @@ oracle_recall = _oracle["recall"]
 n_oracle_sources = len(_oracle["by_source"])
 n_oracle_dataverse_files = _oracle["by_source"]["dataverse_legacy"]["n_files_compared"]
 
-# Cross-tool agreement, read from the artifact `scripts_validate_renv.py`
+# Cross-tool agreement, read from the artifact `scripts/validate_renv.py`
 # writes. This paragraph used to carry a typed 0.998 that nothing in the
 # repository computed -- no script, no artifact, no recorded run. It was the
 # one number here with no provenance at all, and it was wrong by about a

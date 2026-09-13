@@ -1,6 +1,6 @@
 """Unpack the 2024 Harvard Dataverse scrape into the corpus.
 
-    uv run python scripts_ingest_dataverse_legacy.py
+    uv run python scripts/ingest_dataverse_legacy.py
 
 Extracts `data/script_files.tar.gz` (46,735 files, 7,231 deposits, 61
 journals) and `data/datasets_by_dataverse.tar.gz` (DOIs and publication
@@ -10,7 +10,7 @@ It used to build its own tally into `build/tally_dataverse_legacy/`, which is
 why the published per-package counts were Zenodo-only for so long: two
 scripts, two output directories, and only one of them aggregating. Corpus
 assembly now lives in `softverse/corpus/loaders.py` and aggregation in
-`scripts_build_tally.py`, so both halves are hashed, classified and resolved
+`scripts/build_tally.py`, so both halves are hashed, classified and resolved
 by one pass over one corpus. The evidence for why the flattened paths are
 safe to pool moved to the loader, which is where the question next gets
 asked.
@@ -84,7 +84,7 @@ def main() -> int:
     years = sorted({f.deposit_year for f in files if f.deposit_year})
     print(f"{len(files):,} files from {len(deposits):,} deposits")
     print(f"{len(journals)} journals, {years[0]} to {years[-1]}")
-    print("\nrun scripts_build_tally.py to tally this alongside Zenodo")
+    print("\nrun scripts/build_tally.py to tally this alongside Zenodo")
     return 0
 
 

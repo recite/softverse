@@ -15,7 +15,7 @@ import pytest
 RELEASE = Path("build/release/stata-index")
 pytestmark = pytest.mark.skipif(
     not (RELEASE / "stata_command_index.parquet").exists(),
-    reason="release bundle not built; run scripts_release_stata_index.py",
+    reason="release bundle not built; run scripts/release_stata_index.py",
 )
 
 

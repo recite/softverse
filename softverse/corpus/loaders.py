@@ -29,7 +29,7 @@ for vendored libraries. Not one `ado/`, `renv/`, `site-packages/` or
 carries `.Rmd`, `.ipynb`, `.ado`, `.m` and `.sas`; the 2024 Dataverse scrape
 carries three extensions and nothing else. So a package used mostly inside
 notebooks is under-represented in the Dataverse half. That is measured rather
-than asserted: `scripts_release_tally.py` recomputes the whole table
+than asserted: `scripts/release_tally.py` recomputes the whole table
 restricted to the three extensions both corpora collected and fails if the
 ordering moves. The vintages differ too, January 2024 against 2026, which is
 what the year column is for.
@@ -59,14 +59,14 @@ DATAVERSE_LEGACY = "dataverse_legacy"
 def _zenodo_deposits() -> dict[str, dict]:
     """Community and year per record, from `corpus/zenodo/deposits.csv`.
 
-    Written by `scripts_collect_zenodo.py`, which reads both off every record
+    Written by `scripts/collect_zenodo.py`, which reads both off every record
     it harvests. Before that file existed the values were computed, printed
     and dropped, and this loader had to hardcode `collection_id="zenodo"`.
     """
     path = ZENODO_ROOT / "deposits.csv"
     if not path.exists():
         logger.warning(
-            "no zenodo deposits.csv; run scripts_collect_zenodo.py "
+            "no zenodo deposits.csv; run scripts/collect_zenodo.py "
             "--metadata-only to recover community and year"
         )
         return {}

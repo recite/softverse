@@ -1,6 +1,6 @@
 """Compare our R extraction against `renv::dependencies()`.
 
-    uv run python scripts_validate_renv.py [--limit N]
+    uv run python scripts/validate_renv.py [--limit N]
 
 Writes `build/validation/renv_agreement.json`.
 

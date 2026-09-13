@@ -6,7 +6,7 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       # 1 MB rather than the 500 KB default. The released tables under
-      # build/release/tally are text we mean to track, and the largest is
+      # data/tally are text we mean to track, and the largest is
       # 552 KB; the guard is here to catch an accidental Parquet or archive,
       # both of which are far bigger than this.
       - id: check-added-large-files

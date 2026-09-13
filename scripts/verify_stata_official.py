@@ -1,6 +1,6 @@
 """Check corpus Stata command names against StataCorp's help server.
 
-    uv run python scripts_verify_stata_official.py
+    uv run python scripts/verify_stata_official.py
 
 Two questions, and the first is the one that can change published numbers.
 
@@ -55,7 +55,7 @@ MIN_DEPOSITS = 2
 def main() -> int:
     present = [p for p in MENTIONS if p.exists()]
     if not present:
-        print("no tally found; run scripts_build_tally.py first")
+        print("no tally found; run scripts/build_tally.py first")
         return 1
     for path in present:
         print(f"  reading {path.parent.name}/{path.name}")

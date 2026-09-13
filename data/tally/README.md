@@ -91,8 +91,8 @@ CC0.
 ## Regenerating
 
 ```bash
-uv run python scripts_build_tally.py     # needs the collected corpus
-uv run python scripts_release_tally.py
+uv run python scripts/build_tally.py     # needs the collected corpus
+uv run python scripts/release_tally.py
 ```
 
 Produced by [softverse](https://github.com/recite/softverse).
