@@ -16,6 +16,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from collect_dataverse_frame import RATE_PER_S
+
 from softverse.acquire.http import PoliteClient, RateLimiter
 from softverse.acquire.state import Ledger
 from softverse.config import PATHS, dataverse_headers
@@ -74,7 +76,7 @@ def main() -> int:
     with (
         stage("pilot", logger),
         PoliteClient(
-            headers=dataverse_headers(), limiter=RateLimiter(rate_per_s=2.0, burst=2)
+            headers=dataverse_headers(), limiter=RateLimiter(rate_per_s=RATE_PER_S)
         ) as client,
     ):
         rows = collect(dois, files_root, raw_root, ledger, client)
