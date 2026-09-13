@@ -329,7 +329,9 @@ def test_extraction_failure_marks_the_deposit_retryable(tmp_path, monkeypatch):
         }
     )
     client = serving(b"not a real zip")
-    state, _rows = zenodo.collect_record(client, record, tmp_path)
+    state, _rows = zenodo.collect_record(
+        client, record, tmp_path, disk=unlimited_disk()
+    )
     assert state.n_failed == 1
     assert state.state == "partial", "must be retryable, not complete"
     assert state.needs_retry
