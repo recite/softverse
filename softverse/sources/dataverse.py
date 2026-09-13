@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from softverse.acquire.state import DatasetRecord, Ledger, atomic_write_bytes
-from softverse.acquire.unpack import extract, relative_member_path
+from softverse.acquire.unpack import archive_name, extract, relative_member_path
 from softverse.config import (
     ARCHIVE_EXTENSIONS,
     DATAVERSE_BASE_URL,
@@ -468,10 +468,12 @@ def collect_dataset(
             record.n_failed += 1
             record.error = error
             continue
-        archive_path = target / "_archives" / candidate.filename
+        archive_path = target / "_archives" / archive_name(candidate.filename)
         atomic_write_bytes(archive_path, content)
         record.bytes_fetched += len(content)
-        unpack_root = target / "_archives" / f"{candidate.filename}_extracted"
+        unpack_root = (
+            target / "_archives" / f"{archive_name(candidate.filename)}_extracted"
+        )
         result = extract(
             archive_path,
             unpack_root,

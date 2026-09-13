@@ -1,4 +1,4 @@
-"""Recover code from Dataverse archives too large to download whole.
+"""Recover code from archives too large to download whole.
 
 The collector skips any archive over its cap, because keeping the scripts from
 a 20 GB replication package by downloading it means transferring 20 GB. At
@@ -11,6 +11,9 @@ Harvard's S3 storage answers byte-range requests, so ``remotezip`` reads the
 directory and then only the members we keep. Measured on a 91 GB package:
 52,883 members, 9 scripts totalling 129 KB, 9.4 MB transferred, most of that
 the directory itself.
+
+Zenodo answers range requests on its file content URLs too, so the same
+reading serves both repositories; only the URL and the throttling differ.
 
 tar, 7z and rar have no such index, so those are downloaded in full, the code
 extracted, and the archive deleted. ``scripts/recover_oversized.py`` caps how many
@@ -25,19 +28,25 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
+from urllib.parse import quote
 
 import requests
 from remotezip import RemoteZip
 
-from softverse.acquire.unpack import _wanted, extract, relative_member_path
+from softverse.acquire.unpack import (
+    _wanted,
+    archive_name,
+    extract,
+    relative_member_path,
+)
 from softverse.config import DATAVERSE_BASE_URL
 from softverse.logging_setup import get_logger
 from softverse.sources.dataverse import (
     ARCHIVE_EXTENSIONS,
     MANIFEST_FILENAMES,
     SCRIPT_EXTENSIONS,
-    dataset_dir,
 )
+from softverse.sources.zenodo import ZENODO_API
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -68,7 +77,7 @@ class Outcome:
 
     dataset_doi: str
     filename: str
-    file_id: int
+    file_id: int | None
     archive_bytes: int
     method: str
     transferred_bytes: int = 0
@@ -101,17 +110,22 @@ class Outcome:
 class _CountingSession(requests.Session):
     """A session that adds up the bytes the server says it sent."""
 
-    def __init__(self) -> None:
+    def __init__(self, before_each: Callable[[], None] | None = None) -> None:
         super().__init__()
         self.transferred = 0
+        self._before_each = before_each
 
     def request(self, method, url, *args, **kwargs):
+        if self._before_each is not None:
+            self._before_each()
         response = super().request(method, url, *args, **kwargs)
         self.transferred += int(response.headers.get("Content-Length") or 0)
         return response
 
 
-def _row(doi: str, file_id: int, path: Path, unpack_root: Path, target: Path) -> dict:
+def _row(
+    doi: str, file_id: int | None, path: Path, unpack_root: Path, target: Path
+) -> dict:
     data = path.read_bytes()
     return {
         "dataset_doi": doi,
@@ -149,11 +163,10 @@ def storage_url(session: requests.Session, file_id: int, headers: dict) -> str:
 
 
 def recover_zip(
-    session: _CountingSession, url: str, outcome: Outcome, files_root: Path
+    session: _CountingSession, url: str, outcome: Outcome, target: Path
 ) -> None:
     """Read a remote zip's directory and fetch only the members worth keeping."""
-    target = dataset_dir(files_root, outcome.dataset_doi)
-    unpack_root = target / "_archives" / f"{outcome.filename}_extracted"
+    unpack_root = target / "_archives" / f"{archive_name(outcome.filename)}_extracted"
     nested_spent = 0
     with RemoteZip(url, session=session, timeout=300) as archive:
         for info in archive.infolist():
@@ -202,11 +215,10 @@ def recover_zip(
 
 
 def recover_by_download(
-    session: _CountingSession, url: str, outcome: Outcome, files_root: Path
+    session: _CountingSession, url: str, outcome: Outcome, target: Path
 ) -> None:
     """Download an archive that has no index, keep its code, delete it."""
-    target = dataset_dir(files_root, outcome.dataset_doi)
-    archive_path = target / "_archives" / outcome.filename
+    archive_path = target / "_archives" / archive_name(outcome.filename)
     archive_path.parent.mkdir(parents=True, exist_ok=True)
     partial = archive_path.with_name(archive_path.name + ".part")
     with session.get(url, stream=True, timeout=300) as response:
@@ -214,7 +226,7 @@ def recover_by_download(
         with partial.open("wb") as handle:
             shutil.copyfileobj(response.raw, handle, length=1024 * 1024)
     partial.replace(archive_path)
-    unpack_root = target / "_archives" / f"{outcome.filename}_extracted"
+    unpack_root = target / "_archives" / f"{archive_name(outcome.filename)}_extracted"
     result = extract(archive_path, unpack_root, KEEP_SUFFIXES, KEEP_NAMES)
     if result.error:
         outcome.error = f"extract: {result.error}"
@@ -230,21 +242,23 @@ def recover_by_download(
 def recover(
     doi: str,
     skipped: dict,
-    files_root: Path,
-    headers: dict,
+    target: Path,
+    url_for: Callable[[requests.Session], str],
     before_request: Callable[[], None],
+    throttle_every_request: bool = False,
 ) -> Outcome:
     """Recover the code from one over-cap archive.
 
     Args:
         doi: The deposit's DOI.
         skipped: The ledger's ``skipped_archives`` entry for the archive.
-        files_root: Where deposit directories live.
-        headers: Auth headers for the Dataverse API.
-        before_request: Called before the one request to Dataverse itself; the
-            rate limiter. The range reads that follow go to S3 storage and
-            carry kilobytes; throttling them as well made a zip with thirty
-            scripts take a minute.
+        target: The deposit's directory.
+        url_for: Resolves the URL to read the archive from, given the session.
+        before_request: The rate limiter.
+        throttle_every_request: Whether every request waits on the limiter, or
+            only the one that resolves the URL. Dataverse's range reads go to
+            S3 storage and carry kilobytes, and throttling them made a zip with
+            thirty scripts take a minute; Zenodo serves the bytes itself.
 
     Returns:
         What was transferred and kept, or the error that stopped it.
@@ -253,19 +267,20 @@ def recover(
     outcome = Outcome(
         dataset_doi=doi,
         filename=skipped["filename"],
-        file_id=skipped["file_id"],
+        file_id=skipped.get("file_id"),
         archive_bytes=skipped["size_bytes"],
         method="range" if is_zip else "download",
     )
-    session = _CountingSession()
+    session = _CountingSession(before_request if throttle_every_request else None)
     session.headers["User-Agent"] = USER_AGENT
     try:
-        before_request()
-        url = storage_url(session, outcome.file_id, headers)
+        if not throttle_every_request:
+            before_request()
+        url = url_for(session)
         if is_zip:
-            recover_zip(session, url, outcome, files_root)
+            recover_zip(session, url, outcome, target)
         else:
-            recover_by_download(session, url, outcome, files_root)
+            recover_by_download(session, url, outcome, target)
     except Exception as exc:  # one bad archive must not end a long run
         logger.exception("oversized recovery failed", extra={"doi": doi})
         outcome.error = f"{type(exc).__name__}: {exc}"
@@ -273,6 +288,20 @@ def recover(
         outcome.transferred_bytes = session.transferred
         session.close()
     return outcome
+
+
+def zenodo_content_url(doi: str, filename: str) -> str:
+    """The content URL of a file in a Zenodo record, from the record's DOI.
+
+    Args:
+        doi: The record's DOI, ending in ``zenodo.<record id>``.
+        filename: The file's key within the record.
+
+    Returns:
+        ``https://zenodo.org/api/records/<id>/files/<name>/content``.
+    """
+    record_id = doi.rsplit(".", 1)[-1]
+    return f"{ZENODO_API}/records/{record_id}/files/{quote(filename)}/content"
 
 
 def apply(record: DatasetRecord, outcomes: list[Outcome]) -> None:

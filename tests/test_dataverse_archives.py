@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import io
 import zipfile
+from pathlib import Path
 
 from softverse.sources import dataverse
 
@@ -78,3 +79,16 @@ def test_an_unreadable_member_costs_only_itself(tmp_path, monkeypatch):
 
     assert record.state == "complete"
     assert [r["filename"] for r in rows] == ["a.R"]
+
+
+def test_an_archive_name_cannot_climb_out_of_its_deposit(tmp_path, monkeypatch):
+    """The filename is depositor metadata joined onto our directory."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("a.R", b"library(dplyr)")
+    _record, rows = _collect(tmp_path, monkeypatch, "../../escape.zip", buf.getvalue())
+
+    target = dataverse.dataset_dir(tmp_path / "files", DOI)
+    assert [r["filename"] for r in rows] == ["a.R"]
+    assert all(Path(r["local_path"]).resolve().is_relative_to(target) for r in rows)
+    assert not (tmp_path / "escape.zip_extracted").exists()

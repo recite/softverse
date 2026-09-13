@@ -87,6 +87,29 @@ class Extracted:
         return len(self.files)
 
 
+def archive_name(name: str) -> str:
+    """The archive's own filename, reduced to a single safe path component.
+
+    The name comes from repository metadata the depositor controls, and it is
+    joined onto the deposit directory, so ``../../x.zip`` would write outside
+    it. Members inside the archive have :func:`is_safe_member`; this is the
+    same guard for the archive itself.
+
+    Args:
+        name: The archive's filename as the repository reports it.
+
+    Returns:
+        The last path component of ``name``.
+
+    Raises:
+        UnsafeArchiveError: if nothing usable is left.
+    """
+    base = name.replace("\\", "/").rsplit("/", 1)[-1]
+    if base in {"", ".", ".."}:
+        raise UnsafeArchiveError(f"unsafe archive filename: {name!r}")
+    return base
+
+
 def is_safe_member(name: str, root: Path) -> bool:
     """Whether ``name`` stays inside ``root`` once joined.
 

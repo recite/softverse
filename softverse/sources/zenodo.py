@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING
 
 from softverse.acquire.state import DatasetRecord, Ledger, atomic_write_bytes
 from softverse.acquire.unpack import (
+    archive_name,
     extract,
     relative_member_path,
     spanned_segments,
@@ -471,7 +472,7 @@ def collect_record(
             # cap is passed down as well, so an archive whose metadata
             # understates its size is abandoned after a chunk instead of after
             # the whole transfer.
-            archive_path = target / "_archives" / item.key
+            archive_path = target / "_archives" / archive_name(item.key)
             try:
                 outcome = client.download(
                     item.link, archive_path, cap_bytes=archive_cap
@@ -499,7 +500,7 @@ def collect_record(
                 continue
 
             state.bytes_fetched += archive_path.stat().st_size
-            unpack_root = target / "_archives" / f"{item.key}_extracted"
+            unpack_root = target / "_archives" / f"{archive_name(item.key)}_extracted"
             result = extract(
                 archive_path,
                 unpack_root,
