@@ -101,7 +101,6 @@ exclude = [
     "buck-out",
     "build",
     "dist",
-    "archive/",
     "temp/",
     "logs/",
     "debug_*.py",
