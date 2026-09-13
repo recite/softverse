@@ -93,6 +93,7 @@ def test_frame_roundtrips_to_csv(tmp_path):
         [FrameRow("x", "zenodo", "journal", "J", "economics", "dcas")],
         tmp_path / "frame.csv",
     )
-    (row,) = list(csv.DictReader(path.open()))
+    with path.open(encoding="utf-8") as handle:
+        (row,) = list(csv.DictReader(handle))
     assert row["collection_id"] == "x"
     assert row["inclusion_reason"] == "dcas"

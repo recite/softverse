@@ -104,22 +104,18 @@ def _without_comments(source: str) -> str:
     )
 
 
-def test_the_version_is_not_typed_anywhere():
-    """The git tag is the version; nothing in the tree may state one.
+def test_the_version_is_typed_once():
+    """`project.version` is the release number, and nothing else may state one.
 
-    This used to compare `__init__.py` against a static `project.version`,
-    because the risk was two copies drifting apart. Under the fleet standard
-    there is no copy to drift: the build resolves the version from the tag, so
-    the stronger invariant is that neither file names a release number at all.
+    Two copies are two numbers that can disagree, so `__init__.py` reads the
+    installed metadata rather than naming a release itself.
 
     Comments are stripped first. What must not drift is a version the code
     *uses*, and the comment explaining why `EXTRACTOR_VERSION` moved off 2.0.0
     has to stay free to say 2.0.0.
     """
-    assert "version" in PROJECT.get("dynamic", []), (
-        "project.version should come from the git tag, not pyproject.toml"
-    )
-    assert "version" not in PROJECT, "a static project.version is back"
+    assert "dynamic" not in PROJECT or "version" not in PROJECT["dynamic"]
+    assert re.fullmatch(r"\d+\.\d+\.\d+", PROJECT["version"])
 
     source = _without_comments((ROOT / "softverse" / "__init__.py").read_text())
     allowed = {
@@ -144,21 +140,10 @@ def softverse_module():
     return softverse
 
 
-def test_the_installed_version_comes_from_the_tag():
-    """`git describe` and the installed metadata have to agree, or the wheel
-    CI builds is not the wheel this checkout describes."""
-    import subprocess
-
-    described = subprocess.run(
-        ["git", "describe", "--tags", "--abbrev=0"],
-        capture_output=True,
-        text=True,
-        check=False,
-        cwd=ROOT,
-    ).stdout.strip()
-    if not described:
-        pytest.skip("no tags in this checkout")
-    assert softverse_module().__version__.startswith(described.lstrip("v"))
+def test_the_installed_version_is_the_declared_one():
+    """`__version__` must report `project.version`, or the installed package
+    and the checkout describe different releases."""
+    assert softverse_module().__version__ == PROJECT["version"]
 
 
 def test_the_extractor_version_matches_the_released_data():

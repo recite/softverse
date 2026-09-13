@@ -9,7 +9,7 @@ Which libraries does social science research actually run on? Softverse answers
 that by statically analyzing the code inside replication packages deposited to
 journal collections, across **R, Python and Stata**.
 
-see: https://gojiberries.io/2023/07/02/hard-problems-about-research-software/
+see: https://www.gojiberries.io/hard-problems-about-research-software/
 
 ## What is measured
 

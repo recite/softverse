@@ -64,7 +64,8 @@ def test_ambiguity_is_preserved_not_resolved(index):
 
 
 def test_csv_and_parquet_agree(index):
-    csv_rows = sum(1 for _ in (RELEASE / "stata_command_index.csv").open()) - 1
+    with (RELEASE / "stata_command_index.csv").open(encoding="utf-8") as handle:
+        csv_rows = sum(1 for _ in handle) - 1
     parquet_rows = index.execute(
         f"SELECT count(*) FROM '{RELEASE / 'stata_command_index.parquet'}'"
     ).fetchone()[0]

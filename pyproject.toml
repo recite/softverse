@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling", "uv-dynamic-versioning"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.12.5,<0.13"]
+build-backend = "uv_build"
 
 [project]
 name = "softverse"
@@ -38,10 +38,10 @@ dependencies = [
     "packaging>=24.0",
 ]
 
-# The version is the git tag, resolved at build time by uv-dynamic-versioning.
-# Nothing types it: a number in two places is a number that can disagree with
-# itself, and the tag is the thing that actually gets released.
-dynamic = ["version"]
+# The one place the release number is typed. The release workflow refuses a tag
+# that does not match the built wheel, and `__version__` reads the installed
+# metadata, so there is no second copy to drift.
+version = "2.0.0"
 
 # A PEP 621 table. The bare `homepage`/`repository`/`documentation` keys that
 # used to sit under [project] are not part of the standard, so the backend
@@ -153,14 +153,18 @@ known-first-party = ["softverse"]
 split-on-trailing-comma = true
 
 [tool.pytest.ini_options]
+minversion = "6"
 testpaths = ["tests"]
-# The scripts import one another by bare name, which is how Python resolves
-# them when one is run directly; tests import them the same way.
-pythonpath = ["scripts"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=softverse --cov-report=term-missing -q"
+log_level = "INFO"
+xfail_strict = true
+filterwarnings = ["error"]
+addopts = [
+    "--strict-config", "--strict-markers", "-ra",
+    "--cov=softverse", "--cov-report=term-missing", "-q",
+]
 
 [tool.pyright]
 include = ["softverse"]
@@ -174,12 +178,30 @@ check-class-attributes = false
 allow-init-docstring = true
 exclude = '\.venv|tests|docs'
 
-[tool.hatch.version]
-source = "uv-dynamic-versioning"
+# Flat layout: the package sits at the root rather than under src/.
+[tool.uv.build-backend]
+module-root = ""
 
-[tool.hatch.build.targets.wheel]
-packages = ["softverse"]
+[tool.codespell]
+# Stata, not typos: Mata is Stata's matrix language and `ttest`, `fillin` are
+# its commands; `ture` and `ine` are fragments of the `capture`/`define`
+# abbreviation regexes. `pres` is a variable in a paper chunk. `unparseable`
+# is a standard spelling.
+ignore-words-list = "mata,ttest,fillin,ture,ine,pres,unparseable"
 
-[tool.uv-dynamic-versioning]
-vcs = "git"
-style = "pep440"
+[tool.preen]
+# Not documentation links. Schemeless on purpose: with a scheme the check's
+# URL extractor reads the patterns themselves as links.
+link_ignore = [
+  # Placeholder hosts and paths in tests, served by a mock transport.
+  '//x/',
+  'dataverse\.harvard\.edu/api/x',
+  'zenodo\.org/f/',
+  'zenodo\.org/api/files/x/',
+  # API bases, alive but 404 to a bare GET.
+  'zenodo\.org/api$',
+  # A docstring's example of the `user/repo` form install_github takes.
+  'github\.com/user/repo',
+  # A download URL recorded in a deposit's renv.lock, published as data.
+  'sites\.google\.com/a/stonybrook\.edu/mperess',
+]
