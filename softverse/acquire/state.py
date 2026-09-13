@@ -86,6 +86,7 @@ class DatasetRecord:
 
     @property
     def needs_retry(self) -> bool:
+        """Whether this dataset failed in a way a later run should try again."""
         return self.state in {s.value for s in RETRYABLE_STATES}
 
 
@@ -99,6 +100,11 @@ class Ledger:
     """
 
     def __init__(self, path: Path) -> None:
+        """Open the ledger at ``path``, creating it and reading what is there.
+
+        Args:
+            path: The JSONL file. Its parent is created if absent.
+        """
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._records: dict[str, DatasetRecord] = {}
@@ -108,7 +114,7 @@ class Ledger:
         if not self.path.exists():
             return
         bad = 0
-        with open(self.path, encoding="utf-8") as handle:
+        with self.path.open(encoding="utf-8") as handle:
             for line in handle:
                 line = line.strip()
                 if not line:
@@ -126,9 +132,18 @@ class Ledger:
         )
 
     def __len__(self) -> int:
+        """The number of datasets the ledger has a record for."""
         return len(self._records)
 
     def get(self, doi: str) -> DatasetRecord | None:
+        """The last recorded outcome for ``doi``, or None if never attempted.
+
+        Args:
+            doi: The dataset DOI.
+
+        Returns:
+            The record, or None.
+        """
         return self._records.get(doi)
 
     def should_process(
@@ -194,18 +209,29 @@ class Ledger:
             )
         record.finished_at = datetime.now(tz=UTC).isoformat()
         self._records[record.dataset_doi] = record
-        with open(self.path, "a", encoding="utf-8") as handle:
+        with self.path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(asdict(record)) + "\n")
             handle.flush()
             os.fsync(handle.fileno())
 
     def summary(self) -> dict[str, int]:
+        """How many datasets sit in each collection state.
+
+        Returns:
+            State name to count, ordered by state name.
+        """
         counts: dict[str, int] = {}
         for record in self._records.values():
             counts[record.state] = counts.get(record.state, 0) + 1
         return dict(sorted(counts.items()))
 
     def totals(self) -> dict[str, int]:
+        """Files and bytes summed over every dataset in the ledger.
+
+        Returns:
+            Counts of datasets, candidate and fetched files, the three
+            skip reasons, and total bytes.
+        """
         return {
             "datasets": len(self._records),
             "candidate": sum(r.n_candidate for r in self._records.values()),
@@ -217,14 +243,36 @@ class Ledger:
         }
 
     def skipped_archives(self) -> list[dict]:
-        """Every archive passed over by the size cap, for the coverage report."""
+        """Every archive passed over by the size cap, for the coverage report.
+
+        Returns:
+            One row per skipped archive, carrying its dataset DOI.
+        """
         out: list[dict] = []
         for record in self._records.values():
-            for entry in record.skipped_archives:
-                out.append({"dataset_doi": record.dataset_doi, **entry})
+            out.extend(
+                {"dataset_doi": record.dataset_doi, **entry}
+                for entry in record.skipped_archives
+            )
         return out
 
+    def records(self) -> list[DatasetRecord]:
+        """Every record held, in insertion order.
+
+        Exists so callers stop reaching into `_records`: `verify_against_disk`
+        did, which made the ledger's internals part of its interface.
+
+        Returns:
+            The records.
+        """
+        return list(self._records.values())
+
     def non_reconciling(self) -> list[DatasetRecord]:
+        """Records whose own file counts do not add up.
+
+        Returns:
+            The records that fail their own reconciliation check.
+        """
         return [r for r in self._records.values() if not r.reconciles()]
 
 
@@ -241,7 +289,7 @@ def atomic_write_bytes(path: Path, data: bytes) -> None:
             handle.write(data)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(tmp, path)
+        Path(tmp).replace(path)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)
         raise
@@ -256,7 +304,7 @@ def verify_against_disk(
     Returns ``{"empty_but_complete": [...], "missing_dir": [...]}``.
     """
     problems: dict[str, list[str]] = {"empty_but_complete": [], "missing_dir": []}
-    records = list(ledger._records.values())
+    records = ledger.records()
     if sample:
         records = records[:sample]
     for record in records:

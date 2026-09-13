@@ -35,7 +35,6 @@ from softverse.model.schemas import (
 )
 
 __all__ = [
-    "SCHEMAS",
     "COLLECTIONS",
     "DATASETS",
     "DECLARED_DEPENDENCIES",
@@ -44,9 +43,9 @@ __all__ = [
     "MENTIONS",
     "PACKAGES",
     "RESOLUTION_CANDIDATES",
+    "SCHEMAS",
     "STATA_COMMAND_INDEX",
     "UNKNOWN_NAMES",
-    "schema_for",
     "CollectionKind",
     "CollectionState",
     "Construct",
@@ -58,4 +57,5 @@ __all__ = [
     "Source",
     "VendorRule",
     "VersionState",
+    "schema_for",
 ]

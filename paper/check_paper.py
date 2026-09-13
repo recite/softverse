@@ -34,10 +34,10 @@ HERE = Path(__file__).parent
 PAPER = HERE / "paper.qmd"
 
 #: ```{python} ... ``` chunks, with their `#| label:` if they carry one.
-_CHUNK = re.compile(r"^```\{python\}\n(.*?)^```", re.M | re.S)
+_CHUNK = re.compile(r"^```\{python\}\n(.*?)^```", re.MULTILINE | re.DOTALL)
 #: `{python} expr` inline expressions.
 _INLINE = re.compile(r"`\{python\}\s*(.+?)`")
-_LABEL = re.compile(r"^#\|\s*label:\s*(\S+)", re.M)
+_LABEL = re.compile(r"^#\|\s*label:\s*(\S+)", re.MULTILINE)
 
 
 def main() -> int:
@@ -79,7 +79,7 @@ def main() -> int:
             print(f"  FAILED  {expression}\n            {type(exc).__name__}: {exc}")
             failures += 1
             continue
-        print(f"  {str(value):<28}  {expression}")
+        print(f"  {value!s:<28}  {expression}")
 
     print(f"\n{len(seen)} inline expressions, {failures} failed")
     return 1 if failures else 0

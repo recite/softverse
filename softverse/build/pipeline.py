@@ -33,7 +33,7 @@ from softverse.model.enums import (
     Resolution,
 )
 from softverse.model.io import reconcile
-from softverse.registries.resolve import normalize
+from softverse.registries.resolve import Registry, normalize
 from softverse.stata.lexer import declared_version as stata_declared_version
 from softverse.stata.lexer import local_programs as stata_local_programs
 
@@ -166,7 +166,7 @@ def _read_manifest_into(result: BuildResult, item: CorpusFile, file_uid: str) ->
 
 def build(
     corpus: Iterable[CorpusFile],
-    registry,
+    registry: Registry,
     *,
     ssc_shipped: frozenset[str] = frozenset(),
     registry_lock_id: str = "unpinned",
@@ -181,6 +181,10 @@ def build(
         registry_lock_id: Stamped on every mention so a row names its instrument.
         corpus_completeness: Share of the intended corpus present. Below 1.0 the
             output is a diagnostic, not a result, and the stamp says so.
+
+    Returns:
+        The file rows, mention rows, declarations, environment signals and
+        the counters they have to reconcile against.
     """
     result = BuildResult()
     corpus = list(corpus)

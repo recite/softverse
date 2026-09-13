@@ -28,10 +28,10 @@ from markdown_it import MarkdownIt
 HERE = Path(__file__).parent
 PAPER = HERE / "paper.qmd"
 
-_CHUNK = re.compile(r"^```\{python\}\n(.*?)^```", re.M | re.S)
+_CHUNK = re.compile(r"^```\{python\}\n(.*?)^```", re.MULTILINE | re.DOTALL)
 _INLINE = re.compile(r"`\{python\}\s*(.+?)`")
-_LABEL = re.compile(r"^#\|\s*label:\s*(\S+)", re.M)
-_FRONT = re.compile(r"\A---\n(.*?)\n---\n", re.S)
+_LABEL = re.compile(r"^#\|\s*label:\s*(\S+)", re.MULTILINE)
+_FRONT = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 
 STYLE = """
 :root {
@@ -227,7 +227,7 @@ def chunk_output(body: str, namespace: dict) -> str:
     printed = io.StringIO()
     with redirect_stdout(printed):
         exec(compile(tree, "<chunk>", "exec"), namespace)  # noqa: S102
-        value = eval(compile(tail, "<tail>", "eval"), namespace) if tail else None
+        value = eval(compile(tail, "<tail>", "eval"), namespace)  # noqa: S307 if tail else None
 
     out = printed.getvalue()
     if isinstance(value, str):
@@ -244,7 +244,7 @@ def render_markdown() -> tuple[str, dict]:
     abstract = ""
     if front:
         for key in ("title",):
-            m = re.search(rf'^{key}:\s*"?(.+?)"?\s*$', front.group(1), re.M)
+            m = re.search(rf'^{key}:\s*"?(.+?)"?\s*$', front.group(1), re.MULTILINE)
             if m:
                 meta[key] = m.group(1)
         # The abstract is a `|` block, and it holds `{python}` expressions like
@@ -253,7 +253,7 @@ def render_markdown() -> tuple[str, dict]:
         # the one part of the paper a referee reads first is the one part with
         # unresolved placeholders in it.
         block = re.search(
-            r"^abstract:\s*\|\n((?:[ \t]+.*\n|\n)+)", front.group(1), re.M
+            r"^abstract:\s*\|\n((?:[ \t]+.*\n|\n)+)", front.group(1), re.MULTILINE
         )
         if block:
             abstract = textwrap.dedent(block.group(1)).strip()
@@ -279,7 +279,7 @@ def render_markdown() -> tuple[str, dict]:
     def substitute(match: re.Match) -> str:
         try:
             return str(eval(match.group(1), namespace))  # noqa: S307
-        except Exception as exc:  # noqa: BLE001 - surfaced in the page
+        except Exception as exc:
             return f"[UNRESOLVED: {exc}]"
 
     rendered = _INLINE.sub(substitute, body)

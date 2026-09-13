@@ -110,7 +110,8 @@ def test_client_does_not_retry_a_404(monkeypatch):
     monkeypatch.setattr(client._client, "get", fake_get)
     outcome = client.get("http://x/")
     assert calls["n"] == 1, "a 404 must not be retried"
-    assert outcome.not_found and not outcome.retryable
+    assert outcome.not_found
+    assert not outcome.retryable
     client.close()
 
 
@@ -132,7 +133,8 @@ def test_client_retries_a_503_then_gives_up(monkeypatch):
     monkeypatch.setattr(client._client, "get", fake_get)
     outcome = client.get("http://x/")
     assert calls["n"] == 3
-    assert not outcome.ok and outcome.retryable
+    assert not outcome.ok
+    assert outcome.retryable
     client.close()
 
 
@@ -319,7 +321,7 @@ def test_archive_detection():
 
 
 @pytest.mark.parametrize(
-    "keys,spanned",
+    ("keys", "spanned"),
     [
         # The real case: a 6.4 GB replication package split across three
         # Zenodo files. The `.zip` is the *last* segment, so it holds the
@@ -360,7 +362,7 @@ def test_empty_202_is_treated_as_throttling_not_success(monkeypatch):
     which is exactly the shape of v1's 8,953 empty "successes".
     """
 
-    class Throttled:
+    class ThrottledError:
         status_code = 202
         headers: dict[str, str] = {}
         content = b""
@@ -368,7 +370,7 @@ def test_empty_202_is_treated_as_throttling_not_success(monkeypatch):
     limiter = RateLimiter(rate_per_s=4.0)
     client = PoliteClient(limiter=limiter, max_retries=1)
     monkeypatch.setattr(time, "sleep", lambda *_: None)
-    monkeypatch.setattr(client._client, "get", lambda url, **kw: Throttled())
+    monkeypatch.setattr(client._client, "get", lambda url, **kw: ThrottledError())
     outcome = client.get("http://x/")
     assert not outcome.ok, "an empty 202 must never be reported as success"
     assert outcome.retryable
@@ -424,7 +426,8 @@ def test_probe_reports_a_challenge_without_retrying(monkeypatch):
     monkeypatch.setattr(client._client, "get", fake_get)
     outcome = client.probe("http://x/")
     assert calls["n"] == 1
-    assert outcome.challenged and not outcome.ok
+    assert outcome.challenged
+    assert not outcome.ok
     client.close()
 
 

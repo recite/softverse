@@ -14,9 +14,12 @@ neither is true.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import httpx
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 API = "https://zenodo.org/api"
 
@@ -46,6 +49,7 @@ class Deposit:
     published_record: int | None = None
 
     def files(self) -> list[Path]:
+        """Every file in the bundle, sorted, which is what gets uploaded."""
         return sorted(p for p in self.bundle.iterdir() if p.is_file())
 
 
@@ -62,6 +66,7 @@ def find_draft(client: httpx.Client, token: str, title: str) -> dict | None:
 
 
 def show(deposit: dict) -> None:
+    """Print a deposit's title, state, edit URL and reserved DOI."""
     print(f"  title   {deposit['title'][:70]}")
     print(f"  state   {deposit['state']} (submitted={deposit['submitted']})")
     print(f"  edit    {deposit['links']['html']}")

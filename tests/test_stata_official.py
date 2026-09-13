@@ -270,7 +270,7 @@ def test_a_dispatch_page_with_no_manual_code_is_still_a_command():
 
 
 @pytest.mark.parametrize(
-    "manual,expected",
+    ("manual", "expected"),
     [
         ("R", True),
         ("D", True),

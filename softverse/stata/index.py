@@ -41,11 +41,14 @@ import re
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from enum import StrEnum
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import httpx
 
 from softverse.logging_setup import get_logger, stage
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = get_logger(__name__)
 
@@ -154,7 +157,7 @@ def parse_pkg(text: str, package: str, source: str = "ssc") -> StataPackage:
     pkg = StataPackage(package=package, source=source)
     for line in text.splitlines():
         line = line.rstrip()
-        if line.startswith("f ") or line.startswith("F "):
+        if line.startswith(("f ", "F ")):
             entry = line[2:].strip()
             if entry:
                 pkg.files.append(entry)
@@ -218,6 +221,7 @@ class SSCClient:
     """Polite HTTP client for the Boston College RePEc mirror."""
 
     def __init__(self, timeout: float = 30.0) -> None:
+        """Open a client against the SSC mirror."""
         self._client = httpx.Client(
             timeout=timeout,
             follow_redirects=True,
@@ -225,9 +229,11 @@ class SSCClient:
         )
 
     def __enter__(self) -> SSCClient:
+        """Enter the context manager, returning this client."""
         return self
 
     def __exit__(self, *exc: object) -> None:
+        """Close the connection on the way out."""
         self._client.close()
 
     def list_packages(self, letter: str) -> list[str]:
@@ -244,6 +250,7 @@ class SSCClient:
         return sorted(set(re.findall(r'href="([A-Za-z0-9_.\-]+)\.pkg"', response.text)))
 
     def fetch_pkg(self, letter: str, package: str) -> StataPackage | None:
+        """The `.pkg` manifest for one SSC package, or None if it is not there."""
         url = f"{SSC_MIRROR}/{letter}/{package}.pkg"
         try:
             response = self._client.get(url)
@@ -256,6 +263,7 @@ class SSCClient:
         return parse_pkg(response.text, package)
 
     def fetch_ado(self, letter: str, name: str) -> str | None:
+        """The source of one `.ado` file, or None if it is not there."""
         url = f"{SSC_MIRROR}/{letter}/{name}.ado"
         try:
             response = self._client.get(url)

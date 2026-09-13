@@ -39,7 +39,7 @@ $(PDF): $(MD) $(BIB) $(FIGS) paper/preamble.tex
 $(MD): $(PAPER) build/tally/mentions.parquet
 	uv run python paper/render_paper.py $(MD)
 
-# The site. Reads only `build/release/tally/`, which is tracked, so this is
+# The site. Reads only `data/tally/`, which is tracked, so this is
 # the same command locally and in CI, where nothing under `build/tally/`
 # exists. `-W` is the point: the site that shipped before this had a toctree
 # pointing at nine pages nobody ever wrote, and Sphinx warned about it on
@@ -47,16 +47,18 @@ $(MD): $(PAPER) build/tally/mentions.parquet
 # Built from empty every time. Sphinx leaves the HTML for a source you have
 # deleted sitting in the output directory, so an incremental build happily
 # redeploys a page you removed.
+# Generation happens inside docs/conf.py, so this is the same command the
+# fleet's docs workflow runs. Building it a second way here is how a site that
+# works locally starts failing in CI.
 site:
 	rm -rf docs/_build
-	uv run python scripts_build_site.py
 	uv run sphinx-build -b html -W --keep-going docs docs/_build/html
 	@echo "built docs/_build/html"
 
 # Refreshes the tracked tables from the pipeline output. Needs the corpus, so
 # it runs here and never in CI.
 release-tables:
-	uv run python scripts_release_tally.py
+	uv run python scripts/release_tally.py
 
 check:
 	uv run python paper/check_paper.py

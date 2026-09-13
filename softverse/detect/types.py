@@ -10,8 +10,10 @@ outputs with no way to tell which case each was.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from softverse.model.enums import Construct, Language, ParseStatus
+if TYPE_CHECKING:
+    from softverse.model.enums import Construct, Language, ParseStatus
 
 
 @dataclass(frozen=True)
@@ -71,6 +73,7 @@ class ParseReport:
 
     @property
     def error_fraction(self) -> float:
+        """Share of the file the parser could not read, zero for an empty file."""
         return self.bytes_in_error / self.bytes_total if self.bytes_total else 0.0
 
 

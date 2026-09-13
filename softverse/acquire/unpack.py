@@ -18,11 +18,14 @@ import os
 import re
 import tarfile
 import zipfile
-from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from softverse.logging_setup import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 logger = get_logger(__name__)
 
@@ -61,7 +64,7 @@ MAX_EXTRACTED_BYTES = 10 * 1024**3
 _CHUNK = 1 << 20
 
 
-class UnsafeArchive(Exception):
+class UnsafeArchiveError(Exception):
     """An archive member would escape the extraction root, or the archive is a bomb."""
 
 
@@ -77,6 +80,7 @@ class Extracted:
 
     @property
     def n_files(self) -> int:
+        """How many files came out of the archive."""
         return len(self.files)
 
 
@@ -102,7 +106,9 @@ def is_safe_member(name: str, root: Path) -> bool:
 
 def _reject_bomb(n_members: int, label: str) -> None:
     if n_members > MAX_MEMBERS:
-        raise UnsafeArchive(f"{label}: {n_members:,} members (limit {MAX_MEMBERS:,})")
+        raise UnsafeArchiveError(
+            f"{label}: {n_members:,} members (limit {MAX_MEMBERS:,})"
+        )
 
 
 @dataclass
@@ -117,9 +123,10 @@ class Budget:
     remaining: int
 
     def spend(self, n: int, label: str) -> None:
+        """Draw ``n`` from the budget, refusing to go past zero."""
         self.remaining -= n
         if self.remaining < 0:
-            raise UnsafeArchive(
+            raise UnsafeArchiveError(
                 f"{label}: expanded past the "
                 f"{MAX_EXTRACTED_BYTES / 1e9:.0f} GB write budget; "
                 f"stopped extracting"
@@ -132,11 +139,11 @@ def _copy_within_budget(src, target: Path, budget: Budget, label: str) -> None:
     Chunked rather than `read()`-then-`write()` so that neither memory nor disk
     can be committed before the budget has a chance to refuse.
     """
-    with open(target, "wb") as out:
+    with target.open("wb") as out:
         while chunk := src.read(_CHUNK):
             try:
                 budget.spend(len(chunk), label)
-            except UnsafeArchive:
+            except UnsafeArchiveError:
                 out.close()
                 target.unlink(missing_ok=True)
                 raise
@@ -186,7 +193,7 @@ def extract_zip(
                 with zf.open(info) as src:
                     _copy_within_budget(src, target, budget, archive.name)
                 result.files.append(target)
-    except UnsafeArchive as exc:
+    except UnsafeArchiveError as exc:
         result.error = str(exc)
     except (zipfile.BadZipFile, OSError) as exc:
         result.error = f"{type(exc).__name__}: {exc}"
@@ -234,7 +241,7 @@ def extract_7z(
             infos = sz.list()
             names = [i.filename for i in infos]
             if len(names) > MAX_MEMBERS:
-                raise UnsafeArchive(f"{archive.name}: {len(names):,} members")
+                raise UnsafeArchiveError(f"{archive.name}: {len(names):,} members")
             links = {i.filename for i in infos if i.is_symlink}
             wanted = [
                 n
@@ -253,9 +260,9 @@ def extract_7z(
                 # after the fact here. The archive-level member cap and the
                 # `wanted` filter are what bound it in the meantime.
                 budget.spend(sum(p.stat().st_size for p in result.files), archive.name)
-    except UnsafeArchive as exc:
+    except UnsafeArchiveError as exc:
         result.error = str(exc)
-    except Exception as exc:  # noqa: BLE001 - py7zr raises a wide variety
+    except Exception as exc:
         result.error = f"{type(exc).__name__}: {exc}"
     return result
 
@@ -303,9 +310,9 @@ def extract_rar(
                 with rf.open(info) as src:
                     _copy_within_budget(src, target, budget, archive.name)
                 result.files.append(target)
-    except UnsafeArchive as exc:
+    except UnsafeArchiveError as exc:
         result.error = str(exc)
-    except Exception as exc:  # noqa: BLE001 - rarfile wraps varied backend errors
+    except Exception as exc:
         result.error = f"{type(exc).__name__}: {exc}"
     return result
 
@@ -348,7 +355,7 @@ def extract_tar(
                 with extracted:
                     _copy_within_budget(extracted, target, budget, archive.name)
                 result.files.append(target)
-    except UnsafeArchive as exc:
+    except UnsafeArchiveError as exc:
         result.error = str(exc)
     except (tarfile.TarError, OSError) as exc:
         result.error = f"{type(exc).__name__}: {exc}"
@@ -379,10 +386,10 @@ _MAGIC: tuple[tuple[bytes, str], ...] = (
 #: `pkg.7z.002` part of `pkg.7z`; `pkg.r00` part of `pkg.rar`; and a
 #: `pkg.partN.rar` set names itself.
 _SEGMENT_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
-    (re.compile(r"^(.+?)\.z\d{2}$", re.I), "{}.zip"),
-    (re.compile(r"^(.+?\.7z)\.\d{3}$", re.I), "{}"),
-    (re.compile(r"^(.+?)\.r\d{2}$", re.I), "{}.rar"),
-    (re.compile(r"^(.+?)\.part\d+\.rar$", re.I), "{}.part1.rar"),
+    (re.compile(r"^(.+?)\.z\d{2}$", re.IGNORECASE), "{}.zip"),
+    (re.compile(r"^(.+?\.7z)\.\d{3}$", re.IGNORECASE), "{}"),
+    (re.compile(r"^(.+?)\.r\d{2}$", re.IGNORECASE), "{}.rar"),
+    (re.compile(r"^(.+?)\.part\d+\.rar$", re.IGNORECASE), "{}.part1.rar"),
 )
 
 
@@ -436,7 +443,7 @@ def archive_format(archive: Path) -> str | None:
     into a failure.
     """
     try:
-        with open(archive, "rb") as handle:
+        with archive.open("rb") as handle:
             head = handle.read(262)
     except OSError:
         head = b""
@@ -558,7 +565,7 @@ def _extract_gz(
         with gzip.open(archive, "rb") as src:
             _copy_within_budget(src, target, budget, archive.name)
         result.files.append(target)
-    except UnsafeArchive as exc:
+    except UnsafeArchiveError as exc:
         target.unlink(missing_ok=True)
         result.error = str(exc)
     except OSError as exc:

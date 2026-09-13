@@ -26,12 +26,15 @@ import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from softverse.acquire.http import PoliteClient
 from softverse.acquire.state import DatasetRecord, Ledger, atomic_write_bytes
 from softverse.logging_setup import get_logger
 from softverse.model.enums import CollectionState, Source
 from softverse.sources.dataverse import is_wanted
+
+if TYPE_CHECKING:
+    from softverse.acquire.http import PoliteClient
 
 logger = get_logger(__name__)
 
@@ -46,7 +49,7 @@ DEFAULT_DAILY_BUDGET = 10_000
 MAX_DEPTH = 6
 
 
-class BudgetExhausted(Exception):
+class BudgetExhaustedError(Exception):
     """The daily request allowance is spent. Not an error -- a stopping point."""
 
 
@@ -58,17 +61,23 @@ class Budget:
     spent: int = 0
 
     def charge(self, n: int = 1) -> None:
+        """Spend ``n`` requests, raising once the budget is gone."""
         self.spent += n
         if self.spent >= self.limit:
-            raise BudgetExhausted(f"spent {self.spent} of {self.limit} daily requests")
+            raise BudgetExhaustedError(
+                f"spent {self.spent} of {self.limit} daily requests"
+            )
 
     @property
     def remaining(self) -> int:
+        """Requests left in the budget, never negative."""
         return max(0, self.limit - self.spent)
 
 
 @dataclass
 class OSFFile:
+    """One file listed on an OSF node."""
+
     name: str
     path: str
     size: int
@@ -78,6 +87,8 @@ class OSFFile:
 
 @dataclass
 class OSFNode:
+    """One OSF project or component, as its API describes it."""
+
     node_id: str
     title: str
     date_created: str | None
@@ -86,6 +97,7 @@ class OSFNode:
 
     @property
     def year(self) -> int | None:
+        """Creation year, or None if the API gave no usable date."""
         if self.date_created and self.date_created[:4].isdigit():
             return int(self.date_created[:4])
         return None
@@ -270,13 +282,13 @@ def collect(
     for index, node in enumerate(todo, 1):
         try:
             state, node_rows = collect_node(client, node, files_root, budget)
-        except BudgetExhausted as exc:
+        except BudgetExhaustedError as exc:
             logger.warning(
                 "daily budget exhausted; stopping cleanly",
                 extra={"done": index - 1, "of": len(todo), "detail": str(exc)},
             )
             break
-        except Exception as exc:  # noqa: BLE001 - one bad node must not end the run
+        except Exception as exc:
             logger.exception("osf node failed", extra={"node": node.node_id})
             state = DatasetRecord(
                 dataset_doi=node.doi or f"osf:{node.node_id}",

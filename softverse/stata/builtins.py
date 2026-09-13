@@ -379,6 +379,7 @@ class BuiltinSet:
     source: str
 
     def __contains__(self, command: str) -> bool:
+        """Whether ``command`` is an official Stata command, case-insensitively."""
         return command.lower() in self.forms
 
     def collisions(self, package_commands: set[str]) -> set[str]:

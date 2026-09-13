@@ -67,9 +67,7 @@ def _rebound_names(tree: ast.Module) -> set[str]:
         targets: list[ast.expr] = []
         if isinstance(node, ast.Assign):
             targets = list(node.targets)
-        elif isinstance(node, ast.AugAssign | ast.AnnAssign):
-            targets = [node.target]
-        elif isinstance(node, ast.For | ast.AsyncFor):
+        elif isinstance(node, ast.AugAssign | ast.AnnAssign | ast.For | ast.AsyncFor):
             targets = [node.target]
         elif isinstance(node, ast.withitem) and node.optional_vars is not None:
             targets = [node.optional_vars]
@@ -138,22 +136,22 @@ def _walk_ast(tree: ast.Module, lines: list[str]) -> list[Mention]:
     mentions: list[Mention] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            for alias in node.names:
-                mentions.append(
-                    Mention(
-                        # Top-level module only. Emitting the dotted path too is
-                        # what made sklearn and sklearn.model_selection separate
-                        # "packages" in v1.
-                        raw_name=alias.name.split(".")[0],
-                        construct=Construct.IMPORT,
-                        line=node.lineno,
-                        col=node.col_offset,
-                        byte_start=0,
-                        byte_end=0,
-                        snippet=_snippet(lines, node.lineno),
-                        is_conditional=_conditional(node, parents),
-                    )
+            mentions.extend(
+                Mention(
+                    # Top-level module only. Emitting the dotted path too is
+                    # what made sklearn and sklearn.model_selection separate
+                    # "packages" in v1.
+                    raw_name=alias.name.split(".")[0],
+                    construct=Construct.IMPORT,
+                    line=node.lineno,
+                    col=node.col_offset,
+                    byte_start=0,
+                    byte_end=0,
+                    snippet=_snippet(lines, node.lineno),
+                    is_conditional=_conditional(node, parents),
                 )
+                for alias in node.names
+            )
         elif isinstance(node, ast.ImportFrom):
             if node.level and node.level > 0:
                 # `from . import x` / `from .helpers import f`. A local module,
@@ -177,26 +175,26 @@ def _walk_ast(tree: ast.Module, lines: list[str]) -> list[Mention]:
                 # of these statements import more than one name. The package
                 # repeats across them; deposit and file counts collapse it, so
                 # only the raw mention count sees the difference.
-                for alias in node.names or [None]:
-                    mentions.append(
-                        Mention(
-                            raw_name=node.module.split(".")[0],
-                            construct=Construct.IMPORT_FROM,
-                            line=node.lineno,
-                            col=node.col_offset,
-                            byte_start=0,
-                            byte_end=0,
-                            snippet=_snippet(lines, node.lineno),
-                            is_conditional=_conditional(node, parents),
-                            # `from x import *` has the name `*`, which names
-                            # no function, so it is recorded as no function.
-                            called_function=(
-                                alias.name
-                                if alias is not None and alias.name != "*"
-                                else None
-                            ),
-                        )
+                mentions.extend(
+                    Mention(
+                        raw_name=node.module.split(".")[0],
+                        construct=Construct.IMPORT_FROM,
+                        line=node.lineno,
+                        col=node.col_offset,
+                        byte_start=0,
+                        byte_end=0,
+                        snippet=_snippet(lines, node.lineno),
+                        is_conditional=_conditional(node, parents),
+                        # `from x import *` has the name `*`, which names
+                        # no function, so it is recorded as no function.
+                        called_function=(
+                            alias.name
+                            if alias is not None and alias.name != "*"
+                            else None
+                        ),
                     )
+                    for alias in node.names or [None]
+                )
         elif isinstance(node, ast.Call):
             func = node.func
             name = (
@@ -346,7 +344,7 @@ def _names_after(tokens: list[tokenize.TokenInfo], start: int) -> list[tuple[str
         i += 1
     if current:
         out.append(("".join(current), line))
-    return [(n, line) for n, line in out if n and n[0].isalpha() or n.startswith("_")]
+    return [(n, line) for n, line in out if (n and n[0].isalpha()) or n.startswith("_")]
 
 
 def extract(source: str | bytes, filename: str = "<source>") -> ExtractResult:

@@ -235,7 +235,7 @@ def test_osf_budget_stops_cleanly_rather_than_hitting_the_wall():
     budget = osf.Budget(limit=3)
     budget.charge()
     budget.charge()
-    with pytest.raises(osf.BudgetExhausted):
+    with pytest.raises(osf.BudgetExhaustedError):
         budget.charge()
     assert budget.remaining == 0
 
@@ -280,7 +280,7 @@ def test_unknown_community_is_refused_not_silently_widened(monkeypatch):
             request=httpx.Request("GET", url),
         ),
     )
-    with pytest.raises(zenodo.UnknownCommunity, match="whole"):
+    with pytest.raises(zenodo.UnknownCommunityError, match="whole"):
         zenodo.verify_community(client, "restud")
     client.close()
 
@@ -329,7 +329,9 @@ def test_extraction_failure_marks_the_deposit_retryable(tmp_path, monkeypatch):
         }
     )
     client = serving(b"not a real zip")
-    state, _rows = zenodo.collect_record(client, record, tmp_path)
+    state, _rows = zenodo.collect_record(
+        client, record, tmp_path, disk=unlimited_disk()
+    )
     assert state.n_failed == 1
     assert state.state == "partial", "must be retryable, not complete"
     assert state.needs_retry
@@ -757,9 +759,7 @@ def test_deposits_deferred_during_a_run_are_retried_before_it_ends(tmp_path):
             dataset_doi=record.doi, state="complete", n_candidate=1, n_fetched=1
         ), []
 
-    import pytest as _pytest
-
-    monkeypatch = _pytest.MonkeyPatch()
+    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(zenodo, "collect_record", defer_once)
     ledger = Ledger(tmp_path / "ledger.jsonl")
     client = serving(b"")

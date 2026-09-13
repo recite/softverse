@@ -1,13 +1,12 @@
 [build-system]
-requires = ["uv_build>=0.9.13,<0.10.0"]
+requires = ["uv_build>=0.12.5,<0.13"]
 build-backend = "uv_build"
 
 [project]
 name = "softverse"
-version = "2.0.0"
 description = "Measure which software social science replication code loads"
 authors = [{name = "Gaurav Sood", email = "gsood07@gmail.com"}]
-readme = "readme.md"
+readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["research", "software", "citations", "replication", "dataverse", "zenodo"]
@@ -39,6 +38,11 @@ dependencies = [
     "packaging>=24.0",
 ]
 
+# The one place the release number is typed. The release workflow refuses a tag
+# that does not match the built wheel, and `__version__` reads the installed
+# metadata, so there is no second copy to drift.
+version = "2.0.0"
+
 # A PEP 621 table. The bare `homepage`/`repository`/`documentation` keys that
 # used to sit under [project] are not part of the standard, so the backend
 # dropped them and the built wheel carried no Project-URL at all: the PyPI
@@ -50,28 +54,36 @@ Repository = "https://github.com/recite/softverse"
 Issues = "https://github.com/recite/softverse/issues"
 Data = "https://recite.github.io/softverse/data/"
 
-[project.optional-dependencies]
-dev = [
-    "ruff>=0.14.6",
-    "pytest>=7.0.0",
-    "pytest-cov>=3.0.0",
-    "pre-commit>=2.20.0",
-    "sphinx>=5.0.0",
-    "furo>=2022.6.21",
-    "myst-parser>=4.0.0",
-]
-
+# Groups, not extras. The same dev list used to sit in both
+# `[project.optional-dependencies]` and here, so installing one or the other
+# gave different environments; a dev dependency is not part of what this
+# package offers its users, which is what an extra means.
+#
+# `docs` is separate because the documentation build installs only that group
+# and the project itself. Anything `docs/conf.py` reaches for at build time
+# has to resolve from here.
 [dependency-groups]
 dev = [
     "ruff>=0.14.6",
-    "pytest>=7.0.0",
-    "pytest-cov>=3.0.0",
     "pre-commit>=2.20.0",
-    "sphinx>=5.0.0",
-    "furo>=2022.6.21",
-    "myst-parser>=4.0.0",
     "twine>=6.2.0",
+    # The paper's figures, not the package's.
     "matplotlib>=3.11.1",
+    { include-group = "test" },
+    { include-group = "docs" },
+    "pyright>=1.1.390",
+    "pydoclint>=0.5",
+]
+test = [
+    "pytest>=8",
+    "pytest-cov>=6",
+]
+docs = [
+    "sphinx>=8",
+    "furo",
+    "myst-parser",
+    "sphinx-copybutton",
+    "py-canon @ git+https://github.com/gojiplus/py-canon@v1",
 ]
 
 
@@ -89,7 +101,6 @@ exclude = [
     "buck-out",
     "build",
     "dist",
-    "archive/",
     "temp/",
     "logs/",
     "debug_*.py",
@@ -98,39 +109,99 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-# Enable flake8 equivalents + additional rules
+external = ["DOC"]
 select = [
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "F",    # pyflakes
-    "I",    # isort
-    "B",    # flake8-bugbear
-    "C4",   # flake8-comprehensions
-    "UP",   # pyupgrade
+    "E", "W", "F", "I", "B", "C4", "UP", "N", "D", "S", "SIM", "T20", "PT", "RUF",
+    "PTH", "RET", "PIE", "FURB", "PERF", "DTZ", "LOG", "G", "TC", "FLY",
+    "RSE", "SLOT", "FA", "A", "EXE", "ICN", "PGH", "PLE", "ARG", "SLF",
 ]
-ignore = [
-    "E203",  # whitespace before ':' (conflicts with black)
-    "E501",  # line too long (handled by black)
-    "B008",  # do not perform function calls in argument defaults
-]
+# D203/D213: the google convention the fleet standard picks. W191/D206/D300:
+# ruff's own docs list these as always incompatible with `ruff format`, which
+# the standard also runs.
+ignore = ["D203", "D213", "W191", "D206", "D300", "B008", "E203", "E501"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "D", "ARG", "SLF", "S608", "S603", "S607", "S106", "RUF012"]
+"docs/**" = ["D"]
 "__init__.py" = ["F401"]
-
-["F401"]  # imported but unused
-"softverse/analyzers/import_analyzer.py" = ["E501"]  # long lines in R code templates
+# The stdout of these is their product, not debug output: the tally prints
+# the top packages, the release prints what it verified, the paper's tooling
+# reports which computed chunks still run. `print` is the interface, and
+# nothing imports them, so they have no public API to document.
+#
+# S608 flags an f-string reaching SQL. Here the interpolated value is always a
+# module-level `Path` naming a Parquet file, never anything a user supplies,
+# and DuckDB has no parameter binding for a `FROM` clause: the filename is
+# part of the query text or there is no query.
+#
+# S603/S607 flag `subprocess.run(["Rscript", ...])`. The argv is a fixed list
+# with no shell, and the bare name is deliberate: resolving `Rscript` through
+# PATH is what lets the validation run on a laptop and a runner alike.
+"scripts/**" = ["T201", "S608", "D", "S603", "S607"]
+"paper/**" = ["T201", "D"]
+# Progress for an interactive upload: which draft it reused, each file as it
+# goes up, and the DOI at the end. Ruff's fix for `print` is to delete the
+# call, which it did, leaving `show()` as a bare `pass` -- a deposit tool that
+# uploads in silence and tells you nothing.
+"softverse/release/zenodo_deposit.py" = ["T201"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["softverse"]
 split-on-trailing-comma = true
 
-[tool.uv.build-backend]
-module-name = "softverse"
-module-root = ""
-
 [tool.pytest.ini_options]
+minversion = "6"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=softverse --cov-report=term-missing -q"
+log_level = "INFO"
+xfail_strict = true
+filterwarnings = ["error"]
+addopts = [
+    "--strict-config", "--strict-markers", "-ra",
+    "--cov=softverse", "--cov-report=term-missing", "-q",
+]
+
+[tool.pyright]
+include = ["softverse"]
+typeCheckingMode = "standard"
+
+[tool.pydoclint]
+style = "google"
+arg-type-hints-in-docstring = false
+check-return-types = false
+check-class-attributes = false
+allow-init-docstring = true
+exclude = '\.venv|tests|docs'
+
+# Flat layout: the package sits at the root rather than under src/.
+[tool.uv.build-backend]
+module-root = ""
+
+[tool.codespell]
+# Stata, not typos: Mata is Stata's matrix language and `ttest`, `fillin` are
+# its commands; `ture` and `ine` are fragments of the `capture`/`define`
+# abbreviation regexes. `pres` is a variable in a paper chunk. `unparseable`
+# is a standard spelling.
+ignore-words-list = "mata,ttest,fillin,ture,ine,pres,unparseable"
+
+[tool.preen]
+# Not documentation links. Schemeless on purpose: with a scheme the check's
+# URL extractor reads the patterns themselves as links.
+link_ignore = [
+  # Placeholder hosts and paths in tests, served by a mock transport.
+  '//x/',
+  'dataverse\.harvard\.edu/api/x',
+  'zenodo\.org/f/',
+  'zenodo\.org/api/files/x/',
+  # API bases, alive but 404 to a bare GET.
+  'zenodo\.org/api$',
+  # A docstring's example of the `user/repo` form install_github takes.
+  'github\.com/user/repo',
+  # A download URL recorded in a deposit's renv.lock, published as data.
+  'sites\.google\.com/a/stonybrook\.edu/mperess',
+]

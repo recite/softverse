@@ -11,6 +11,7 @@ These read the metadata rather than the source.
 
 from __future__ import annotations
 
+import re
 import tomllib
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -45,7 +46,8 @@ def test_project_urls_are_declared_where_the_standard_looks():
     """
     urls = PROJECT.get("urls", {})
     assert urls, "no [project.urls] table"
-    assert "Repository" in urls and "Documentation" in urls
+    assert "Repository" in urls
+    assert "Documentation" in urls
 
     stray = {"homepage", "repository", "documentation"} & set(PROJECT)
     assert not stray, f"non-standard keys under [project], silently dropped: {stray}"
@@ -71,7 +73,9 @@ def test_no_dependency_is_declared_without_being_imported():
         "zenodo-client": "zenodo_client",
         "tree-sitter-language-pack": "tree_sitter_language_pack",
     }
-    sources = list((ROOT / "softverse").rglob("*.py")) + list(ROOT.glob("scripts_*.py"))
+    sources = list((ROOT / "softverse").rglob("*.py")) + list(
+        (ROOT / "scripts").glob("*.py")
+    )
     imported: set[str] = set()
     for path in sources:
         for node in ast.walk(ast.parse(path.read_text())):
@@ -100,27 +104,46 @@ def _without_comments(source: str) -> str:
     )
 
 
-def test_the_version_is_not_typed_in_two_places():
-    """`__init__.py` carried its own copy, free to drift from pyproject.
+def test_the_version_is_typed_once():
+    """`project.version` is the release number, and nothing else may state one.
 
-    Checks for the release number specifically, not for any assignment to
-    `__version__`: the fallback used when the package is not installed has to
-    assign something, and an earlier version of this test failed on it.
+    Two copies are two numbers that can disagree, so `__init__.py` reads the
+    installed metadata rather than naming a release itself.
 
     Comments are stripped first. What must not drift is a version the code
-    *uses*; a comment explaining why `EXTRACTOR_VERSION` moved off 2.0.0 has
-    to be free to name 2.0.0, and once the package version became 2.0.0 the
-    raw-text search failed on that prose.
+    *uses*, and the comment explaining why `EXTRACTOR_VERSION` moved off 2.0.0
+    has to stay free to say 2.0.0.
     """
-    source = _without_comments((ROOT / "softverse" / "__init__.py").read_text())
-    declared = PROJECT["version"]
-    assert declared not in source, (
-        f"{declared!r} is typed into __init__.py as well as pyproject.toml"
-    )
+    assert "dynamic" not in PROJECT or "version" not in PROJECT["dynamic"]
+    assert re.fullmatch(r"\d+\.\d+\.\d+", PROJECT["version"])
 
+    source = _without_comments((ROOT / "softverse" / "__init__.py").read_text())
+    allowed = {
+        # A different number on purpose: it names the instrument that produced
+        # a mention row, not the release.
+        softverse_module().EXTRACTOR_VERSION,
+        # The sentinel for "running from a source tree with nothing
+        # installed", where `importlib.metadata` has nothing to report.
+        "0.0.0",
+    }
+    typed = [
+        v
+        for v in re.findall(r"""["'](\d+\.\d+\.\d+[^"']*)["']""", source)
+        if v not in allowed
+    ]
+    assert not typed, f"release numbers typed into __init__.py: {typed}"
+
+
+def softverse_module():
     import softverse
 
-    assert softverse.__version__ == declared
+    return softverse
+
+
+def test_the_installed_version_is_the_declared_one():
+    """`__version__` must report `project.version`, or the installed package
+    and the checkout describe different releases."""
+    assert softverse_module().__version__ == PROJECT["version"]
 
 
 def test_the_extractor_version_matches_the_released_data():

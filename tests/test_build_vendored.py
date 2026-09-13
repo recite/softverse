@@ -18,12 +18,15 @@ to be worth vendoring -- which are the ones the paper ranks.
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from softverse.build.pipeline import CorpusFile, build
 from softverse.registries.resolve import Registry
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -118,9 +121,10 @@ def test_a_program_defined_under_an_ado_tree_is_not_the_authors(tmp_path, regist
     vendored = [
         f for f in result.files if f["relative_path"].startswith("Codes/ado/base/")
     ]
-    assert vendored and all(
-        f["parse_status"] == "skipped_vendored" for f in vendored
-    ), "a file under an ado/ tree must not be analyzed as research code"
+    assert vendored, "the fixture should contain files under an ado/ tree"
+    assert all(f["parse_status"] == "skipped_vendored" for f in vendored), (
+        "a file under an ado/ tree must not be analyzed as research code"
+    )
 
 
 def test_both_rules_together_on_one_deposit(tmp_path, registry):

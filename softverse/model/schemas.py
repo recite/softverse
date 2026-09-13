@@ -1,4 +1,4 @@
-"""PyArrow schemas for every table Softverse emits.
+r"""PyArrow schemas for every table Softverse emits.
 
 Design rules, each traceable to a v1 defect:
 
@@ -402,6 +402,12 @@ SCHEMAS: dict[str, pa.Schema] = {
 
 def schema_for(table: str) -> pa.Schema:
     """Return the schema for ``table``.
+
+    Args:
+        table: Table name.
+
+    Returns:
+        The declared PyArrow schema.
 
     Raises:
         KeyError: if ``table`` is not a known table, listing what is.

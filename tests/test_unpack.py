@@ -10,7 +10,7 @@ from __future__ import annotations
 import io
 import tarfile
 import zipfile
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -22,6 +22,9 @@ from softverse.acquire.unpack import (
     is_safe_member,
     relative_member_path,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 KEEP = frozenset({".r", ".py", ".do"})
 KEEP_NAMES = frozenset({"renv.lock", "requirements.txt"})
@@ -87,7 +90,8 @@ def test_declared_member_count_bomb_is_refused(tmp_path, monkeypatch):
     monkeypatch.setattr("softverse.acquire.unpack.MAX_MEMBERS", 5)
     archive = make_zip(tmp_path / "many.zip", {f"f{i}.R": b"x" for i in range(10)})
     result = extract_zip(archive, tmp_path / "out", KEEP)
-    assert result.error is not None and "members" in result.error
+    assert result.error is not None
+    assert "members" in result.error
 
 
 def test_size_bomb_of_wanted_files_is_refused(tmp_path, monkeypatch):
@@ -95,7 +99,8 @@ def test_size_bomb_of_wanted_files_is_refused(tmp_path, monkeypatch):
     monkeypatch.setattr("softverse.acquire.unpack.MAX_EXTRACTED_BYTES", 100)
     archive = make_zip(tmp_path / "bomb.zip", {"big.R": b"x" * 5000})
     result = extract_zip(archive, tmp_path / "out", KEEP)
-    assert result.error is not None and "expanded" in result.error
+    assert result.error is not None
+    assert "expanded" in result.error
 
 
 def test_an_archive_of_mostly_data_is_extracted_not_refused(tmp_path, monkeypatch):
@@ -134,7 +139,8 @@ def test_the_budget_stops_extraction_rather_than_reporting_it_afterwards(
         tmp_path / "runaway.zip", {"a.R": b"x" * 5000, "b.R": b"y" * 5000}
     )
     result = extract_zip(archive, dest, KEEP)
-    assert result.error is not None and "expanded" in result.error
+    assert result.error is not None
+    assert "expanded" in result.error
     on_disk = sum(p.stat().st_size for p in dest.rglob("*") if p.is_file())
     assert on_disk <= 6_000, f"{on_disk} bytes written against a 6,000 budget"
 
@@ -166,7 +172,8 @@ def test_the_budget_spans_nesting_levels(tmp_path, monkeypatch):
         tmp_path / "outer.zip", {"a.R": b"x" * 5000, "data.zip": inner.getvalue()}
     )
     result = extract(archive, tmp_path / "out", KEEP | {".zip"})
-    assert result.error is not None and "expanded" in result.error
+    assert result.error is not None
+    assert "expanded" in result.error
 
 
 # -- what gets kept -------------------------------------------------------
@@ -265,7 +272,8 @@ def test_unsupported_type_is_reported(tmp_path):
     odd = tmp_path / "thing.sit"
     odd.write_bytes(b"StuffIt!")
     result = extract(odd, tmp_path / "out", KEEP)
-    assert result.error is not None and "unsupported" in result.error
+    assert result.error is not None
+    assert "unsupported" in result.error
 
 
 def test_rar_is_routed_to_the_rar_reader(tmp_path):
@@ -448,4 +456,5 @@ def test_expansion_budget_stops_a_runaway_deposit(tmp_path, monkeypatch):
     monkeypatch.setattr("softverse.acquire.unpack.MAX_EXTRACTED_BYTES", 100)
     archive = make_zip(tmp_path / "big.zip", {"a.R": b"x" * 5000})
     result = extract(archive, tmp_path / "out", KEEP)
-    assert result.error is not None and "expanded" in result.error
+    assert result.error is not None
+    assert "expanded" in result.error

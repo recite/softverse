@@ -236,21 +236,21 @@ def extract_notebook(source: str) -> ExtractResult:
         cleaned: list[str] = []
         for line in code.splitlines():
             if install := _MAGIC_INSTALL.match(line):
-                for token in install.group(1).split():
-                    if token and not token.startswith("-"):
-                        mentions.append(
-                            Mention(
-                                raw_name=token.split("==")[0].split(">")[0],
-                                construct=Construct.SHELL_INSTALL,
-                                line=index,
-                                col=0,
-                                byte_start=0,
-                                byte_end=0,
-                                snippet=line.strip()[:300],
-                                cell_index=index,
-                                language=language,
-                            )
-                        )
+                mentions.extend(
+                    Mention(
+                        raw_name=token.split("==")[0].split(">")[0],
+                        construct=Construct.SHELL_INSTALL,
+                        line=index,
+                        col=0,
+                        byte_start=0,
+                        byte_end=0,
+                        snippet=line.strip()[:300],
+                        cell_index=index,
+                        language=language,
+                    )
+                    for token in install.group(1).split()
+                    if token and not token.startswith("-")
+                )
                 continue
             # Magics and shell escapes are not valid source; dropping the line
             # keeps one bad line from costing the whole cell.
@@ -265,9 +265,11 @@ def extract_notebook(source: str) -> ExtractResult:
             # Per-cell isolation: one unparseable cell must not void the
             # notebook, which is what happens when the whole file is parsed.
             failed_cells += 1
-        for mention in result.mentions:
-            # `replace`, for the reason given in `_shift`.
-            mentions.append(replace(mention, cell_index=index, language=language))
+        # `replace`, for the reason given in `_shift`.
+        mentions.extend(
+            replace(mention, cell_index=index, language=language)
+            for mention in result.mentions
+        )
 
     return ExtractResult(
         mentions=mentions,

@@ -42,12 +42,12 @@ def test_the_paper_types_no_numbers_it_could_compute():
     import re
 
     text = (PAPER_DIR / "paper.qmd").read_text()
-    prose = re.sub(r"^```\{python\}\n.*?^```", "", text, flags=re.M | re.S)
+    prose = re.sub(r"^```\{python\}\n.*?^```", "", text, flags=re.MULTILINE | re.DOTALL)
     # Inline code spans hold identifiers, not claims: `.7z.002` is a filename
     # extension and `renv 1.2.3` a version. Stripping them keeps the check on
     # prose, where a number is an assertion about the corpus.
     prose = re.sub(r"`[^`\n]*`", "", prose)
-    prose = re.sub(r"^\s*[-*]?\s*\[.*?\]\(.*?\)", "", prose, flags=re.M)
+    prose = re.sub(r"^\s*[-*]?\s*\[.*?\]\(.*?\)", "", prose, flags=re.MULTILINE)
 
     #: Facts about the world rather than measurements of our corpus: Zenodo's
     #: size, a CVE, and another paper's deposit count.
@@ -75,7 +75,7 @@ def _prose() -> str:
     import re
 
     text = (PAPER_DIR / "paper.qmd").read_text()
-    text = re.sub(r"^```\{python\}\n.*?^```", "", text, flags=re.M | re.S)
+    text = re.sub(r"^```\{python\}\n.*?^```", "", text, flags=re.MULTILINE | re.DOTALL)
     return re.sub(r"`\{python\}[^`]*`", "", text)
 
 
@@ -106,7 +106,7 @@ def test_no_bold_header_list_items():
     """
     import re
 
-    found = re.findall(r"^\s*[-*]\s+\*\*[^*]+\*\*", _prose(), re.M)
+    found = re.findall(r"^\s*[-*]\s+\*\*[^*]+\*\*", _prose(), re.MULTILINE)
     assert not found, f"bold-header list items: {found}"
 
 
@@ -128,7 +128,7 @@ def test_the_paper_opens_on_a_finding_not_a_topic():
     import re
 
     prose = _prose()
-    first_heading = re.search(r"^## (.+)$", prose, re.M)
+    first_heading = re.search(r"^## (.+)$", prose, re.MULTILINE)
     assert first_heading, "no sections found"
     assert "what this measures" not in first_heading.group(1).lower(), (
         "the paper opens on its own caveats again"
@@ -156,8 +156,8 @@ def _sentences(text: str) -> list[str]:
     """Prose split into sentences, with markup and whitespace normalised."""
     import re
 
-    text = re.sub(r"```\{=latex\}.*?```", " ", text, flags=re.S)
-    text = re.sub(r"^\s*[|>#].*$", " ", text, flags=re.M)
+    text = re.sub(r"```\{=latex\}.*?```", " ", text, flags=re.DOTALL)
+    text = re.sub(r"^\s*[|>#].*$", " ", text, flags=re.MULTILINE)
     text = re.sub(r"\[@[^\]]+\]|\\cref\{[^}]*\}|[`*_]", " ", text)
     text = " ".join(text.split())
     return [s.strip() for s in re.split(r"(?<=[.?!])\s+", text) if s.strip()]
@@ -238,7 +238,7 @@ def test_the_paper_does_not_say_we():
     import re
 
     prose = _prose()
-    found = re.findall(r"\b(we|our|ours)\b", prose, re.I)
+    found = re.findall(r"\b(we|our|ours)\b", prose, re.IGNORECASE)
     assert not found, f"{len(found)} first-person plurals, e.g. {found[:5]}"
 
 

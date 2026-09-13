@@ -15,7 +15,7 @@ import pytest
 RELEASE = Path("build/release/stata-index")
 pytestmark = pytest.mark.skipif(
     not (RELEASE / "stata_command_index.parquet").exists(),
-    reason="release bundle not built; run scripts_release_stata_index.py",
+    reason="release bundle not built; run scripts/release_stata_index.py",
 )
 
 
@@ -64,7 +64,8 @@ def test_ambiguity_is_preserved_not_resolved(index):
 
 
 def test_csv_and_parquet_agree(index):
-    csv_rows = sum(1 for _ in open(RELEASE / "stata_command_index.csv")) - 1
+    with (RELEASE / "stata_command_index.csv").open(encoding="utf-8") as handle:
+        csv_rows = sum(1 for _ in handle) - 1
     parquet_rows = index.execute(
         f"SELECT count(*) FROM '{RELEASE / 'stata_command_index.parquet'}'"
     ).fetchone()[0]

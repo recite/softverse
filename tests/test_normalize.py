@@ -14,7 +14,7 @@ from softverse.registries.resolve import normalize
 
 
 @pytest.mark.parametrize(
-    "raw,expected",
+    ("raw", "expected"),
     [
         # PEP 503: lowercase *and* collapse runs of -_. to a single hyphen.
         # Lowercasing alone left `scikit_learn` and `scikit-learn` as two

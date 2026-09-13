@@ -35,9 +35,12 @@ import json
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from softverse.acquire.http import PoliteClient, RateLimiter
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 HELP_URL = "https://www.stata.com/help.cgi?{name}"
 
@@ -52,7 +55,7 @@ CHECKPOINT_EVERY = 25
 #: The stub served for a name Stata does not know. Matched as a sentence
 #: because the status code is always 200 and the body size is only incidentally
 #: different -- see the module docstring.
-_NOT_FOUND = re.compile(r"help for\s+\S+\s+not found", re.I)
+_NOT_FOUND = re.compile(r"help for\s+\S+\s+not found", re.IGNORECASE)
 
 #: Stata help pages open with the manual they come from: `[R] regress`,
 #: `[D] list`, `[MV] pca`. The bracketed code says what *kind* of thing is
@@ -89,14 +92,17 @@ class OfficialSnapshot:
     source: str = HELP_URL
 
     def __contains__(self, name: str) -> bool:
+        """Whether ``name`` was verified as an official Stata command."""
         return self.checked.get(name.lower(), False)
 
     @property
     def official(self) -> set[str]:
+        """The names the help server confirmed."""
         return {name for name, ok in self.checked.items() if ok}
 
     @property
     def not_official(self) -> set[str]:
+        """The names the help server did not confirm."""
         return {name for name, ok in self.checked.items() if not ok}
 
 
