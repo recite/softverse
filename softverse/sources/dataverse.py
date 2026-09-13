@@ -479,10 +479,19 @@ def collect_dataset(
             frozenset(MANIFEST_FILENAMES),
         )
         if result.error:
+            # A failure, not a deposit without code: counting it fetched marked
+            # the deposit complete and so beyond any retry. The archive stays as
+            # the evidence, as it does on Zenodo.
             logger.warning(
                 "archive extraction failed",
                 extra={"doi": doi, "archive": candidate.filename, "err": result.error},
             )
+            record.n_failed += 1
+            record.error = f"extract: {result.error}"
+            continue
+        # The code is out, and the ledger keeps the file id to refetch it, so
+        # the archive -- mostly data -- goes.
+        archive_path.unlink(missing_ok=True)
         file_rows.extend(
             {
                 "dataset_doi": doi,
