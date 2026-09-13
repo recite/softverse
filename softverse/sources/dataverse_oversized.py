@@ -54,6 +54,11 @@ KEEP_NAMES = frozenset(MANIFEST_FILENAMES)
 #: `code.zip`; fetching every one would be the full download by instalments.
 NESTED_CAP_BYTES = 5 * 1024 * 1024
 
+#: And at most this much in total per outer archive. The size cap alone did not
+#: bound it: the 91 GB package's nested archives were mostly under 5 MB, so all
+#: ~11,000 were fetched -- 7 GB transferred for 9 scripts, none of them nested.
+NESTED_BUDGET_BYTES = 20 * 1024 * 1024
+
 USER_AGENT = "softverse/2.0 (research; github.com/recite/softverse)"
 
 
@@ -149,14 +154,20 @@ def recover_zip(
     """Read a remote zip's directory and fetch only the members worth keeping."""
     target = dataset_dir(files_root, outcome.dataset_doi)
     unpack_root = target / "_archives" / f"{outcome.filename}_extracted"
+    nested_spent = 0
     with RemoteZip(url, session=session, timeout=300) as archive:
         for info in archive.infolist():
             if info.is_dir() or not _wanted(info.filename, KEEP_SUFFIXES, KEEP_NAMES):
                 continue
             nested = PurePosixPath(info.filename).suffix.lower() in ARCHIVE_EXTENSIONS
-            if nested and info.file_size > NESTED_CAP_BYTES:
+            if nested and (
+                info.file_size > NESTED_CAP_BYTES
+                or nested_spent + info.compress_size > NESTED_BUDGET_BYTES
+            ):
                 outcome.nested_skipped += 1
                 continue
+            if nested:
+                nested_spent += info.compress_size
             try:
                 path = Path(archive.extract(info, unpack_root))
             except (NotImplementedError, RuntimeError, zipfile.BadZipFile) as exc:

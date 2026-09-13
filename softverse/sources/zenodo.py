@@ -210,6 +210,10 @@ class UnknownCommunityError(Exception):
     """A community slug Zenodo does not recognise."""
 
 
+class ZenodoUnavailableError(Exception):
+    """Zenodo did not answer, so nothing can be said about the community."""
+
+
 def verify_community(client: PoliteClient, slug: str) -> int:
     """Confirm a community exists, returning its record count.
 
@@ -235,18 +239,27 @@ def verify_community(client: PoliteClient, slug: str) -> int:
 
     Raises:
         UnknownCommunityError: if the slug is not a real community.
+        ZenodoUnavailableError: if Zenodo did not answer.
     """
     outcome = client.get(f"{ZENODO_API}/communities/{slug}")
-    if not outcome.ok:
+    if outcome.status == 404:
         raise UnknownCommunityError(
-            f"{slug!r} is not a Zenodo community (HTTP {outcome.status}). "
+            f"{slug!r} is not a Zenodo community (HTTP 404). "
             f"Filtering on it would return the entire repository."
+        )
+    if not outcome.ok:
+        # A timeout or a 5xx says nothing about the community. Calling it
+        # unknown let a Zenodo outage skip every community and finish "clean".
+        raise ZenodoUnavailableError(
+            f"Zenodo did not answer for {slug!r} (HTTP {outcome.status})"
         )
     counted = client.get(
         f"{ZENODO_API}/records", params={"communities": slug, "size": 1}
     )
     if not counted.ok or counted.content is None:
-        raise UnknownCommunityError(f"could not count records for {slug!r}")
+        raise ZenodoUnavailableError(
+            f"could not count records for {slug!r} (HTTP {counted.status})"
+        )
     total = json.loads(counted.content)["hits"]["total"]
     if total > WHOLE_REPOSITORY_THRESHOLD:
         raise UnknownCommunityError(

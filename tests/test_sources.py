@@ -285,6 +285,37 @@ def test_unknown_community_is_refused_not_silently_widened(monkeypatch):
     client.close()
 
 
+def _answering(monkeypatch, status):
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000), max_retries=0)
+    monkeypatch.setattr(
+        client._client,
+        "get",
+        lambda url, **kw: httpx.Response(
+            status, content=b"", request=httpx.Request("GET", url)
+        ),
+    )
+    return client
+
+
+def test_a_zenodo_outage_is_not_an_unknown_community(monkeypatch):
+    """Zenodo answered 504 for every community one morning.
+
+    Reported as "not a Zenodo community", each was skipped, and the run ended
+    with zero records and exit status 0: an outage dressed as a finding.
+    """
+    client = _answering(monkeypatch, 504)
+    with pytest.raises(zenodo.ZenodoUnavailableError, match="504"):
+        zenodo.verify_community(client, "restud-replication")
+    client.close()
+
+
+def test_a_missing_community_is_still_unknown(monkeypatch):
+    client = _answering(monkeypatch, 404)
+    with pytest.raises(zenodo.UnknownCommunityError):
+        zenodo.verify_community(client, "restud")
+    client.close()
+
+
 def test_real_community_passes_verification(monkeypatch):
     client = PoliteClient(limiter=RateLimiter(rate_per_s=1000))
     monkeypatch.setattr(
