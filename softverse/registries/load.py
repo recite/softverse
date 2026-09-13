@@ -32,7 +32,7 @@ def load_registry() -> tuple[Registry, frozenset[str]]:
     snapshots = PATHS.registries / "snapshots"
 
     def names(registry: str) -> frozenset[str]:
-        newest = sorted((snapshots / registry).glob("*/names.json"))[-1]
+        newest = max((snapshots / registry).glob("*/names.json"))
         return frozenset(json.loads(newest.read_text()))
 
     con = duckdb.connect()
