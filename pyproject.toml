@@ -79,7 +79,7 @@ test = [
     "pytest-cov>=6",
 ]
 docs = [
-    "sphinx>=8",
+    "sphinx>=9.0.4",
     "furo",
     "myst-parser",
     "sphinx-copybutton",
