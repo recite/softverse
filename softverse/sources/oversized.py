@@ -33,7 +33,12 @@ from urllib.parse import quote
 import requests
 from remotezip import RemoteZip
 
-from softverse.acquire.unpack import _wanted, extract, relative_member_path
+from softverse.acquire.unpack import (
+    _wanted,
+    archive_name,
+    extract,
+    relative_member_path,
+)
 from softverse.config import DATAVERSE_BASE_URL
 from softverse.logging_setup import get_logger
 from softverse.sources.dataverse import (
@@ -161,7 +166,7 @@ def recover_zip(
     session: _CountingSession, url: str, outcome: Outcome, target: Path
 ) -> None:
     """Read a remote zip's directory and fetch only the members worth keeping."""
-    unpack_root = target / "_archives" / f"{outcome.filename}_extracted"
+    unpack_root = target / "_archives" / f"{archive_name(outcome.filename)}_extracted"
     nested_spent = 0
     with RemoteZip(url, session=session, timeout=300) as archive:
         for info in archive.infolist():
@@ -213,7 +218,7 @@ def recover_by_download(
     session: _CountingSession, url: str, outcome: Outcome, target: Path
 ) -> None:
     """Download an archive that has no index, keep its code, delete it."""
-    archive_path = target / "_archives" / outcome.filename
+    archive_path = target / "_archives" / archive_name(outcome.filename)
     archive_path.parent.mkdir(parents=True, exist_ok=True)
     partial = archive_path.with_name(archive_path.name + ".part")
     with session.get(url, stream=True, timeout=300) as response:
@@ -221,7 +226,7 @@ def recover_by_download(
         with partial.open("wb") as handle:
             shutil.copyfileobj(response.raw, handle, length=1024 * 1024)
     partial.replace(archive_path)
-    unpack_root = target / "_archives" / f"{outcome.filename}_extracted"
+    unpack_root = target / "_archives" / f"{archive_name(outcome.filename)}_extracted"
     result = extract(archive_path, unpack_root, KEEP_SUFFIXES, KEEP_NAMES)
     if result.error:
         outcome.error = f"extract: {result.error}"
