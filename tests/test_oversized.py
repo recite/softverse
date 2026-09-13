@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from softverse.acquire.state import DatasetRecord
-from softverse.sources import dataverse, dataverse_oversized
+from softverse.sources import dataverse, oversized
 
 DOI = "doi:10.7910/DVN/BIG001"
 
@@ -34,7 +34,8 @@ class _RangeHandler(SimpleHTTPRequestHandler):
         if match is None:
             start, end, status = 0, len(data) - 1, 200
         elif match.group(1) == "":
-            start, end, status = len(data) - int(match.group(2)), len(data) - 1, 206
+            start = max(0, len(data) - int(match.group(2)))
+            end, status = len(data) - 1, 206
         else:
             start = int(match.group(1))
             end = int(match.group(2)) if match.group(2) else len(data) - 1
@@ -49,7 +50,7 @@ class _RangeHandler(SimpleHTTPRequestHandler):
 
 
 @pytest.fixture
-def serve(tmp_path, monkeypatch):
+def serve(tmp_path):
     root = tmp_path / "remote"
     root.mkdir()
     server = ThreadingHTTPServer(
@@ -60,14 +61,20 @@ def serve(tmp_path, monkeypatch):
 
     def publish(name: str, content: bytes) -> dict:
         (root / name).write_bytes(content)
-        monkeypatch.setattr(
-            dataverse_oversized, "storage_url", lambda *a, **k: f"{base}/{name}"
-        )
-        return {"filename": name, "size_bytes": len(content), "file_id": 42}
+        return {
+            "filename": name,
+            "size_bytes": len(content),
+            "file_id": 42,
+            "url": f"{base}/{name}",
+        }
 
     yield publish
     server.shutdown()
     server.server_close()
+
+
+def _target(tmp_path):
+    return dataverse.dataset_dir(tmp_path / "files", DOI)
 
 
 def _incompressible(n: int) -> bytes:
@@ -89,8 +96,12 @@ def test_a_zip_gives_up_its_code_for_a_fraction_of_its_size(tmp_path, serve):
     entry = serve("replication.zip", buf.getvalue())
     throttled = []
 
-    outcome = dataverse_oversized.recover(
-        DOI, entry, tmp_path / "files", {}, lambda: throttled.append(1)
+    outcome = oversized.recover(
+        DOI,
+        entry,
+        _target(tmp_path),
+        lambda _s: entry["url"],
+        lambda: throttled.append(1),
     )
 
     assert outcome.error is None
@@ -106,7 +117,7 @@ def test_a_zip_gives_up_its_code_for_a_fraction_of_its_size(tmp_path, serve):
 def test_many_small_nested_archives_do_not_add_up_to_a_download(
     tmp_path, serve, monkeypatch
 ):
-    monkeypatch.setattr(dataverse_oversized, "NESTED_BUDGET_BYTES", 2_500_000)
+    monkeypatch.setattr(oversized, "NESTED_BUDGET_BYTES", 2_500_000)
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
         zf.writestr("run.do", b"use panel")
@@ -114,8 +125,8 @@ def test_many_small_nested_archives_do_not_add_up_to_a_download(
             zf.writestr(f"data/chunk{i}.zip", _incompressible(1_000_000))
     entry = serve("package.zip", buf.getvalue())
 
-    outcome = dataverse_oversized.recover(
-        DOI, entry, tmp_path / "files", {}, lambda: None
+    outcome = oversized.recover(
+        DOI, entry, _target(tmp_path), lambda _s: entry["url"], lambda: None
     )
 
     assert outcome.error is None
@@ -132,8 +143,8 @@ def test_a_tarball_is_downloaded_mined_and_deleted(tmp_path, serve):
             tf.addfile(info, io.BytesIO(data))
     entry = serve("replication.tar.gz", buf.getvalue())
 
-    outcome = dataverse_oversized.recover(
-        DOI, entry, tmp_path / "files", {}, lambda: None
+    outcome = oversized.recover(
+        DOI, entry, _target(tmp_path), lambda _s: entry["url"], lambda: None
     )
 
     assert outcome.error is None
@@ -155,10 +166,10 @@ def test_apply_moves_recovered_archives_out_of_skipped():
             {"filename": "bad.7z", "size_bytes": 1, "file_id": 2},
         ],
     )
-    ok = dataverse_oversized.Outcome(DOI, "ok.zip", 1, 1, "range")
-    bad = dataverse_oversized.Outcome(DOI, "bad.7z", 2, 1, "download", error="boom")
+    ok = oversized.Outcome(DOI, "ok.zip", 1, 1, "range")
+    bad = oversized.Outcome(DOI, "bad.7z", 2, 1, "download", error="boom")
 
-    dataverse_oversized.apply(record, [ok, bad])
+    oversized.apply(record, [ok, bad])
 
     assert record.reconciles()
     assert record.n_fetched == 2
@@ -166,3 +177,33 @@ def test_apply_moves_recovered_archives_out_of_skipped():
     assert record.skipped_archives == [
         {"filename": "bad.7z", "size_bytes": 1, "file_id": 2, "recovery_error": "boom"}
     ]
+
+
+def test_zenodo_throttles_every_request(tmp_path, serve):
+    """Zenodo serves the bytes itself, so the range reads are its requests too."""
+    buf = io.BytesIO()
+    # Members bigger than remotezip's 64 KB first read, so each needs its own.
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
+        for i in range(3):
+            zf.writestr(f"code/s{i}.do", _incompressible(200_000))
+    entry = serve("pkg.zip", buf.getvalue())
+    throttled = []
+
+    outcome = oversized.recover(
+        "10.5281/zenodo.123",
+        entry,
+        tmp_path / "files" / "123",
+        lambda _s: entry["url"],
+        lambda: throttled.append(1),
+        throttle_every_request=True,
+    )
+
+    assert outcome.error is None
+    assert len(outcome.rows) == 3
+    assert len(throttled) >= 4, "the directory read and each member wait"
+
+
+def test_zenodo_content_url_is_built_from_the_doi():
+    assert oversized.zenodo_content_url("10.5281/zenodo.17387697", "a b.zip") == (
+        "https://zenodo.org/api/records/17387697/files/a%20b.zip/content"
+    )
