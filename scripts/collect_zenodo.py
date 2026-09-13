@@ -57,6 +57,13 @@ def main() -> int:
         for slug in frame_communities():
             try:
                 declared[slug] = zenodo.verify_community(client, slug)
+            except zenodo.ZenodoUnavailableError as exc:
+                # Stop rather than skip: a harvest missing every community the
+                # outage touched would look like a smaller frame.
+                logger.error("zenodo unavailable", extra={"err": str(exc)})
+                print(f"stopped, nothing written: {exc}")
+                client.close()
+                return 1
             except zenodo.UnknownCommunityError as exc:
                 logger.error(
                     "skipping community", extra={"slug": slug, "err": str(exc)}

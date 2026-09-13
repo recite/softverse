@@ -103,6 +103,26 @@ def test_a_zip_gives_up_its_code_for_a_fraction_of_its_size(tmp_path, serve):
     assert not list(target.rglob("*.zip")), "the small nested zip is not kept"
 
 
+def test_many_small_nested_archives_do_not_add_up_to_a_download(
+    tmp_path, serve, monkeypatch
+):
+    monkeypatch.setattr(dataverse_oversized, "NESTED_BUDGET_BYTES", 2_500_000)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
+        zf.writestr("run.do", b"use panel")
+        for i in range(10):
+            zf.writestr(f"data/chunk{i}.zip", _incompressible(1_000_000))
+    entry = serve("package.zip", buf.getvalue())
+
+    outcome = dataverse_oversized.recover(
+        DOI, entry, tmp_path / "files", {}, lambda: None
+    )
+
+    assert outcome.error is None
+    assert outcome.nested_skipped == 8, "two 1 MB nested zips fit a 2.5 MB budget"
+    assert outcome.transferred_bytes < 3_500_000, outcome.transferred_bytes
+
+
 def test_a_tarball_is_downloaded_mined_and_deleted(tmp_path, serve):
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tf:
