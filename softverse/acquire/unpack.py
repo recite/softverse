@@ -75,6 +75,9 @@ class Extracted:
     files: list[Path] = field(default_factory=list)
     skipped_unsafe: list[str] = field(default_factory=list)
     skipped_other: list[str] = field(default_factory=list)
+    #: Wanted members the reader cannot decode: Deflate64 or encryption. Lost,
+    #: but they do not cost the rest of the archive.
+    unreadable: list[str] = field(default_factory=list)
     nested_archives: list[Path] = field(default_factory=list)
     error: str | None = None
 
@@ -190,8 +193,16 @@ def extract_zip(
                     continue
                 target = dest / name
                 target.parent.mkdir(parents=True, exist_ok=True)
-                with zf.open(info) as src:
-                    _copy_within_budget(src, target, budget, archive.name)
+                try:
+                    with zf.open(info) as src:
+                        _copy_within_budget(src, target, budget, archive.name)
+                except (NotImplementedError, RuntimeError):
+                    # zipfile raises these, not BadZipFile, for Deflate64 and
+                    # for encrypted members; unhandled, one such member failed
+                    # the whole deposit.
+                    target.unlink(missing_ok=True)
+                    result.unreadable.append(name)
+                    continue
                 result.files.append(target)
     except UnsafeArchiveError as exc:
         result.error = str(exc)
@@ -202,6 +213,11 @@ def extract_zip(
         logger.warning(
             "rejected unsafe archive members",
             extra={"archive": archive.name, "n": len(result.skipped_unsafe)},
+        )
+    if result.unreadable:
+        logger.warning(
+            "unreadable archive members",
+            extra={"archive": archive.name, "members": result.unreadable},
         )
     return result
 

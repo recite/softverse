@@ -57,3 +57,24 @@ def test_an_archive_that_will_not_open_is_kept_and_retryable(tmp_path, monkeypat
     assert record.needs_retry
     assert rows == []
     assert (target / "_archives" / "broken.zip").exists(), "kept as the evidence"
+
+
+def test_an_unreadable_member_costs_only_itself(tmp_path, monkeypatch):
+    """Deflate64 and encrypted members raise NotImplementedError/RuntimeError."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("a.R", b"library(dplyr)")
+        zf.writestr("b.do", b"reghdfe y x")
+    original = zipfile.ZipFile.open
+
+    def refuse_b(self, name, *args, **kwargs):
+        member = name.filename if isinstance(name, zipfile.ZipInfo) else name
+        if member == "b.do":
+            raise NotImplementedError("That compression method is not supported")
+        return original(self, name, *args, **kwargs)
+
+    monkeypatch.setattr(zipfile.ZipFile, "open", refuse_b)
+    record, rows = _collect(tmp_path, monkeypatch, "pkg.zip", buf.getvalue())
+
+    assert record.state == "complete"
+    assert [r["filename"] for r in rows] == ["a.R"]
