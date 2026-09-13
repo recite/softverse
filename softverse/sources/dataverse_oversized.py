@@ -96,13 +96,11 @@ class Outcome:
 class _CountingSession(requests.Session):
     """A session that adds up the bytes the server says it sent."""
 
-    def __init__(self, before_request: Callable[[], None]) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self.transferred = 0
-        self._before = before_request
 
     def request(self, method, url, *args, **kwargs):
-        self._before()
         response = super().request(method, url, *args, **kwargs)
         self.transferred += int(response.headers.get("Content-Length") or 0)
         return response
@@ -232,7 +230,10 @@ def recover(
         skipped: The ledger's ``skipped_archives`` entry for the archive.
         files_root: Where deposit directories live.
         headers: Auth headers for the Dataverse API.
-        before_request: Called before every HTTP request; the rate limiter.
+        before_request: Called before the one request to Dataverse itself; the
+            rate limiter. The range reads that follow go to S3 storage and
+            carry kilobytes; throttling them as well made a zip with thirty
+            scripts take a minute.
 
     Returns:
         What was transferred and kept, or the error that stopped it.
@@ -245,9 +246,10 @@ def recover(
         archive_bytes=skipped["size_bytes"],
         method="range" if is_zip else "download",
     )
-    session = _CountingSession(before_request)
+    session = _CountingSession()
     session.headers["User-Agent"] = USER_AGENT
     try:
+        before_request()
         url = storage_url(session, outcome.file_id, headers)
         if is_zip:
             recover_zip(session, url, outcome, files_root)
