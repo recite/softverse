@@ -60,7 +60,7 @@ ECOSYSTEM_LABEL = {
 #: Reader-facing names for the two repositories.
 SOURCE_LABEL = {
     "zenodo": "Zenodo",
-    "dataverse_legacy": "Dataverse",
+    "dataverse": "Dataverse",
 }
 
 
@@ -278,10 +278,9 @@ a { color: var(--accent); }
   should not be read against each other. <strong>Repositories</strong> splits
   the count between the two collections, and the filter narrows to one.
   <br>Two things to know before relying on a number. A package can be loaded
-  by code that never runs, so these are loads and not executions. And the
-  Dataverse collection came from a 2024 scrape that kept only
-  <code>.do</code>, <code>.r</code> and <code>.py</code> files, so packages
-  used inside notebooks are under-counted on that side.
+  by code that never runs, so these are loads and not executions. And both
+  collections are replication deposits only, so code an author kept out of
+  the deposit is not counted.
   <br><a href="../paper/softverse.pdf">The paper</a> gives the method and
   <a href="../data/">the tables</a> are CC0.
 </footer>

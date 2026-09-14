@@ -12,7 +12,7 @@ from softverse.model.enums import Construct, Resolution
 def mention(**kw):
     base = {
         "dataset_doi": "doi:a",
-        "source": "dataverse_legacy",
+        "source": "dataverse",
         "collection_id": "ajps",
         "deposit_year": 2020,
         "language": "python",

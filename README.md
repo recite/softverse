@@ -50,11 +50,11 @@ science. One pass tallies both, and every row of `usage_by_package.csv`
 carries the pooled count next to the per-repository split, since the two are
 very different sizes.
 
-The Dataverse material is a January 2024 scrape that collected only `.do`,
-`.r` and `.py` files, so a package used mainly inside notebooks or knitr
-documents is under-counted on that side. That is checked rather than
-asserted: `scripts/release_tally.py` recomputes the whole ranking restricted
-to the file types both halves collected, and fails if the ordering moves.
+Both repositories are collected by the same rules: every code, notebook and
+knitr file and every dependency manifest, with the deposit's directories
+intact. Code inside archives too large to download is recovered by reading
+only the code members (`scripts/recover_oversized.py`). The eight AEA
+journals deposit on openICPSR and are not included.
 
 ## Using it as a library
 
@@ -104,8 +104,12 @@ uv run python scripts/collect_zenodo.py
 uv run python scripts/collect_zenodo.py --fresh          # full re-scrape
 uv run python scripts/collect_zenodo.py --metadata-only  # community and year only
 
-# Unpack the 2024 Harvard Dataverse scrape into the corpus.
-uv run python scripts/ingest_dataverse_legacy.py
+uv run python scripts/collect_dataverse_frame.py
+uv run python scripts/collect_dataverse.py
+
+# Code from archives over the size cap, read in place.
+uv run python scripts/recover_oversized.py --zips-only
+uv run python scripts/recover_oversized.py --source zenodo --zips-only
 
 # Tally every source in one pass. Safe to run mid-collection; it describes
 # whatever is on disk.
