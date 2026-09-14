@@ -187,10 +187,11 @@ module-root = ""
 
 [tool.codespell]
 # Stata, not typos: Mata is Stata's matrix language and `ttest`, `fillin` are
-# its commands; `ture` and `ine` are fragments of the `capture`/`define`
+# its commands; `ND` is the NoDerivatives license term; `ture` and `ine` are
+# fragments of the `capture`/`define`
 # abbreviation regexes. `pres` is a variable in a paper chunk. `unparseable`
 # is a standard spelling.
-ignore-words-list = "mata,ttest,fillin,ture,ine,pres,unparseable"
+ignore-words-list = "mata,ttest,fillin,ture,ine,pres,unparseable,nd"
 
 [tool.preen]
 # Not documentation links. Schemeless on purpose: with a scheme the check's

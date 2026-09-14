@@ -169,6 +169,9 @@ class ZenodoRecord:
     publication_date: str | None
     communities: list[str]
     files: list[ZenodoFile]
+    #: The identifier Zenodo gives (``cc-by-4.0``), which decides whether the
+    #: corpus release may republish the record's files.
+    license: str | None = None
 
     @property
     def year(self) -> int | None:
@@ -204,7 +207,22 @@ def parse_record(payload: dict) -> ZenodoRecord:
         publication_date=metadata.get("publication_date"),
         communities=[c for c in communities if c],
         files=[f for f in files if f.key and f.link],
+        license=_license_id(metadata.get("license")),
     )
+
+
+def _license_id(value: object) -> str | None:
+    """The license identifier, which the API gives as ``{"id": ...}`` or a string.
+
+    Args:
+        value: The record metadata's ``license`` entry.
+
+    Returns:
+        The identifier, or None if the record names none.
+    """
+    if isinstance(value, dict):
+        value = value.get("id")
+    return value.strip() if isinstance(value, str) and value.strip() else None
 
 
 class UnknownCommunityError(Exception):
@@ -757,6 +775,7 @@ DEPOSIT_FIELDS = (
     "communities",
     "publication_date",
     "deposit_year",
+    "license",
 )
 
 
@@ -783,6 +802,7 @@ def deposit_rows(records: Iterable[ZenodoRecord]) -> list[dict]:
             "communities": ";".join(record.communities),
             "publication_date": record.publication_date or "",
             "deposit_year": record.year or "",
+            "license": record.license or "",
         }
         for record in records
     ]
