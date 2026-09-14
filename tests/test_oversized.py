@@ -28,7 +28,16 @@ class _RangeHandler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):  # noqa: A002
         pass
 
+    #: Requests left to refuse with a 504, shared across handler instances.
+    fail_next = 0
+
     def do_GET(self):
+        if _RangeHandler.fail_next > 0:
+            _RangeHandler.fail_next -= 1
+            self.send_response(504)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         data = Path(self.translate_path(self.path)).read_bytes()
         match = re.fullmatch(r"bytes=(\d*)-(\d*)", self.headers.get("Range") or "")
         if match is None:
@@ -207,3 +216,20 @@ def test_zenodo_content_url_is_built_from_the_doi():
     assert oversized.zenodo_content_url("10.5281/zenodo.17387697", "a b.zip") == (
         "https://zenodo.org/api/records/17387697/files/a%20b.zip/content"
     )
+
+
+def test_a_gateway_timeout_is_retried_not_fatal(tmp_path, serve, monkeypatch):
+    """One 504 used to fail the archive; 38 of 41 did during a Zenodo outage."""
+    monkeypatch.setattr(oversized.Retry, "DEFAULT_BACKOFF_MAX", 0)
+    monkeypatch.setattr(_RangeHandler, "fail_next", 2)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("main.do", b"use x")
+    entry = serve("pkg.zip", buf.getvalue())
+
+    outcome = oversized.recover(
+        DOI, entry, _target(tmp_path), lambda _s: entry["url"], lambda: None
+    )
+
+    assert outcome.error is None
+    assert [r["filename"] for r in outcome.rows] == ["main.do"]

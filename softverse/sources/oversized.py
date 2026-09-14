@@ -32,6 +32,8 @@ from urllib.parse import quote
 
 import requests
 from remotezip import RemoteZip
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from softverse.acquire.unpack import (
     _wanted,
@@ -114,6 +116,18 @@ class _CountingSession(requests.Session):
         super().__init__()
         self.transferred = 0
         self._before_each = before_each
+        # Every request here is a GET for a byte range, so repeating one is
+        # safe. Without this a single 504 or read timeout failed the whole
+        # archive: 38 of 41 Zenodo archives in one run during an outage.
+        retry = Retry(
+            total=4,
+            backoff_factor=2,
+            status_forcelist=(429, 500, 502, 503, 504),
+            allowed_methods=("GET", "HEAD"),
+            respect_retry_after_header=True,
+        )
+        self.mount("https://", HTTPAdapter(max_retries=retry))
+        self.mount("http://", HTTPAdapter(max_retries=retry))
 
     def request(self, method, url, *args, **kwargs):
         if self._before_each is not None:

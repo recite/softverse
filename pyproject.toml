@@ -38,6 +38,7 @@ dependencies = [
     "packaging>=26.3",
     "remotezip>=0.12.6",
     "requests>=2.34.2",
+    "urllib3>=2.7.0",
 ]
 
 # The one place the release number is typed. The release workflow refuses a tag
