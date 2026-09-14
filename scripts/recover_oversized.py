@@ -3,11 +3,15 @@
     uv run python scripts/recover_oversized.py --zips-only
     uv run python scripts/recover_oversized.py --download-budget-gb 50
     uv run python scripts/recover_oversized.py --source zenodo --zips-only
+    uv run python scripts/recover_oversized.py --codeless-only --download-budget-gb 250
 
 Zips are read in place with byte-range requests, so they cost kilobytes to
 megabytes each. Other archives are downloaded whole, their code kept and the
 archive deleted; `--download-budget-gb` caps what one run spends on those, and
-an archive that would cross the cap waits for the next run.
+an archive that would cross the cap waits for the next run. `--codeless-only`
+limits downloads to deposits that have yielded no code at all, which is where
+an archive is the only way to count the deposit; `--dry-run` prints what
+would be fetched and stops.
 
 Each deposit's ledger record is rewritten as its archives are recovered, and
 one line per archive -- its size, the bytes actually transferred, the code
@@ -50,6 +54,8 @@ def main() -> int:
     parser.add_argument("--zips-only", action="store_true")
     parser.add_argument("--download-budget-gb", type=float, default=0.0)
     parser.add_argument("--limit", type=int, default=None, help="archives this run")
+    parser.add_argument("--codeless-only", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     is_zenodo = args.source == "zenodo"
@@ -68,9 +74,12 @@ def main() -> int:
         (out / "files.jsonl").open("a", encoding="utf-8") as provenance,
         (out / "oversized.jsonl").open("a", encoding="utf-8") as transfers,
     ):
+        planned = []
         for record in ledger.records():
             outcomes = []
             doi = record.dataset_doi
+            if args.codeless_only and record.n_fetched > 0:
+                continue
             for entry in record.skipped_archives:
                 if args.limit is not None and done >= args.limit:
                     break
@@ -80,6 +89,11 @@ def main() -> int:
                 if not is_zip and (
                     args.zips_only or spent + entry["size_bytes"] > budget
                 ):
+                    continue
+                if args.dry_run:
+                    planned.append(entry["size_bytes"])
+                    if not is_zip:
+                        spent += entry["size_bytes"]
                     continue
                 if is_zenodo:
                     target = out / "files" / doi.rsplit(".", 1)[-1]
@@ -124,6 +138,13 @@ def main() -> int:
                 apply(record, outcomes)
                 ledger.finish(record)
 
+    if args.dry_run:
+        print(
+            f"would recover {len(planned):,} archives "
+            f"({sum(planned) / 1e9:.0f} GB of archives, "
+            f"{spent / 1e9:.0f} GB of it downloaded whole)"
+        )
+        return 0
     print(f"{done:,} archives; {spent / 1e9:.1f} GB spent on full downloads")
     return 0
 
