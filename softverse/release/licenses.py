@@ -64,6 +64,9 @@ class License:
 def _spdx(name: str) -> str:
     """Map a Dataverse display name or Zenodo id to an SPDX-style id.
 
+    Args:
+        name: The name or identifier as the repository reports it.
+
     Returns:
         The identifier, or the input tidied if it matches no known form.
     """

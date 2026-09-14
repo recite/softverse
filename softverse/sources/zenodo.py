@@ -214,6 +214,9 @@ def parse_record(payload: dict) -> ZenodoRecord:
 def _license_id(value: object) -> str | None:
     """The license identifier, which the API gives as ``{"id": ...}`` or a string.
 
+    Args:
+        value: The record metadata's ``license`` entry.
+
     Returns:
         The identifier, or None if the record names none.
     """
