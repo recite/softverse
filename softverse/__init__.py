@@ -28,4 +28,6 @@ except PackageNotFoundError:  # running from a source tree with nothing installe
 #: never produced. Leaving the stamp at 2.0.0 would have given two different
 #: extractors one name across two published releases, which is the single
 #: thing this constant exists to prevent.
-EXTRACTOR_VERSION = "2.1.0"
+#: 2.2.0 records the version an install call asks for (`pinned_version`) and
+#: stops recording `scikit-learn=1.2.2` and `dask[complete]` as package names.
+EXTRACTOR_VERSION = "2.2.0"

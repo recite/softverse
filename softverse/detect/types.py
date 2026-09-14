@@ -56,6 +56,11 @@ class Mention:
     #: and no function, and a bare `select(x)` names a function whose package
     #: needs scope resolution this extractor does not attempt.
     called_function: str | None = None
+    #: The version the code itself asks for, as written: `0.11.1` from
+    #: `install_version("fixest", "0.11.1")`, `==1.5.3` from
+    #: `pip install pandas==1.5.3`, a git ref from `install_github("u/r@v1")`.
+    #: None almost everywhere, because almost no code says.
+    pinned_version: str | None = None
 
 
 @dataclass

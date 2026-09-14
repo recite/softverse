@@ -203,6 +203,7 @@ def _mention(
     *,
     dynamic: bool = False,
     called_function: str | None = None,
+    pinned_version: str | None = None,
 ) -> Mention:
     return Mention(
         raw_name=name,
@@ -215,6 +216,7 @@ def _mention(
         is_dynamic=dynamic,
         is_conditional=_conditional(node, source),
         called_function=called_function,
+        pinned_version=pinned_version,
     )
 
 
@@ -316,7 +318,8 @@ def _multi_names(value: Node, source: bytes) -> list[Mention]:
 
 def _handle_installer(call: Node, source: bytes, callee: str) -> list[Mention]:
     out: list[Mention] = []
-    for arg in _arguments(call):
+    args = _arguments(call)
+    for arg in args:
         if arg.child_by_field_name("name") is not None:
             continue
         value = arg.child_by_field_name("value")
@@ -336,13 +339,53 @@ def _handle_installer(call: Node, source: bytes, callee: str) -> list[Mention]:
                 path = path.split("://", 1)[1]
                 path = path.split("/", 1)[1] if "/" in path else ""
             parts = [p for p in path.split("/") if p]
-            repo = parts[1].split("@")[0] if len(parts) > 1 else ""
+            repo, _, ref = parts[1].partition("@") if len(parts) > 1 else ("", "", "")
             if repo:
-                out.append(_mention(repo, Construct.INSTALL, value, source))
+                out.append(
+                    _mention(
+                        repo,
+                        Construct.INSTALL,
+                        value,
+                        source,
+                        pinned_version=ref or None,
+                    )
+                )
         else:
-            out.append(_mention(literal, Construct.INSTALL, value, source))
+            out.append(
+                _mention(
+                    literal,
+                    Construct.INSTALL,
+                    value,
+                    source,
+                    pinned_version=_install_version_arg(args, source, callee),
+                )
+            )
         break
     return out
+
+
+def _install_version_arg(args: list[Node], source: bytes, callee: str) -> str | None:
+    """The version `install_version(package, version)` asks for, if literal.
+
+    Args:
+        args: The call's argument nodes.
+        source: The file's bytes.
+        callee: The installer's name.
+
+    Returns:
+        The version string, or None for any other installer or a non-literal.
+    """
+    if callee != "install_version":
+        return None
+    named = _named_arg(args, source, "version")
+    if named is not None:
+        return _string_value(named, source) or None
+    positional = [a for a in args if a.child_by_field_name("name") is None]
+    if len(positional) > 1:
+        value = positional[1].child_by_field_name("value")
+        if value is not None:
+            return _string_value(value, source) or None
+    return None
 
 
 def _handle_package_arg(call: Node, source: bytes, callee: str) -> list[Mention]:
