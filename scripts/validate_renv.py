@@ -158,7 +158,7 @@ def main() -> int:
                 "n_renv": len(theirs),
                 "n_shared": len(mine & theirs),
                 "n_union": len(mine | theirs),
-                "source": "dataverse_legacy" if doi.startswith("doi:") else "zenodo",
+                "source": "dataverse" if doi.startswith("doi:") else "zenodo",
             }
         )
     script.unlink(missing_ok=True)

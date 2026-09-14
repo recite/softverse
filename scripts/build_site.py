@@ -84,7 +84,7 @@ def landing(summary: dict, usage: list[dict], unknown: list[dict]) -> str:
         "__N_STATA__": f"{by_language.get('stata', 0):,}",
         "__N_R__": f"{by_language.get('r', 0):,}",
         "__N_ZENODO__": f"{by_source.get('zenodo', 0):,}",
-        "__N_DATAVERSE__": f"{by_source.get('dataverse_legacy', 0):,}",
+        "__N_DATAVERSE__": f"{by_source.get('dataverse', 0):,}",
         "__N_PACKAGES__": f"{summary['n_packages']:,}",
         "__TOP_STATA__": stata[0]["package"],
         "__TOP_STATA_N__": f"{int(stata[0]['n_deposits']):,}",

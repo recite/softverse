@@ -254,7 +254,7 @@ stata_to_r_ratio = n_stata_deposits / max(1, n_r_deposits)
 _analyzable = files[files["in_analysis_set"]]
 _by_source = _analyzable.groupby("source")["dataset_doi"].nunique()
 n_zenodo_deposits = int(_by_source.get("zenodo", 0))
-n_dataverse_deposits = int(_by_source.get("dataverse_legacy", 0))
+n_dataverse_deposits = int(_by_source.get("dataverse", 0))
 n_deposits_analyzable = int(_analyzable["dataset_doi"].nunique())
 n_collections_tallied = int(files["collection_id"].nunique())
 
@@ -375,7 +375,7 @@ n_polsci_coefplot = sum(1 for c in _polsci if _leans(c) == "coefplot")
 
 # The confound this rules out: economics journals that live in the Dataverse
 # half, so repository is held constant and the split still appears.
-_dv = set(files[files["source"].eq("dataverse_legacy")]["collection_id"])
+_dv = set(files[files["source"].eq("dataverse")]["collection_id"])
 n_econ_in_dataverse = sum(1 for c in _econ if c in _dv)
 
 # The unresolved rate per *deposit*, which is the unit this paper argues for
@@ -425,7 +425,7 @@ oracle_recall = _oracle["recall"]
 # Per source, because until recently this check globbed the Zenodo directory
 # and reported its result as though it described the corpus.
 n_oracle_sources = len(_oracle["by_source"])
-n_oracle_dataverse_files = _oracle["by_source"]["dataverse_legacy"]["n_files_compared"]
+n_oracle_dataverse_files = _oracle["by_source"]["dataverse"]["n_files_compared"]
 
 # Cross-tool agreement, read from the artifact `scripts/validate_renv.py`
 # writes. This paragraph used to carry a typed 0.998 that nothing in the

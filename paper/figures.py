@@ -72,7 +72,7 @@ def _style(ax) -> None:
 #: Reader-facing names, and what each repository is.
 SOURCE_LABEL = {
     "zenodo": "Zenodo (economics)",
-    "dataverse_legacy": "Dataverse (political science)",
+    "dataverse": "Dataverse (political science)",
 }
 
 

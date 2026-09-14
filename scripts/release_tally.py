@@ -92,15 +92,15 @@ collections are mostly political science.
 {composition}
 
 Counts pool the two. `usage_by_package.csv` also carries the split, in
-`n_deposits_zenodo` and `n_deposits_dataverse_legacy`, because the two are
+`n_deposits_zenodo` and `n_deposits_dataverse`, because the two are
 very different sizes and a pooled figure alone would hide that.
 
-The Dataverse deposits come from a January 2024 scrape that kept `.do`, `.r`
-and `.py` files and nothing else, so a package used mainly inside a notebook
-or a knitr document is under-counted on that side. The release checks this
-by recomputing the whole ranking on those three extensions alone and fails if
-the order moves. The two collections are also two years apart, which
-`first_year` and `last_year` will show.
+Both repositories were collected with the same rules in 2026: every code,
+notebook and knitr file and every dependency manifest, with the deposit's own
+directories, and code recovered from archives too large to download. An
+archive that could not be read is counted in `summary.json` rather than
+dropped. The two collections still differ in discipline, which the per-source
+columns keep visible.
 
 ## Files
 
@@ -168,7 +168,7 @@ Produced by [softverse](https://github.com/recite/softverse).
 #: Reader-facing names for the sources, and what each one is.
 SOURCE_LABEL = {
     "zenodo": "Zenodo (economics)",
-    "dataverse_legacy": "Harvard Dataverse (political science)",
+    "dataverse": "Harvard Dataverse (political science)",
 }
 
 
@@ -360,97 +360,6 @@ def main() -> int:
     return report(summary)
 
 
-#: The only extensions the 2024 Dataverse scrape kept. Zenodo carries these
-#: plus `.ado`, `.m`, `.Rmd`, `.ipynb` and `.sas`.
-COMMON_BASIS = frozenset({".do", ".r", ".py"})
-
-#: How far a package may move between the pooled ranking and the same ranking
-#: on the common basis. One place absorbs ties; more would mean the extra file
-#: types Zenodo carries are driving the order rather than usage is.
-MAX_RANK_SHIFT = 1
-
-#: The comparison is printed for the top 20 and enforced over the top 10,
-#: which is the depth the paper's tables actually print and therefore the
-#: depth at which a claim rests on the ordering. The gap between the two is
-#: not slack, it is the finding: R and Stata hold all twenty places, and
-#: Python's ranks 14 to 20 move because that is where notebook-only packages
-#: sit and the 2024 Dataverse scrape collected no notebooks.
-GATE_DEPTH = 10
-
-
-def _common_basis_ranking(top_n: int = 20) -> tuple[list[str], str]:
-    """Recompute the ranking using only file types both corpora collected.
-
-    The two halves do not see the same extensions, so pooling could in
-    principle reorder the table through coverage rather than through usage.
-    This is that objection turned into a number instead of a caveat: rebuild
-    the per-package deposit counts from the mentions restricted to `.do`,
-    `.r` and `.py`, and compare the top 20 per language against the shipped
-    ranking.
-    """
-    files = pd.read_parquet(TALLY / "files.parquet", columns=["file_uid", "extension"])
-    mentions = pd.read_parquet(
-        TALLY / "mentions.parquet",
-        columns=[
-            "file_uid",
-            "dataset_doi",
-            "language",
-            "resolved_package",
-            "resolution",
-        ],
-    )
-    shipped = pd.read_csv(TALLY / "usage_by_package.csv")
-
-    countable = {"known_current", "known_archived"}
-    keep = set(files.loc[files["extension"].str.lower().isin(COMMON_BASIS), "file_uid"])
-    basis = mentions[
-        mentions["file_uid"].isin(keep)
-        & mentions["resolution"].isin(countable)
-        & mentions["resolved_package"].notna()
-    ]
-    counts = (
-        basis.groupby(["language", "resolved_package"], observed=True)["dataset_doi"]
-        .nunique()
-        .reset_index(name="n_deposits")
-    )
-
-    problems: list[str] = []
-    lines = []
-    for language in sorted(shipped["language"].unique()):
-        pooled = (
-            shipped[shipped["language"] == language]
-            .nlargest(top_n, "n_deposits")["package"]
-            .tolist()
-        )
-        restricted = (
-            counts[counts["language"] == language]
-            .nlargest(top_n, "n_deposits")["resolved_package"]
-            .tolist()
-        )
-        position = {name: i for i, name in enumerate(restricted)}
-        moved = []
-        for rank, name in enumerate(pooled):
-            if name not in position:
-                note = f"{name} leaves the top {top_n}"
-            elif abs(position[name] - rank) > MAX_RANK_SHIFT:
-                note = f"{name} {rank + 1}->{position[name] + 1}"
-            else:
-                continue
-            moved.append(note)
-            if rank < GATE_DEPTH:
-                problems.append(f"common basis, {language}: {note}")
-        # Every change, not the first four. Truncating here once reported
-        # "ipython leaves the top 20" while hiding that spacy left as well,
-        # which reads as a smaller discrepancy than the one measured.
-        lines.append(
-            f"  {language:<8} {len(pooled) - len(moved):>2}/{len(pooled)} hold rank"
-            + (f"  ({'; '.join(moved)})" if moved else "")
-        )
-
-    report = "common-basis ranking (.do/.r/.py only, as the 2024 scrape kept):\n"
-    return problems, report + "\n".join(lines)
-
-
 def _denominators_recomputed(summary: dict) -> list[str]:
     """Rebuild the denominators from the raw Parquet by the documented rule.
 
@@ -526,9 +435,6 @@ def report(summary: dict) -> int:
             )
             break
 
-    basis_problems, basis_report = _common_basis_ranking()
-    problems.extend(basis_problems)
-
     print(f"wrote {OUT}")
     print(
         f"  {summary['n_packages']:,} packages · "
@@ -540,7 +446,6 @@ def report(summary: dict) -> int:
     print("\n  deposits by source:")
     for source, n in summary["deposits_by_source"].items():
         print(f"    {source:<20} {n:>6,}")
-    print(f"\n{basis_report}")
     if problems:
         print("\nVERIFICATION FAILED:")
         for problem in problems:

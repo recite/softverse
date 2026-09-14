@@ -68,7 +68,7 @@ package loaded in that code.</p>
 
 <p><strong>Scope.</strong> Two repositories holding two disciplines:
 {by_source.get("zenodo", 0):,} deposits from Zenodo's verified economics
-collections and {by_source.get("dataverse_legacy", 0):,} from Harvard
+collections and {by_source.get("dataverse", 0):,} from Harvard
 Dataverse's political science journals. Counts pool both and
 <code>usage_by_package.csv</code> carries the split beside every pooled total,
 since the two are very different sizes.</p>
@@ -77,12 +77,8 @@ since the two are very different sizes.</p>
 was loaded by code in the deposit. They do not say the code ran. Authors
 often leave older scripts in a deposit, and a script can load a package
 inside a branch that never executes. Whatever an author kept out of the
-deposit cannot be counted at all.
-The Harvard Dataverse material also came from a January 2024 scrape that kept
-only <code>.do</code>, <code>.r</code> and <code>.py</code> files, so a
-package used mainly inside a notebook is under-counted on that side; the
-release checks this by recomputing the whole ranking on those three
-extensions and fails if the order moves.</p>
+deposit cannot be counted at all. The AEA journals, which deposit on
+openICPSR, are not included.</p>
 
 <p><strong>Files.</strong> <code>usage_by_package.csv</code> is the main
 table. <code>usage_by_package_year.csv</code> and

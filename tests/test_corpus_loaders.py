@@ -30,7 +30,7 @@ def corpus_file(doi: str, source: str, path_name: str = "a.do") -> CorpusFile:
 def test_disjointness_passes_for_distinct_namespaces():
     files = [
         corpus_file("zenodo:1", "zenodo"),
-        corpus_file("doi:10.7910/DVN/AAA", "dataverse_legacy"),
+        corpus_file("doi:10.7910/DVN/AAA", "dataverse"),
     ]
     loaders._assert_disjoint(files)
 
@@ -40,7 +40,7 @@ def test_a_deposit_in_two_sources_is_refused():
     and no downstream check looks at deposit identity across sources."""
     files = [
         corpus_file("zenodo:1", "zenodo"),
-        corpus_file("zenodo:1", "dataverse_legacy"),
+        corpus_file("zenodo:1", "dataverse"),
     ]
     with pytest.raises(ValueError, match="both"):
         loaders._assert_disjoint(files)
@@ -67,10 +67,10 @@ def test_dataset_packages_carries_the_source():
     rows = dataset_packages(
         [
             mention("zenodo:1", "zenodo", "estout"),
-            mention("doi:10.7910/DVN/A", "dataverse_legacy", "estout"),
+            mention("doi:10.7910/DVN/A", "dataverse", "estout"),
         ]
     )
-    assert {r["source"] for r in rows} == {"zenodo", "dataverse_legacy"}
+    assert {r["source"] for r in rows} == {"zenodo", "dataverse"}
 
 
 def test_language_presence_is_reported_per_source():
@@ -80,10 +80,10 @@ def test_language_presence_is_reported_per_source():
     files = [
         {"dataset_doi": "zenodo:1", "source": "zenodo", "language": "stata"},
         {"dataset_doi": "zenodo:2", "source": "zenodo", "language": "r"},
-        {"dataset_doi": "doi:A", "source": "dataverse_legacy", "language": "stata"},
+        {"dataset_doi": "doi:A", "source": "dataverse", "language": "stata"},
     ]
     assert language_presence(files) == {
-        ("dataverse_legacy", "stata"): 1,
+        ("dataverse", "stata"): 1,
         ("zenodo", "r"): 1,
         ("zenodo", "stata"): 1,
     }
@@ -104,3 +104,39 @@ def test_zenodo_deposits_carry_a_community_and_a_year():
     assert len({r["collection_id"] for r in rows}) > 1
     dated = sum(1 for r in rows if r["deposit_year"].isdigit())
     assert dated == len(rows)
+
+
+def test_dataverse_corpus_reads_code_not_kept_archives(tmp_path, monkeypatch):
+    frame = tmp_path / "frame"
+    frame.mkdir()
+    (frame / "dataverse_deposits.csv").write_text(
+        "collection_id,source,dataset_id,persistent_id,protocol,authority,"
+        "identifier,publication_date\n"
+        "ajps,dataverse,1,https://doi.org/10.7910/DVN/ABC123,doi,10.7910,"
+        "DVN/ABC123,2021-05-01\n"
+    )
+    files = tmp_path / "corpus" / "dataverse" / "files" / "ABC123"
+    (files / "code").mkdir(parents=True)
+    (files / "code" / "main.do").write_text("reghdfe y x")
+    extracted = files / "_archives" / "pkg.zip_extracted" / "src"
+    extracted.mkdir(parents=True)
+    (extracted / "fit.R").write_text("library(fixest)")
+    (files / "_archives" / "broken.zip").write_bytes(b"not a zip")
+    (files / "code" / "big.7z.part").write_bytes(b"half")
+
+    monkeypatch.setattr(
+        loaders, "DATAVERSE_NEW_ROOT", tmp_path / "corpus" / "dataverse"
+    )
+    monkeypatch.setattr(
+        loaders, "PATHS", type("P", (), {"frame": frame, "root": tmp_path})()
+    )
+    rows = loaders.dataverse_corpus()
+
+    assert sorted(r.relative_path for r in rows) == [
+        "_archives/pkg.zip_extracted/src/fit.R",
+        "code/main.do",
+    ]
+    assert {r.dataset_doi for r in rows} == {"doi:10.7910/DVN/ABC123"}
+    assert {(r.collection_id, r.deposit_year, r.source) for r in rows} == {
+        ("ajps", 2021, "dataverse")
+    }

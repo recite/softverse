@@ -6,33 +6,12 @@ resolved by the same code with the same registry pins. They were tallied
 separately for a while, which meant the published per-package counts covered
 the Zenodo half alone: economics, one seventh of the deposits we hold.
 
-**Why pooling the flattened Dataverse scrape is sound.** The scrape kept only
-basenames, so its paths are `<journal>_datasets_files/<id>/<file>` with no
-in-deposit directories, and the hygiene rules that need a path cannot fire on
-it. The first estimate of that cost said it was severe: on Zenodo, where the
-truth is known, the path rules catch 26,776 vendored files and only 25% of
-those survive flattening.
-
-That estimate measured the wrong corpus. Zenodo deposits ship zip archives
-holding whole project trees; Dataverse deposits of this era do not, and the
-corpus says so directly. Zero `.ado` files, because the scrape kept only
-`.do`, `.r` and `.py`. Two sha256 values shared across five or more of the
-7,231 deposits. 188 of 15,805 R files whose basename is a CRAN package name,
-at most five in any one deposit, so no library trees. Checked from the other
-side too, by asking Harvard for the directory listings the scrape discarded:
-of 36 sampled deposits, 31 have no directory structure at all, and the five
-that do use it for organisation (`scripts/`, `data/`, `tables/`) rather than
-for vendored libraries. Not one `ado/`, `renv/`, `site-packages/` or
-`.checkpoint/`.
-
-**What pooling does cost.** The two halves see different file types. Zenodo
-carries `.Rmd`, `.ipynb`, `.ado`, `.m` and `.sas`; the 2024 Dataverse scrape
-carries three extensions and nothing else. So a package used mostly inside
-notebooks is under-represented in the Dataverse half. That is measured rather
-than asserted: `scripts/release_tally.py` recomputes the whole table
-restricted to the three extensions both corpora collected and fails if the
-ordering moves. The vintages differ too, January 2024 against 2026, which is
-what the year column is for.
+Both sources are now collected by the same rules -- every code, notebook and
+knitr file and every manifest, with the deposit's directories -- so the file
+types the two halves see no longer differ. `dataverse_legacy_corpus` reads the
+January 2024 scrape, which kept three extensions and no directories; it is not
+part of `full_corpus()` and stays only so the frame collector can compare
+per-journal counts against it.
 """
 
 from __future__ import annotations
@@ -48,12 +27,14 @@ logger = get_logger(__name__)
 
 ZENODO_ROOT = PATHS.root / "corpus" / "zenodo"
 DATAVERSE_ROOT = PATHS.root / "corpus" / "dataverse_legacy"
+DATAVERSE_NEW_ROOT = PATHS.root / "corpus" / "dataverse"
 
 #: Marks every row with the corpus it came from, so a downstream query cannot
 #: forget which one it is looking at. A footnote can be missed; a column in a
 #: `GROUP BY` cannot.
 ZENODO = "zenodo"
 DATAVERSE_LEGACY = "dataverse_legacy"
+DATAVERSE = "dataverse"
 
 
 def _zenodo_deposits() -> dict[str, dict]:
@@ -182,9 +163,75 @@ def dataverse_legacy_corpus(limit: int | None = None) -> list[CorpusFile]:
     return out
 
 
+def _dataverse_frame() -> dict[str, dict]:
+    """Deposit id -> its row in `data/frame/dataverse_deposits.csv`.
+
+    Keyed on the identifier's last segment (`DVN/00IT1L` -> `00IT1L`), which is
+    the collector's directory name for the deposit.
+    """
+    path = PATHS.frame / "dataverse_deposits.csv"
+    out: dict[str, dict] = {}
+    if not path.exists():
+        return out
+    with path.open(encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            identifier = (row.get("identifier") or "").strip()
+            if identifier:
+                out[identifier.rsplit("/", 1)[-1]] = row
+    return out
+
+
+def dataverse_corpus(limit: int | None = None) -> list[CorpusFile]:
+    """The 2026 Harvard Dataverse collection, every file type, paths intact.
+
+    Replaces the 2024 scrape in the tally. That scrape kept three extensions
+    and no directories; this one keeps notebooks, knitr documents, `.ado`
+    files and manifests, with the deposit's own folders, and code recovered
+    from archives sits under `_archives/<archive>_extracted/`. Two things on
+    disk are not corpus: an archive kept because it would not extract, which
+    sits directly in `_archives/`, and a `.part` left by an interrupted
+    download.
+    """
+    root = DATAVERSE_NEW_ROOT / "files"
+    if not root.exists():
+        return []
+    frame = _dataverse_frame()
+
+    out: list[CorpusFile] = []
+    unmatched = 0
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or path.suffix == ".part":
+            continue
+        parts = path.relative_to(root).parts
+        if len(parts) < 2 or (parts[1] == "_archives" and len(parts) == 3):
+            continue
+        deposit = parts[0]
+        row = frame.get(deposit)
+        if row is None:
+            unmatched += 1
+            continue
+        published = (row.get("publication_date") or "")[:4]
+        out.append(
+            CorpusFile(
+                path=path,
+                dataset_doi=f"doi:10.7910/DVN/{deposit}",
+                collection_id=row["collection_id"],
+                source=DATAVERSE,
+                relative_path="/".join(parts[1:]),
+                deposit_year=int(published) if published.isdigit() else None,
+            )
+        )
+        if limit and len(out) >= limit:
+            break
+
+    if unmatched:
+        logger.warning("dataverse files with no frame row", extra={"n": unmatched})
+    return out
+
+
 def full_corpus(limit: int | None = None) -> list[CorpusFile]:
     """Every collected file, from every source."""
-    files = zenodo_corpus(limit) + dataverse_legacy_corpus(limit)
+    files = zenodo_corpus(limit) + dataverse_corpus(limit)
     _assert_disjoint(files)
     return files
 
@@ -233,5 +280,6 @@ def paths_for(source: str) -> Path:
     """Where a source's files live, for anything that needs to re-read them."""
     return {
         ZENODO: ZENODO_ROOT / "files",
+        DATAVERSE: DATAVERSE_NEW_ROOT / "files",
         DATAVERSE_LEGACY: DATAVERSE_ROOT / "files",
     }[source]

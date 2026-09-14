@@ -3,7 +3,7 @@
     uv run python scripts/corpus_view.py
 
 Writes `outputs/scripts/<source>/<deposit>/<script>` as symlinks to the files
-under `corpus/`, and copies the Dataverse journal metadata beside them.
+under `corpus/`, and writes the Dataverse journal listings beside them.
 
 `kasauti` reads a corpus of replication scripts and re-derives call sites from
 it. Its loader expects `outputs/scripts/<source>/<id>/<script>`, which is what
@@ -26,18 +26,28 @@ it. Linking the files themselves works for all of them.
 
 from __future__ import annotations
 
+import csv
 import shutil
+from collections import defaultdict
 
 from softverse.config import PATHS
 from softverse.corpus.loaders import full_corpus
 
 OUT = PATHS.root / "outputs" / "scripts"
-METADATA = PATHS.root / "corpus" / "dataverse_legacy" / "metadata"
+FRAME = PATHS.frame / "dataverse_deposits.csv"
 
-#: What each source is called in the view. `dataverse_legacy` records which
-#: collection run the files came from, which matters inside softverse and is
-#: noise to a consumer that only wants to know the deposit is from Dataverse.
-VIEW_NAME = {"zenodo": "zenodo", "dataverse_legacy": "dataverse"}
+VIEW_NAME = {"zenodo": "zenodo", "dataverse": "dataverse"}
+
+#: The columns of Dataverse's own per-collection listing, which is the shape
+#: consumers of `outputs/metadata/` were written against.
+LISTING_FIELDS = [
+    "id",
+    "identifier",
+    "persistentUrl",
+    "protocol",
+    "authority",
+    "publicationDate",
+]
 
 
 def deposit_id(doi: str) -> str:
@@ -51,7 +61,7 @@ def deposit_id(doi: str) -> str:
 
 
 def source_of(doi: str) -> str:
-    return "dataverse_legacy" if doi.startswith("doi:") else "zenodo"
+    return "dataverse" if doi.startswith("doi:") else "zenodo"
 
 
 def build() -> tuple[int, int]:
@@ -76,23 +86,43 @@ def build() -> tuple[int, int]:
     return linked, len(deposits)
 
 
-def copy_metadata() -> int:
-    """The per-journal dataset listings, which date a deposit's paper.
+def write_metadata() -> int:
+    """One listing per journal, which dates a deposit's paper.
 
-    Copied rather than linked because they are 75 small CSVs and a consumer
-    that walks them should not have to care that they came from elsewhere.
+    Written from `data/frame/dataverse_deposits.csv`, the frame the corpus was
+    collected from. They used to be copied from the 2024 scrape's listings,
+    which would leave every deposit collected since without a date.
+
+    Returns:
+        How many journal listings were written.
     """
-    if not METADATA.is_dir():
+    if not FRAME.exists():
         return 0
+    by_journal: dict[str, list[dict]] = defaultdict(list)
+    with FRAME.open(encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            by_journal[row["collection_id"]].append(
+                {
+                    "id": row["dataset_id"],
+                    "identifier": row["identifier"],
+                    "persistentUrl": row["persistent_id"],
+                    "protocol": row["protocol"],
+                    "authority": row["authority"],
+                    "publicationDate": row["publication_date"],
+                }
+            )
     destination = PATHS.root / "outputs" / "metadata"
-    destination.mkdir(parents=True, exist_ok=True)
-    n = 0
-    for path in sorted(METADATA.glob("*_datasets.csv")):
-        if ".ipynb_checkpoints" in str(path):
-            continue
-        shutil.copyfile(path, destination / path.name)
-        n += 1
-    return n
+    if destination.exists():
+        shutil.rmtree(destination)
+    destination.mkdir(parents=True)
+    for journal, rows in by_journal.items():
+        with (destination / f"{journal}_datasets.csv").open(
+            "w", encoding="utf-8", newline=""
+        ) as handle:
+            writer = csv.DictWriter(handle, fieldnames=LISTING_FIELDS)
+            writer.writeheader()
+            writer.writerows(rows)
+    return len(by_journal)
 
 
 def main() -> int:
@@ -100,7 +130,7 @@ def main() -> int:
     if not linked:
         print("nothing to link; is the corpus present?")
         return 1
-    n_metadata = copy_metadata()
+    n_metadata = write_metadata()
 
     by_source = {
         name: len(list((OUT / name).iterdir()))
@@ -113,7 +143,7 @@ def main() -> int:
     )
     for name, n in by_source.items():
         print(f"  {name:<12}{n:>7,} deposits")
-    print(f"copied {n_metadata} journal metadata files")
+    print(f"wrote {n_metadata} journal listings")
 
     # Prove the view is readable rather than merely present: a consumer globs
     # it, so glob it. A symlinked directory that a recursive walk declines to
