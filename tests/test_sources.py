@@ -800,3 +800,15 @@ def test_deposits_deferred_during_a_run_are_retried_before_it_ends(tmp_path):
 
     states = {r.dataset_doi: r.state for r in ledger._records.values()}
     assert all(s == "complete" for s in states.values()), states
+
+
+def test_zenodo_license_is_read_in_either_shape(tmp_path):
+    base = {"id": 9, "metadata": {"doi": "10.5281/zenodo.9", "title": "t"}, "files": []}
+    as_dict = {**base, "metadata": {**base["metadata"], "license": {"id": "cc-by-4.0"}}}
+    as_text = {**base, "metadata": {**base["metadata"], "license": "mit"}}
+    assert zenodo.parse_record(as_dict).license == "cc-by-4.0"
+    assert zenodo.parse_record(as_text).license == "mit"
+    assert zenodo.parse_record(base).license is None
+
+    zenodo.write_deposits([zenodo.parse_record(as_dict)], tmp_path / "deposits.csv")
+    assert "cc-by-4.0" in (tmp_path / "deposits.csv").read_text()
