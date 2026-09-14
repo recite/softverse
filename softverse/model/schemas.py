@@ -205,6 +205,9 @@ MENTIONS = pa.schema(
         # `dplyr::select`, the command itself for Stata. Null for a bare
         # `library(dplyr)`, which names a package and no function.
         pa.field("called_function", pa.string()),
+        # The version the code itself asks for, as written, where it asks:
+        # `install_version("fixest", "0.11.1")`, `pip install pandas==1.5.3`.
+        pa.field("pinned_version", pa.string()),
         pa.field("normalized_name", pa.string()),
         pa.field("resolved_package", pa.string()),
         pa.field("ecosystem", _dict()),

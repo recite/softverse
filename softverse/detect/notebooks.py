@@ -44,6 +44,29 @@ _MAGIC_INSTALL = re.compile(
     r"^\s*[%!]\s*(?:pip|conda|mamba)\s+install\s+(?:-\S+\s+)*(.+)$"
 )
 
+#: `pandas==1.5.3`, `numpy>=1.24`, `scikit-learn=1.2.2` (conda), `dask[complete]`.
+_REQUIREMENT = re.compile(r"^([A-Za-z0-9_.\-]+)(?:\[[^\]]*\])?((?:[=<>!~]=?|===).+)?$")
+
+
+def _requirement(token: str) -> tuple[str | None, str | None]:
+    """Split an install token into its package name and version specifier.
+
+    Only the first specifier's operator stays attached (`==1.5.3`), so pip's
+    exact pin and conda's single `=` remain distinguishable from a range.
+
+    Args:
+        token: One whitespace-separated argument to `pip`/`conda install`.
+
+    Returns:
+        ``(name, specifier)``; the name is None when the token is not a
+        requirement at all, such as a path or URL.
+    """
+    match = _REQUIREMENT.match(token.strip("'\""))
+    if match is None:
+        return None, None
+    return match.group(1), match.group(2)
+
+
 #: Kernels we can read. A kernel that is not in here is not parsed, because
 #: the fallback used to be the Python extractor: a Julia notebook's
 #: `import Ipopt` is valid Python, so it parsed cleanly and was recorded as a
@@ -238,7 +261,8 @@ def extract_notebook(source: str) -> ExtractResult:
             if install := _MAGIC_INSTALL.match(line):
                 mentions.extend(
                     Mention(
-                        raw_name=token.split("==")[0].split(">")[0],
+                        raw_name=name,
+                        pinned_version=pin,
                         construct=Construct.SHELL_INSTALL,
                         line=index,
                         col=0,
@@ -248,8 +272,12 @@ def extract_notebook(source: str) -> ExtractResult:
                         cell_index=index,
                         language=language,
                     )
-                    for token in install.group(1).split()
-                    if token and not token.startswith("-")
+                    for name, pin in (
+                        _requirement(token)
+                        for token in install.group(1).split()
+                        if token and not token.startswith("-")
+                    )
+                    if name
                 )
                 continue
             # Magics and shell escapes are not valid source; dropping the line

@@ -372,6 +372,7 @@ def build(
                         "construct": str(mention.construct),
                         "raw_name": mention.raw_name,
                         "called_function": mention.called_function,
+                        "pinned_version": mention.pinned_version,
                         "normalized_name": normalize(mention.raw_name, mention_language),
                         "resolved_package": resolved.package,
                         "ecosystem": str(resolved.ecosystem) if resolved.ecosystem else None,
