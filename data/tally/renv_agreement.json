@@ -14,86 +14,14 @@
   }
  },
  "n_renv_read_nothing": 63,
- "renv_read_nothing": [
+ "renv_read_nothing_sample": [
   {
-   "dataset_doi": "doi:10.7910/DVN/H6RZA7",
-   "n_ours": 16
+   "dataset_doi": "doi:10.7910/DVN/VTA5OA",
+   "n_ours": 8
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/PG4UGE",
-   "n_ours": 13
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/5TTZRQ",
-   "n_ours": 4
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/SREUHV",
-   "n_ours": 6
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/DAGL4S",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/ZMZDHG",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/KGIBK5",
-   "n_ours": 1
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/RLXYCJ",
-   "n_ours": 13
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/1CCXS9",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/TRIEF2",
-   "n_ours": 24
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/VWPPVQ",
-   "n_ours": 10
-  },
-  {
-   "dataset_doi": "zenodo:7554744",
-   "n_ours": 4
-  },
-  {
-   "dataset_doi": "zenodo:7064906",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/BE99YA",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "zenodo:5748084",
-   "n_ours": 6
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/SCXPHI",
-   "n_ours": 10
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/FEQSC7",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/OKZOUX",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/W8TQHB",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/TRLSJA",
-   "n_ours": 9
+   "dataset_doi": "doi:10.7910/DVN/84NYFE",
+   "n_ours": 8
   },
   {
    "dataset_doi": "doi:10.7910/DVN/MZUOWG",
@@ -104,12 +32,8 @@
    "n_ours": 7
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/84NYFE",
-   "n_ours": 8
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/VTA5OA",
-   "n_ours": 8
+   "dataset_doi": "doi:10.7910/DVN/TRLSJA",
+   "n_ours": 9
   },
   {
    "dataset_doi": "doi:10.7910/DVN/IRUDXK",
@@ -120,40 +44,92 @@
    "n_ours": 2
   },
   {
-   "dataset_doi": "zenodo:14929025",
+   "dataset_doi": "zenodo:7064906",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZMZDHG",
    "n_ours": 2
   },
   {
-   "dataset_doi": "zenodo:13981874",
+   "dataset_doi": "doi:10.7910/DVN/DAGL4S",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/KGIBK5",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/RYUUB9",
+   "n_ours": 9
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/HRLHA4",
+   "n_ours": 14
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OJWRWM",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OKZOUX",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/W8TQHB",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SCXPHI",
+   "n_ours": 10
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FEQSC7",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "zenodo:14427583",
+   "n_ours": 15
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/08RCPK",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/6MRVOM",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/5DEGYP",
+   "n_ours": 4
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/L8YEDW",
    "n_ours": 2
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/FRPRDP",
-   "n_ours": 2
+   "dataset_doi": "doi:10.7910/DVN/TRIEF2",
+   "n_ours": 24
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/SJ4IMB",
-   "n_ours": 2
+   "dataset_doi": "doi:10.7910/DVN/VWPPVQ",
+   "n_ours": 10
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/SJI4IA",
-   "n_ours": 22
+   "dataset_doi": "doi:10.7910/DVN/RLXYCJ",
+   "n_ours": 13
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/B4XDZP",
-   "n_ours": 21
+   "dataset_doi": "doi:10.7910/DVN/1CCXS9",
+   "n_ours": 3
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/LLRLQB",
-   "n_ours": 17
+   "dataset_doi": "zenodo:7554744",
+   "n_ours": 4
   },
   {
-   "dataset_doi": "zenodo:8168773",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/24497",
-   "n_ours": 2
+   "dataset_doi": "doi:10.7910/DVN/YGSKJT",
+   "n_ours": 13
   },
   {
    "dataset_doi": "doi:10.7910/DVN/95LWQN",
@@ -168,24 +144,44 @@
    "n_ours": 2
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/6MRVOM",
+   "dataset_doi": "zenodo:13981874",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SJ4IMB",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "zenodo:14929025",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FRPRDP",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/PG4UGE",
+   "n_ours": 13
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/H6RZA7",
+   "n_ours": 16
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SREUHV",
    "n_ours": 6
   },
   {
-   "dataset_doi": "zenodo:14427583",
-   "n_ours": 15
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/5DEGYP",
+   "dataset_doi": "doi:10.7910/DVN/5TTZRQ",
    "n_ours": 4
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/08RCPK",
+   "dataset_doi": "zenodo:5748084",
    "n_ours": 6
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/L8YEDW",
-   "n_ours": 2
+   "dataset_doi": "doi:10.7910/DVN/BE99YA",
+   "n_ours": 7
   },
   {
    "dataset_doi": "doi:10.7910/DVN/DO43V5",
@@ -200,7 +196,7 @@
    "n_ours": 14
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/ZCLECH",
+   "dataset_doi": "doi:10.7910/DVN/4NUQE3",
    "n_ours": 5
   },
   {
@@ -208,12 +204,16 @@
    "n_ours": 27
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/OXBYO7",
-   "n_ours": 2
+   "dataset_doi": "doi:10.7910/DVN/RTB1IG",
+   "n_ours": 5
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/4NUQE3",
+   "dataset_doi": "doi:10.7910/DVN/ZCLECH",
    "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OXBYO7",
+   "n_ours": 2
   }
  ],
  "n_deposits_compared": 3336,
@@ -221,8 +221,199 @@
  "mean_jaccard": 0.9610731462807981,
  "pooled_jaccard": 0.9479724560061209,
  "n_perfect_agreement": 2456,
+ "n_disagreements": 880,
+ "n_ours_only": 695,
+ "n_renv_only": 1209,
+ "top_renv_only": [
+  [
+   "grid",
+   323
+  ],
+  [
+   "parallel",
+   217
+  ],
+  [
+   "stats",
+   140
+  ],
+  [
+   "base",
+   58
+  ],
+  [
+   "rmarkdown",
+   52
+  ],
+  [
+   "tools",
+   46
+  ],
+  [
+   "utils",
+   39
+  ],
+  [
+   "splines",
+   39
+  ],
+  [
+   "grDevices",
+   38
+  ],
+  [
+   "graphics",
+   23
+  ],
+  [
+   "methods",
+   23
+  ],
+  [
+   "renv",
+   18
+  ],
+  [
+   "compiler",
+   16
+  ],
+  [
+   "datasets",
+   11
+  ],
+  [
+   "stats4",
+   8
+  ],
+  [
+   "tcltk",
+   7
+  ],
+  [
+   "knitr",
+   5
+  ],
+  [
+   "RcppArmadillo",
+   4
+  ],
+  [
+   "RcppGSL",
+   4
+  ],
+  [
+   "async",
+   4
+  ]
+ ],
+ "top_ours_only": [
+  [
+   "dplyr",
+   11
+  ],
+  [
+   "ggplot2",
+   11
+  ],
+  [
+   "sandwich",
+   9
+  ],
+  [
+   "tidyr",
+   9
+  ],
+  [
+   "stargazer",
+   9
+  ],
+  [
+   "lmtest",
+   8
+  ],
+  [
+   "MASS",
+   8
+  ],
+  [
+   "car",
+   8
+  ],
+  [
+   "foreign",
+   7
+  ],
+  [
+   "haven",
+   7
+  ],
+  [
+   "lfe",
+   7
+  ],
+  [
+   "tidyverse",
+   7
+  ],
+  [
+   "xtable",
+   7
+  ],
+  [
+   "Hmisc",
+   6
+  ],
+  [
+   "devtools",
+   6
+  ],
+  [
+   "lubridate",
+   6
+  ],
+  [
+   "readstata13",
+   6
+  ],
+  [
+   "scales",
+   6
+  ],
+  [
+   "Rcpp",
+   5
+  ],
+  [
+   "glmnet",
+   5
+  ]
+ ],
  "renv_version": "1.2.3",
- "disagreements": [
+ "disagreements_sample": [
+  {
+   "dataset_doi": "zenodo:19866751",
+   "jaccard": 0.0,
+   "ours_only": [
+    "dplyr",
+    "foreign",
+    "ggplot2",
+    "haven",
+    "ivreg",
+    "lmtest",
+    "renv",
+    "rstudioapi",
+    "sandwich",
+    "tidyr"
+   ],
+   "renv_only": [
+    "utils"
+   ],
+   "n_ours": 10,
+   "n_renv": 1,
+   "n_shared": 0,
+   "n_union": 11,
+   "source": "zenodo"
+  },
   {
    "dataset_doi": "zenodo:14871772",
    "jaccard": 0.0,
@@ -273,30 +464,6 @@
    "n_renv": 1,
    "n_shared": 0,
    "n_union": 39,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "zenodo:19866751",
-   "jaccard": 0.0,
-   "ours_only": [
-    "dplyr",
-    "foreign",
-    "ggplot2",
-    "haven",
-    "ivreg",
-    "lmtest",
-    "renv",
-    "rstudioapi",
-    "sandwich",
-    "tidyr"
-   ],
-   "renv_only": [
-    "utils"
-   ],
-   "n_ours": 10,
-   "n_renv": 1,
-   "n_shared": 0,
-   "n_union": 11,
    "source": "zenodo"
   },
   {
@@ -506,21 +673,6 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/UBRKHO",
-   "jaccard": 0.25,
-   "ours_only": [
-    "amen",
-    "ergm.count",
-    "ergm_3.10.4.tar.gz"
-   ],
-   "renv_only": [],
-   "n_ours": 4,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 4,
-   "source": "dataverse_legacy"
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/CXA8GR",
    "jaccard": 0.25,
    "ours_only": [
@@ -549,6 +701,21 @@
    "n_shared": 1,
    "n_union": 4,
    "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/UBRKHO",
+   "jaccard": 0.25,
+   "ours_only": [
+    "amen",
+    "ergm.count",
+    "ergm_3.10.4.tar.gz"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 4,
+   "source": "dataverse_legacy"
   },
   {
    "dataset_doi": "doi:10.7910/DVN/1DB0FT",
@@ -906,39 +1073,7 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/1YG7BI",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "base",
-    "datasets",
-    "grDevices",
-    "graphics",
-    "methods",
-    "stats",
-    "utils"
-   ],
-   "n_ours": 7,
-   "n_renv": 14,
-   "n_shared": 7,
-   "n_union": 14,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/28575",
-   "jaccard": 0.5,
-   "ours_only": [
-    "R2jags"
-   ],
-   "renv_only": [],
-   "n_ours": 2,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/27455",
+   "dataset_doi": "doi:10.7910/DVN/CGHTPZ",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
@@ -951,50 +1086,11 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/35M5CV",
+   "dataset_doi": "doi:10.7910/DVN/UFZTYU",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
-    "stats"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/TLPMVI",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "parallel"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "zenodo:14156677",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "parallel"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/RQNVFW",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "parallel"
+    "compiler"
    ],
    "n_ours": 1,
    "n_renv": 2,
@@ -1016,19 +1112,42 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/N5IF8R",
+   "dataset_doi": "doi:10.7910/DVN/RQNVFW",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/TLPMVI",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZNOX0G",
    "jaccard": 0.5,
    "ours_only": [
-    "SPDDD_0.14.tar.gz",
-    "corpcor"
+    "textables"
    ],
-   "renv_only": [
-    "grid"
-   ],
-   "n_ours": 5,
-   "n_renv": 4,
-   "n_shared": 3,
-   "n_union": 6,
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
    "source": "dataverse_legacy"
   },
   {
@@ -1045,11 +1164,27 @@
    "source": "zenodo"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/CGHTPZ",
+   "dataset_doi": "doi:10.7910/DVN/28158",
+   "jaccard": 0.5,
+   "ours_only": [
+    "apsrtable",
+    "erer",
+    "memisc",
+    "xtable"
+   ],
+   "renv_only": [],
+   "n_ours": 8,
+   "n_renv": 4,
+   "n_shared": 4,
+   "n_union": 8,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/P2RD03",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
-    "methods"
+    "parallel"
    ],
    "n_ours": 1,
    "n_renv": 2,
@@ -1058,11 +1193,66 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/UFZTYU",
+   "dataset_doi": "doi:10.7910/DVN/4XQUKB",
+   "jaccard": 0.5,
+   "ours_only": [
+    "MatchIt",
+    "Matching",
+    "optmatch"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/59F366",
+   "jaccard": 0.5,
+   "ours_only": [
+    "RcppArmadillo",
+    "optmatch"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 4,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:14156677",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
-    "compiler"
+    "parallel"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "zenodo:6226207",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "rmarkdown"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/JJMCTA",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "methods"
    ],
    "n_ours": 1,
    "n_renv": 2,
@@ -1101,62 +1291,26 @@
    "source": "zenodo"
   },
   {
-   "dataset_doi": "zenodo:8380044",
-   "jaccard": 0.5,
-   "ours_only": [
-    "Rcpp",
-    "rgdal",
-    "sf"
-   ],
-   "renv_only": [],
-   "n_ours": 6,
-   "n_renv": 3,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/2IO3DL",
+   "dataset_doi": "doi:10.7910/DVN/1YG7BI",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
-    "grid"
+    "base",
+    "datasets",
+    "grDevices",
+    "graphics",
+    "methods",
+    "stats",
+    "utils"
    ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
+   "n_ours": 7,
+   "n_renv": 14,
+   "n_shared": 7,
+   "n_union": 14,
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/RGIMXH",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "grid",
-    "splines"
-   ],
-   "n_ours": 2,
-   "n_renv": 4,
-   "n_shared": 2,
-   "n_union": 4,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "zenodo:1116352",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "rmarkdown"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/JJMCTA",
+   "dataset_doi": "doi:10.7910/DVN/27455",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
@@ -1169,68 +1323,10 @@
    "source": "dataverse_legacy"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/28158",
+   "dataset_doi": "doi:10.7910/DVN/28575",
    "jaccard": 0.5,
    "ours_only": [
-    "apsrtable",
-    "erer",
-    "memisc",
-    "xtable"
-   ],
-   "renv_only": [],
-   "n_ours": 8,
-   "n_renv": 4,
-   "n_shared": 4,
-   "n_union": 8,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/4XQUKB",
-   "jaccard": 0.5,
-   "ours_only": [
-    "MatchIt",
-    "Matching",
-    "optmatch"
-   ],
-   "renv_only": [],
-   "n_ours": 6,
-   "n_renv": 3,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/59F366",
-   "jaccard": 0.5,
-   "ours_only": [
-    "RcppArmadillo",
-    "optmatch"
-   ],
-   "renv_only": [],
-   "n_ours": 4,
-   "n_renv": 2,
-   "n_shared": 2,
-   "n_union": 4,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/P2RD03",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "parallel"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/QKCICV",
-   "jaccard": 0.5,
-   "ours_only": [
-    "packages"
+    "R2jags"
    ],
    "renv_only": [],
    "n_ours": 2,
@@ -1240,10 +1336,52 @@
    "source": "dataverse_legacy"
   },
   {
+   "dataset_doi": "doi:10.7910/DVN/35M5CV",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "stats"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/N5IF8R",
+   "jaccard": 0.5,
+   "ours_only": [
+    "SPDDD_0.14.tar.gz",
+    "corpcor"
+   ],
+   "renv_only": [
+    "grid"
+   ],
+   "n_ours": 5,
+   "n_renv": 4,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "dataverse_legacy"
+  },
+  {
    "dataset_doi": "doi:10.7910/DVN/MX5NIV",
    "jaccard": 0.5,
    "ours_only": [
     "https://sites.google.com/a/stonybrook.edu/mperess/research/mnlresp_0.1.0.tar.gz"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/QKCICV",
+   "jaccard": 0.5,
+   "ours_only": [
+    "packages"
    ],
    "renv_only": [],
    "n_ours": 2,
@@ -1264,6 +1402,34 @@
    "n_shared": 1,
    "n_union": 2,
    "source": "dataverse_legacy"
+  },
+  {
+   "dataset_doi": "zenodo:1116352",
+   "jaccard": 0.5,
+   "ours_only": [],
+   "renv_only": [
+    "rmarkdown"
+   ],
+   "n_ours": 1,
+   "n_renv": 2,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "zenodo:8380044",
+   "jaccard": 0.5,
+   "ours_only": [
+    "Rcpp",
+    "rgdal",
+    "sf"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "zenodo"
   }
  ]
 }

@@ -15,7 +15,8 @@ missing dataset card is a reason to stop, not to upload what is there.
 After the upload it reads every table back from the Hub and compares row
 counts with the local files, so "uploaded" means readable, not sent.
 
-The token comes from `HF_TOKEN`, in the environment or `.env`.
+The token is huggingface_hub's own: `HF_TOKEN` if set, otherwise the one
+`hf auth login` saved.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ from __future__ import annotations
 import sys
 
 import pyarrow.parquet as pq
-from huggingface_hub import HfApi
+from huggingface_hub import HfApi, get_token
 
 from softverse.config import PATHS, credential
 
@@ -64,9 +65,9 @@ def main() -> int:
     if "--dry-run" in sys.argv:
         return 0
 
-    token = credential("HF_TOKEN")
+    token = credential("HF_TOKEN") or get_token()
     if not token:
-        print("HF_TOKEN is not set")
+        print("no Hugging Face token: set HF_TOKEN or run `hf auth login`")
         return 1
     api = HfApi(token=token)
     api.create_repo(repo, repo_type="dataset", exist_ok=True)

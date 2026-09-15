@@ -4,8 +4,8 @@ How often each R, Python and Stata package is loaded by the code deposited
 with published papers, at journals whose data-and-code policy the Social
 Science Data Editors record as *actively verified*.
 
-**3,223 packages · 8,349 deposits with analyzable
-code · 8,685 deposits collected · built 2026-08-16**
+**4,642 packages · 13,247 deposits with analyzable
+code · 13,985 deposits collected · built 2026-09-15**
 
 A count here is the number of deposits whose code loads the package. Adding
 one to it takes a paper published at a journal that checks its authors' code,
@@ -21,35 +21,35 @@ collections are mostly political science.
 
 | repository | deposits | with analyzable code |
 |---|---:|---:|
-| Zenodo (economics) | 1,454 | 1,272 |
-| Harvard Dataverse (political science) | 7,231 | 7,077 |
-| **total** | **8,685** | **8,349** |
+| Zenodo (economics) | 1,543 | 1,358 |
+| Harvard Dataverse (political science) | 12,442 | 11,889 |
+| **total** | **13,985** | **13,247** |
 
 Counts pool the two. `usage_by_package.csv` also carries the split, in
-`n_deposits_zenodo` and `n_deposits_dataverse_legacy`, because the two are
+`n_deposits_zenodo` and `n_deposits_dataverse`, because the two are
 very different sizes and a pooled figure alone would hide that.
 
-The Dataverse deposits come from a January 2024 scrape that kept `.do`, `.r`
-and `.py` files and nothing else, so a package used mainly inside a notebook
-or a knitr document is under-counted on that side. The release checks this
-by recomputing the whole ranking on those three extensions alone and fails if
-the order moves. The two collections are also two years apart, which
-`first_year` and `last_year` will show.
+Both repositories were collected with the same rules in 2026: every code,
+notebook and knitr file and every dependency manifest, with the deposit's own
+directories, and code recovered from archives too large to download. An
+archive that could not be read is counted in `summary.json` rather than
+dropped. The two collections still differ in discipline, which the per-source
+columns keep visible.
 
 ## Files
 
 | file | rows | contents |
 |---|---:|---|
-| `usage_by_package.csv` | 3,223 | per-package deposit and call counts, pooled and split |
-| `usage_by_package_year.csv` | 9,738 | the same by deposit year |
-| `usage_by_collection.csv` | 13,880 | the same per journal or community |
-| `usage_by_function.csv` | 10,962 | package → function, where the source names one |
-| `unknown_names.csv` | 7,686 | names called in code that resolve to no registry |
-| `language_presence.csv` | 15 | deposits containing each language, per repository |
-| `mentions.parquet` | 7,060,338 | every mention: package, function, file, line, snippet |
-| `files.parquet` | 217,573 | the provenance spine every mention joins to |
-| `declared_dependencies.parquet` | 5,104 | what manifests declare: shipped, locked or asked for |
-| `environment_signals.parquet` | 6,029 | R, Python and Stata versions, and the OS, where a file says |
+| `usage_by_package.csv` | 4,642 | per-package deposit and call counts, pooled and split |
+| `usage_by_package_year.csv` | 14,661 | the same by deposit year |
+| `usage_by_collection.csv` | 22,894 | the same per journal or community |
+| `usage_by_function.csv` | 25,161 | package → function, where the source names one |
+| `unknown_names.csv` | 12,418 | names called in code that resolve to no registry |
+| `language_presence.csv` | 24 | deposits containing each language, per repository |
+| `mentions.parquet` | 14,415,577 | every mention: package, function, file, line, snippet |
+| `files.parquet` | 447,289 | the provenance spine every mention joins to |
+| `declared_dependencies.parquet` | 33,848 | what manifests declare: shipped, locked or asked for |
+| `environment_signals.parquet` | 19,997 | R, Python and Stata versions, and the OS, where a file says |
 | `environment_coverage.json` | | deposits stating each signal, over deposits that could |
 | `summary.json` | | corpus counts the tables are shares of |
 
@@ -80,7 +80,7 @@ deposits that said something over the deposits that were in a position to.
 Names that appear in the code and resolve to no registry, unfiltered. Some
 are false positives: `str` is a Stata type, and some are programs a deposit
 defines for itself. The list also holds real and heavily used software that
-no registry indexes, `grc1leg` being the clearest case at 1,224
+no registry indexes, `grc1leg` being the clearest case at 1,971
 calls. Pruning the list by hand would put a judgement call inside a file
 whose value is that you can check every row of it.
 

@@ -1,52 +1,52 @@
 {
- "built": "2026-08-16",
+ "built": "2026-09-15",
  "sources": [
-  "dataverse_legacy",
+  "dataverse",
   "zenodo"
  ],
- "n_deposits": 8685,
- "n_deposits_analyzable": 8349,
- "n_files_analyzable": 79654,
- "n_packages": 3223,
- "n_unresolved_names": 7686,
- "n_collections": 69,
+ "n_deposits": 13985,
+ "n_deposits_analyzable": 13247,
+ "n_files_analyzable": 159599,
+ "n_packages": 4642,
+ "n_unresolved_names": 12418,
+ "n_collections": 75,
  "deposits_by_source": {
-  "zenodo": 1454,
-  "dataverse_legacy": 7231
+  "zenodo": 1543,
+  "dataverse": 12442
  },
  "deposits_analyzable_by_source": {
-  "dataverse_legacy": 7077,
-  "zenodo": 1272
+  "dataverse": 11889,
+  "zenodo": 1358
  },
  "deposits_by_language": {
-  "stata": 6212,
-  "r": 3518,
-  "python": 406
+  "stata": 8942,
+  "r": 6473,
+  "python": 911
  },
  "environment_coverage": {
   "julia_version": {
-   "deposits_carrying": 6,
-   "deposits_eligible": 59
+   "deposits_carrying": 17,
+   "deposits_eligible": 322
   },
   "matlab_version": {
-   "deposits_carrying": 1,
-   "deposits_eligible": 59
+   "deposits_carrying": 3,
+   "deposits_eligible": 322
   },
   "os": {
-   "deposits_carrying": 13,
-   "deposits_eligible": 3488
+   "deposits_carrying": 92,
+   "deposits_eligible": 6437
   },
   "python_version": {
-   "deposits_carrying": 58,
-   "deposits_eligible": 408
+   "deposits_carrying": 300,
+   "deposits_eligible": 919
   },
   "r_version": {
-   "deposits_carrying": 28,
-   "deposits_eligible": 3529
+   "deposits_carrying": 183,
+   "deposits_eligible": 6630
   },
   "stata_version": {
-   "deposits_carrying": 777,
-   "deposits_eligible": 6100
+   "deposits_carrying": 1194,
+   "deposits_eligible": 8983
   }
  }
 }
