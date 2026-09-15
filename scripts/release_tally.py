@@ -404,12 +404,14 @@ def report(summary: dict) -> int:
 
     # Fixed expectations, not spot checks: these are the numbers the paper
     # prints, so a release that disagrees with them is a release that would
-    # have quietly contradicted the paper.
+    # have quietly contradicted the paper. Moved from the August 2026 release
+    # (estout 2,440 of 6,212) to the 2026 collection; the paper's computed
+    # values follow when it is re-rendered, and this pins them until then.
     for key, field, expected in (
-        (("estout", "stata"), "n_deposits", "2440"),
-        (("estout", "stata"), "n_deposits_zenodo", "657"),
-        (("reghdfe", "stata"), "n_deposits", "800"),
-        (("estout", "stata"), "n_deposits_at_risk", "6212"),
+        (("estout", "stata"), "n_deposits", "3818"),
+        (("estout", "stata"), "n_deposits_zenodo", "699"),
+        (("reghdfe", "stata"), "n_deposits", "1527"),
+        (("estout", "stata"), "n_deposits_at_risk", "8942"),
     ):
         got = usage.get(key, {}).get(field)
         if got != expected:
