@@ -35,6 +35,7 @@ import duckdb
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from softverse.detect.dispatch import decode
 from softverse.logging_setup import get_logger
 from softverse.model.enums import NON_USE_CONSTRUCTS, Resolution
 from softverse.release.licenses import classify
@@ -68,6 +69,13 @@ class Inputs:
     frame: Path
     dataverse_corpus: Path
     zenodo_corpus: Path
+
+
+def _size(path: str | None) -> int | None:
+    try:
+        return Path(path).stat().st_size if path else None
+    except OSError:
+        return None
 
 
 def _sql_list(values: tuple[str, ...]) -> str:
@@ -206,7 +214,22 @@ def build(inputs: Inputs, out: Path) -> dict[str, int]:
 
     deposits = pa.Table.from_pylist(_deposit_rows(inputs, license_of))
     con.register("deposits_in", deposits)
-    con.execute(f"CREATE VIEW files_in AS SELECT * FROM '{tally / 'files.parquet'}'")
+    con.execute(f"CREATE VIEW files_raw AS SELECT * FROM '{tally / 'files.parquet'}'")
+    # The tally does not record file sizes, so they are read off the disk,
+    # which is also the copy `contents` is built from.
+    paths = con.execute("SELECT file_uid, local_path FROM files_raw").fetchall()
+    sizes = pa.table(
+        {
+            "file_uid": [uid for uid, _ in paths],
+            "disk_bytes": [_size(path) for _, path in paths],
+        }
+    )
+    con.register("sizes", sizes)
+    con.execute(
+        "CREATE VIEW files_in AS SELECT f.* REPLACE "
+        "(coalesce(f.size_bytes, s.disk_bytes) AS size_bytes) "
+        "FROM files_raw f LEFT JOIN sizes s USING (file_uid)"
+    )
     con.execute(
         f"CREATE VIEW mentions_in AS SELECT * FROM '{tally / 'mentions.parquet'}'"
     )
@@ -363,7 +386,7 @@ def _write_contents(con: duckdb.DuckDBPyConnection, out: Path) -> int:
     """
     rows = con.execute(
         f"""
-        SELECT f.sha256_local, any_value(f.local_path), any_value(f.encoding)
+        SELECT f.sha256_local, any_value(f.local_path)
         FROM files_in f JOIN redistributable r USING (dataset_doi)
         WHERE r.content_redistributable AND f.sha256_local IS NOT NULL
           AND f.size_bytes <= {CONTENT_CAP_BYTES}
@@ -377,6 +400,10 @@ def _write_contents(con: duckdb.DuckDBPyConnection, out: Path) -> int:
             ("content", pa.string()),
             ("src_encoding", pa.string()),
             ("length_bytes", pa.int64()),
+            # Whether encoding `content` in `src_encoding` gives back the
+            # original bytes. False where the encoding was a guess or a byte
+            # order mark was dropped: the text is right to read, not to hash.
+            ("exact", pa.bool_()),
         ]
     )
     directory = out / "contents"
@@ -393,18 +420,23 @@ def _write_contents(con: duckdb.DuckDBPyConnection, out: Path) -> int:
             )
             shard, buffer, buffered = shard + 1, [], 0
 
-    for sha, local_path, encoding in rows:
+    for sha, local_path in rows:
         data = Path(local_path).read_bytes()
         if hashlib.sha256(data).hexdigest() != sha:
             logger.error("file changed since the tally", extra={"path": local_path})
             continue
-        text = data.decode(encoding or "utf-8", errors="replace")
+        decoded = decode(data)
+        try:
+            exact = decoded.text.encode(decoded.encoding) == data
+        except (UnicodeEncodeError, LookupError):
+            exact = False
         buffer.append(
             {
                 "sha256": sha,
-                "content": text,
-                "src_encoding": encoding,
+                "content": decoded.text,
+                "src_encoding": decoded.encoding,
                 "length_bytes": len(data),
+                "exact": exact,
             }
         )
         buffered += len(data)
@@ -452,22 +484,28 @@ def check(inputs: Inputs, out: Path) -> list[str]:
             f"file_packages sums to {grouped}, resolved mentions {resolved}"
         )
 
-    # Content: every hash re-derived from the text, none from a closed deposit,
-    # and none missing for an open one.
+    # Content: every exact row re-derived to its hash, none from a closed
+    # deposit, and none missing for an open one.
+    shards = sorted((out / "contents").glob("*.parquet"))
+    if not shards:
+        problems.append("no contents written")
+        return problems
     bad_hash = 0
-    for shard in sorted((out / "contents").glob("*.parquet")):
-        table = pq.read_table(shard, columns=["sha256", "content", "src_encoding"])
-        for sha, text, encoding in zip(
+    for shard in shards:
+        table = pq.read_table(
+            shard, columns=["sha256", "content", "src_encoding", "exact"]
+        )
+        for sha, text, encoding, exact in zip(
             table["sha256"].to_pylist(),
             table["content"].to_pylist(),
             table["src_encoding"].to_pylist(),
+            table["exact"].to_pylist(),
             strict=True,
         ):
-            encoded = text.encode(encoding or "utf-8", errors="replace")
-            if "�" not in text and hashlib.sha256(encoded).hexdigest() != sha:
+            if exact and hashlib.sha256(text.encode(encoding)).hexdigest() != sha:
                 bad_hash += 1
     if bad_hash:
-        problems.append(f"{bad_hash} contents rows do not hash to their sha256")
+        problems.append(f"{bad_hash} exact contents rows do not hash to their sha256")
 
     (leaked,) = one(
         f"""SELECT count(*) FROM {contents} c WHERE NOT EXISTS (
