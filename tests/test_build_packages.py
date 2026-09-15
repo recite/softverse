@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -128,6 +129,14 @@ def tally(tmp_path, monkeypatch):
         ]
     ).to_csv(tally / "package_versions.csv", index=False)
     (tally / "summary.json").write_text(json.dumps({"built": "2026-09-15"}))
+    pd.DataFrame(
+        [
+            {"language": "r", "year": 2019, "n_deposits_at_risk": 10},
+            {"language": "r", "year": 2020, "n_deposits_at_risk": 40},
+            {"language": "r", "year": 2021, "n_deposits_at_risk": 50},
+            {"language": "python", "year": 2022, "n_deposits_at_risk": 4},
+        ]
+    ).to_csv(tally / "language_year_at_risk.csv", index=False)
     frame = tmp_path / "frame.csv"
     frame.write_text(
         "collection_id,journal_name\najps,American Journal of Political Science\n"
@@ -181,3 +190,51 @@ def test_a_case_only_collision_fails_the_build():
                 {"path": "cran/rcpp", "ecosystem": "cran", "package": "rcpp"},
             ]
         )
+
+
+def test_the_trend_plots_each_usable_year_at_its_share(tally):
+    build_packages.main(out=tally)
+    record = json.loads((tally / "api" / "v1" / "cran" / "fixest.json").read_text())
+    svg = build_packages.trend(record)
+    titles = re.findall(
+        r"<title>(\d+): (\d+) of (\d+) deposits, ([\d.]+)%</title>", svg
+    )
+    assert [t[0] for t in titles] == ["2020", "2021"], "2019 has too few deposits"
+    for _, n, at_risk, pct in titles:
+        assert float(pct) == pytest.approx(100 * int(n) / int(at_risk), abs=0.05)
+
+
+def test_one_usable_year_draws_no_chart(tally):
+    build_packages.main(out=tally)
+    record = json.loads((tally / "api" / "v1" / "pypi" / "arrow.json").read_text())
+    assert build_packages.trend(record) == ""
+
+
+def test_the_function_table_says_what_it_undercounts(tally):
+    build_packages.main(out=tally)
+    page = (tally / "p" / "cran" / "fixest" / "index.html").read_text()
+    assert "only where the code names the package" in page
+
+
+def test_leaderboards_rank_by_deposits():
+    from build_lookup import leaderboards
+
+    data = [
+        {"p": "a", "l": "R", "d": 5, "s": 50.0, "u": "cran/a"},
+        {"p": "b", "l": "R", "d": 9, "s": 90.0, "u": "cran/b"},
+        {"p": "c", "l": "Stata", "d": 3, "s": 3.0, "u": "ssc/c"},
+    ]
+    boards = leaderboards(data)
+    assert boards.index("cran/b") < boards.index("cran/a")
+    assert "ssc/c" in boards
+
+
+def test_a_year_without_the_package_is_a_zero_not_a_gap(tally):
+    build_packages.main(out=tally)
+    record = json.loads((tally / "api" / "v1" / "cran" / "arrow.json").read_text())
+    assert [(y["year"], y["n_deposits"]) for y in record["by_year"]] == [
+        (2019, 0),
+        (2020, 0),
+        (2021, 1),
+    ]
+    assert "<title>2020: 0 of 40 deposits, 0.0%</title>" in build_packages.trend(record)

@@ -27,15 +27,14 @@ from __future__ import annotations
 import csv
 import html
 import json
-import re
 from collections import Counter, defaultdict
 from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import anybadge
 import pandas as pd
-from build_lookup import TEMPLATE as LOOKUP_TEMPLATE
 from build_lookup import slug
+from site_style import STYLE
 
 from softverse.config import PATHS
 
@@ -61,8 +60,10 @@ LANGUAGE_LABEL = {"r": "R", "python": "Python", "stata": "Stata", "julia": "Juli
 BADGE_LABEL = "replication code"
 BADGE_COLOR = "#007ec6"
 
-#: The lookup page's own stylesheet, so a package page looks like part of it.
-STYLE = re.search(r"<style>.*?</style>", LOOKUP_TEMPLATE, re.DOTALL).group(0)  # type: ignore[union-attr]
+#: Years whose denominator is smaller than this are left off the trend. A
+#: share of 3 out of 11 deposits moves 9 points on one paper, and a line
+#: through such years draws noise as if it were a change in practice.
+MIN_AT_RISK = 30
 
 
 def badge_message(n_deposits: int) -> str:
@@ -113,6 +114,12 @@ def records() -> list[dict]:
         .sum()
     )
     versions = pd.read_csv(TALLY / "package_versions.csv", dtype={"version": str})
+    at_risk = {
+        (row.language, int(row.year)): int(row.n_deposits_at_risk)
+        for row in pd.read_csv(TALLY / "language_year_at_risk.csv")
+        .dropna(subset=["year"])
+        .itertuples(index=False)
+    }
 
     by_package = dict(list(deposits.groupby(["language", "package"])))
     fn_by_package = dict(list(functions.groupby(["language", "package"])))
@@ -146,7 +153,18 @@ def records() -> list[dict]:
                     c.removeprefix("n_deposits_"): int(getattr(row, c))
                     for c in source_columns
                 },
-                "by_year": dict(sorted(years.items())),
+                # Every year the language has deposits in, zeros included: a
+                # year a package went unused is a point on its line, and
+                # leaving it out draws a straight segment across the gap.
+                "by_year": [
+                    {
+                        "year": year,
+                        "n_deposits": years.get(year, 0),
+                        "n_deposits_at_risk": n_at_risk,
+                    }
+                    for (language, year), n_at_risk in sorted(at_risk.items())
+                    if language == row.language
+                ],
                 "journals": [
                     {"id": j, "name": journals.get(j, j), "n_deposits": n}
                     for j, n in journal_counts.most_common()
@@ -208,6 +226,61 @@ def _refuse_collisions(items: list[dict]) -> None:
         raise ValueError(f"packages share a page path: {clashes}")
 
 
+def trend(record: dict) -> str:
+    """The package's share of each year's deposits, as a plain line.
+
+    Only years with at least :data:`MIN_AT_RISK` deposits in the language. The
+    y-axis starts at zero, so a small share looks small.
+
+    Args:
+        record: The package's record from :func:`records`.
+
+    Returns:
+        An inline SVG, or an empty string with fewer than two usable years.
+    """
+    points = [
+        (y["year"], y["n_deposits"] / y["n_deposits_at_risk"], y)
+        for y in record["by_year"]
+        if y["n_deposits_at_risk"] >= MIN_AT_RISK
+    ]
+    if len(points) < 2:
+        return ""
+    width, height, left, bottom, top = 600, 180, 34, 22, 8
+    first, last = points[0][0], points[-1][0]
+    peak = max(share for _, share, _ in points)
+    ceiling = max(0.05, round(peak * 1.15 + 0.005, 2))
+
+    def x(year: int) -> float:
+        return left + (width - left - 8) * (year - first) / max(1, last - first)
+
+    def y(share: float) -> float:
+        return top + (height - top - bottom) * (1 - share / ceiling)
+
+    line = " ".join(f"{x(yr):.1f},{y(sh):.1f}" for yr, sh, _ in points)
+    dots = "".join(
+        f'<circle class="pt" cx="{x(yr):.1f}" cy="{y(sh):.1f}" r="2.5">'
+        f"<title>{yr}: {d['n_deposits']:,} of {d['n_deposits_at_risk']:,} "
+        f"deposits, {sh:.1%}</title></circle>"
+        for yr, sh, d in points
+    )
+    ticks = "".join(
+        f'<text x="{x(yr):.1f}" y="{height - 6}" text-anchor="middle">{yr}</text>'
+        for yr, _, _ in points
+        if yr in (first, last) or (yr - first) % max(1, (last - first) // 4) == 0
+    )
+    labels = "".join(
+        f'<text x="{left - 6}" y="{y(v) + 4:.1f}" text-anchor="end">{v:.0%}</text>'
+        for v in (0, ceiling / 2, ceiling)
+    )
+    base = height - bottom
+    return (
+        f'<svg class="trend" viewBox="0 0 {width} {height}" role="img" '
+        f'aria-label="Share of deposits using {html.escape(record["package"])}, by year">'
+        f'<line class="axis" x1="{left}" y1="{base}" x2="{width - 8}" y2="{base}"/>'
+        f'{labels}{ticks}<polyline class="line" points="{line}"/>{dots}</svg>'
+    )
+
+
 def page(record: dict, built: str) -> str:
     """The package's HTML page.
 
@@ -227,80 +300,105 @@ def page(record: dict, built: str) -> str:
     markdown = f"[![{BADGE_LABEL}]({shields})]({page_url})"
     static = f"[![{BADGE_LABEL}]({SITE}/badges/{record['path']}.svg)]({page_url})"
 
-    def rows(items: list[dict], cells) -> str:
-        return "".join(f"<tr>{cells(i)}</tr>" for i in items)
-
-    years = rows(
-        [{"y": y, "n": n} for y, n in record["by_year"].items()],
-        lambda i: f"<td>{i['y']}</td><td class='num'>{i['n']:,}</td>",
-    )
-    journals = rows(
-        record["journals"],
-        lambda i: f"<td>{e(i['name'])}</td><td class='num'>{i['n_deposits']:,}</td>",
-    )
-    functions = rows(
-        record["functions"],
-        lambda i: f"<td class='pkg'>{e(i['function'])}</td>"
-        f"<td class='num'>{i['n_deposits']:,}</td><td class='num'>{i['n_calls']:,}</td>",
-    )
-    versions = rows(
-        record["versions"],
-        lambda i: f"<td class='pkg'>{e(i['version'])}</td><td>{e(i['source'])}</td>"
-        f"<td class='num'>{i['n_deposits']:,}</td>",
-    )
-    deposits = rows(
-        record["deposits"],
-        lambda i: f"<td><a href='{e(i['url'])}'>{e(i['doi'])}</a></td>"
-        f"<td>{e(i['journal'])}</td><td class='num'>{i['year'] or ''}</td>",
-    )
-
-    def section(title: str, head: str, body: str) -> str:
-        if not body:
+    def table(head: list[tuple[str, str]], rows: list[list[str]]) -> str:
+        if not rows:
             return ""
-        return (
-            f"<h2>{title}</h2><div class='tablewrap'><table><thead><tr>{head}"
-            f"</tr></thead><tbody>{body}</tbody></table></div>"
+        th = "".join(f"<th class='{c}'>{t}</th>" for t, c in head)
+        body = "".join(
+            "<tr>"
+            + "".join(f"<td class='{head[i][1]}'>{v}</td>" for i, v in enumerate(r))
+            + "</tr>"
+            for r in rows
         )
+        return f"<div class='scroll'><table><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>"
 
-    split = " · ".join(f"{s}: {n:,}" for s, n in record["by_source"].items())
+    chart = trend(record)
+    journals = table(
+        [("Journal", ""), ("Deposits", "num")],
+        [[e(j["name"]), f"{j['n_deposits']:,}"] for j in record["journals"]],
+    )
+    functions = table(
+        [("Function", ""), ("Deposits", "num"), ("Calls", "num")],
+        [
+            [
+                f"<span class='pkg'>{e(f['function'])}</span>",
+                f"{f['n_deposits']:,}",
+                f"{f['n_calls']:,}",
+            ]
+            for f in record["functions"]
+        ],
+    )
+    versions = table(
+        [("Version", ""), ("Stated in", ""), ("Deposits", "num")],
+        [
+            [
+                f"<span class='pkg'>{e(v['version'])}</span>",
+                e(v["source"]),
+                f"{v['n_deposits']:,}",
+            ]
+            for v in record["versions"]
+        ],
+    )
+    deposits = table(
+        [("Deposit", ""), ("Journal", ""), ("Year", "num")],
+        [
+            [
+                f"<a href='{e(d['url'])}'>{e(d['doi'])}</a>",
+                e(d["journal"]),
+                str(d["year"] or ""),
+            ]
+            for d in record["deposits"]
+        ],
+    )
+    split = ", ".join(
+        f"{n:,} from {s.capitalize()}" for s, n in record["by_source"].items() if n
+    )
+
+    sections = []
+    if chart:
+        sections.append(
+            f"<h2>Share of {lang} deposits, by year</h2>{chart}"
+            f"<p class='note'>Years with fewer than {MIN_AT_RISK} deposits containing "
+            f"{lang} code are left out.</p>"
+        )
+    if journals:
+        sections.append(f"<h2>Journals</h2>{journals}")
+    if functions:
+        sections.append(
+            f"<h2>Functions called</h2>{functions}<p class='note'>A call is counted "
+            f"only where the code names the package, as in "
+            f"<code>{e(record['package'])}::f()</code> or through an import alias, so "
+            "these undercount calls made after a plain <code>library()</code>.</p>"
+        )
+    if versions:
+        sections.append(f"<h2>Versions researchers stated</h2>{versions}")
+    sections.append(f"<h2>The {record['n_deposits']:,} deposits</h2>{deposits}")
+
     return f"""<!doctype html>
 <meta charset="utf-8">
-<title>{e(record["package"])} ({eco}) · softverse</title>
+<title>{e(record["package"])} · softverse</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {STYLE}
-<style>
-h2 {{ font-size: 1.05rem; margin: 2rem 0 0.6rem; }}
-.stat {{ font-size: 2.2rem; font-weight: 650; letter-spacing: -0.02em; }}
-pre {{ background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
-       padding: 0.7rem; overflow-x: auto; font-size: 0.8rem; white-space: pre-wrap; }}
-button.copy {{ font: inherit; font-size: 0.8rem; cursor: pointer; }}
-</style>
 <div class="wrap">
 <header>
-  <div class="eyebrow"><a href="../../../lookup/">softverse lookup</a> · {eco} · {lang}</div>
+  <p class="crumb"><a href="../../../lookup/">softverse</a> · {eco} · {lang}</p>
   <h1 class="pkg">{e(record["package"])}</h1>
-  <p class="lede">Referenced in the replication code of</p>
-  <div class="stat">{badge_message(record["n_deposits"])}</div>
+  <p class="stat">Loaded by the replication code of {badge_message(record["n_deposits"])}</p>
   <p class="lede">{record["share_of_deposits"]:.1%} of the {record["n_deposits_at_risk"]:,}
-  deposits with analyzable {lang} code. {split}.</p>
+  deposits with {lang} code; {split}.</p>
 </header>
+{"".join(sections)}
 <h2>Badge</h2>
-<p><img alt="{BADGE_LABEL}: {badge_message(record["n_deposits"])}"
-  src="../../../badges/{record["path"]}.svg"></p>
+<p><img alt="{BADGE_LABEL}: {badge_message(record["n_deposits"])}" src="../../../badges/{record["path"]}.svg"></p>
 <pre id="md">{e(markdown)}</pre>
-<button class="copy" onclick="navigator.clipboard.writeText(document.getElementById('md').textContent)">Copy Markdown</button>
-<details><summary>Without shields.io</summary><pre>{e(static)}</pre></details>
-{section("Deposits by year", "<th>Year</th><th class='num'>Deposits</th>", years)}
-{section("Journals", "<th>Journal</th><th class='num'>Deposits</th>", journals)}
-{section("Most-used functions", "<th>Function</th><th class='num'>Deposits</th><th class='num'>Calls</th>", functions)}
-{section("Versions researchers stated", "<th>Version</th><th>Where stated</th><th class='num'>Deposits</th>", versions)}
-{section(f"The {record['n_deposits']:,} deposits", "<th>Deposit</th><th>Journal</th><th class='num'>Year</th>", deposits)}
+<p class="note"><a href="#" onclick="navigator.clipboard.writeText(document.getElementById('md').textContent); this.textContent='copied'; return false">copy</a>
+ · without shields.io: <code>{e(static)}</code></p>
 <footer>
   A reference is not a run: these deposits' code names {e(record["package"])},
-  which does not show the code executed. Counts cover deposits at economics
-  and political science journals that verify replication packages, built
-  {e(built)}. <a href="../../../api/v1/{record["path"]}.json">This page as JSON</a> ·
-  <a href="../../../data/">the tables</a>.
+  which does not show the code executed. Deposits at economics and political
+  science journals that verify replication packages; built {e(built)}.
+  <a href="../../../api/v1/{record["path"]}.json">JSON</a> ·
+  <a href="../../../data/">tables</a>
 </footer>
 </div>
 """

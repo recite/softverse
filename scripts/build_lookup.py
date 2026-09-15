@@ -23,10 +23,13 @@ be able to say that rather than go quiet.
 from __future__ import annotations
 
 import csv
+import html
 import json
 import re
 from typing import TYPE_CHECKING
 from urllib.parse import quote
+
+from site_style import STYLE
 
 from softverse.config import PATHS
 from softverse.logging_setup import get_logger, setup_logging
@@ -188,82 +191,57 @@ def build(data: list[dict], misses: list[dict], n_deposits: int) -> str:
         .replace("__SOURCES__", json.dumps(sources))
         .replace("__NPACKAGES__", f"{len(data):,}")
         .replace("__NDEPOSITS__", f"{n_deposits:,}")
+        .replace("__BOARDS__", leaderboards(data))
+        .replace("__STYLE__", STYLE)
     )
 
 
-TEMPLATE = r"""<title>Validated Use Lookup</title>
+#: Languages given a leaderboard, in the order they are shown, and its length.
+BOARD_LANGUAGES = ("R", "Stata", "Python")
+BOARD_LENGTH = 15
+
+
+def leaderboards(data: list[dict]) -> str:
+    """The most used packages per language, as plain ranked lists.
+
+    Args:
+        data: The rows the lookup table is built from, one per package.
+
+    Returns:
+        One ``<ol>`` per language, each package linked to its page.
+    """
+    out = []
+    for lang in BOARD_LANGUAGES:
+        top = sorted((r for r in data if r["l"] == lang), key=lambda r: -r["d"])
+        items = "".join(
+            f'<li><a class="pkg" href="../p/{r["u"]}/">{html.escape(r["p"])}</a>'
+            f'<span class="n">{r["d"]:,}'
+            + (f" · {r['s']:.0f}%" if r["s"] is not None else "")
+            + "</span></li>"
+            for r in top[:BOARD_LENGTH]
+        )
+        out.append(
+            f'<div><p><strong>{lang}</strong></p><ol class="board">{items}</ol></div>'
+        )
+    return "".join(out)
+
+
+TEMPLATE = r"""<!doctype html>
+<meta charset="utf-8">
+<title>Package lookup · softverse</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+__STYLE__
 <style>
-:root {
-  --ink: #16181d; --soft: #5a626e; --faint: #8d95a1;
-  --ground: #fcfcfb; --panel: #f1f2ef; --rule: #dfe1dc;
-  --accent: #1f4e7a; --accent-soft: #e9eff5;
-}
-:root:not([data-theme="light"]) {
-  @media (prefers-color-scheme: dark) {
-    --ink: #e7e9ec; --soft: #a6aeb9; --faint: #79818d;
-    --ground: #15171b; --panel: #1d2026; --rule: #2c3038;
-    --accent: #82b2dd; --accent-soft: #1a2733;
-  }
-}
-:root[data-theme="dark"] {
-  --ink: #e7e9ec; --soft: #a6aeb9; --faint: #79818d;
-  --ground: #15171b; --panel: #1d2026; --rule: #2c3038;
-  --accent: #82b2dd; --accent-soft: #1a2733;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0; background: var(--ground); color: var(--ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 15px; line-height: 1.5;
-}
-.wrap { max-width: 60rem; margin: 0 auto; padding: 2.6rem 1.2rem 5rem; }
-header { border-bottom: 2px solid var(--ink); padding-bottom: 1.2rem; margin-bottom: 1.4rem; }
-.eyebrow {
-  font-size: 0.66rem; font-weight: 650; letter-spacing: 0.15em;
-  text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem;
-}
-h1 { font-size: 1.6rem; font-weight: 650; margin: 0 0 0.4rem; letter-spacing: -0.01em; }
-.lede { color: var(--soft); max-width: 46rem; margin: 0; }
-.controls { display: flex; gap: 0.7rem; flex-wrap: wrap; margin: 1.4rem 0 0.9rem; }
-input[type="search"], select {
-  font: inherit; color: var(--ink); background: var(--ground);
-  border: 1px solid var(--rule); border-radius: 5px; padding: 0.5rem 0.7rem;
-}
-input[type="search"] { flex: 1 1 18rem; }
-input:focus-visible, select:focus-visible, th button:focus-visible {
-  outline: 2px solid var(--accent); outline-offset: 1px;
-}
-.count { color: var(--faint); font-size: 0.85rem; margin-bottom: 0.5rem; }
-.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; }
-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-th { background: var(--panel); text-align: left; white-space: nowrap; }
-th button {
-  all: unset; cursor: pointer; display: block; width: 100%;
-  padding: 0.55rem 0.8rem; font-weight: 640; font-size: 0.82rem; color: var(--soft);
-}
-th button:hover { color: var(--accent); }
-th.num button, td.num { text-align: right; }
-td { padding: 0.45rem 0.8rem; border-top: 1px solid var(--rule); font-size: 0.88rem; }
-tbody tr:hover { background: var(--accent-soft); }
-.pkg { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-weight: 600; }
-.lang { color: var(--soft); font-size: 0.8rem; }
-.bar { display: block; height: 3px; background: var(--accent); border-radius: 2px; margin: 3px 0 0 auto; }
-th:last-child button, td:last-child { padding-left: 1.8rem; }
-.empty { padding: 2.5rem 1rem 1rem; text-align: center; color: var(--faint); }
-.miss {
-  margin-top: 0.9rem; padding: 0.9rem 1.1rem; border-radius: 6px;
-  background: var(--accent-soft); border: 1px solid var(--rule);
-  font-size: 0.88rem; color: var(--soft);
-}
-.miss strong { color: var(--ink); }
-footer { margin-top: 2rem; color: var(--faint); font-size: 0.8rem; line-height: 1.6; }
-a { color: var(--accent); }
+.wrap { max-width: 54rem; }
+.count, .empty { color: var(--soft); font-size: 0.85rem; margin: 0.6rem 0; }
+.lang { color: var(--soft); }
+.controls { margin: 2.4rem 0 0.4rem; }
+.miss { color: var(--soft); font-size: 0.85rem; margin-top: 1rem; }
 </style>
 <div class="wrap">
 <header>
-  <div class="eyebrow">softverse</div>
-  <h1>Validated use lookup</h1>
+  <p class="crumb"><a href="../">softverse</a></p>
+  <h1>Package lookup</h1>
   <p class="lede">
     How often each package is loaded by the code behind published papers.
     __NPACKAGES__ packages across __NDEPOSITS__ deposits at economics and
@@ -273,6 +251,9 @@ a { color: var(--accent); }
     it.
   </p>
 </header>
+
+<h2>Most used, by language</h2>
+<div class="boards">__BOARDS__</div>
 
 <div class="controls">
   <input type="search" id="q" placeholder="Search a package, e.g. reghdfe" autocomplete="off" aria-label="Search packages">
@@ -287,7 +268,7 @@ a { color: var(--accent); }
 </div>
 <div class="count" id="count"></div>
 
-<div class="tablewrap">
+<div class="scroll">
 <table>
   <thead><tr>
     <th><button data-k="p">Package</button></th>
@@ -295,7 +276,7 @@ a { color: var(--accent); }
     <th class="num"><button data-k="d">Deposits</button></th>
     <th class="num"><button data-k="s">Share</button></th>
     <th class="num"><button data-k="m">Calls</button></th>
-    <th><button data-k="e">Registry</button></th>
+    <th><button data-k="e" title="The registry the package is published on">Listed on</button></th>
     <th><button data-k="d">Repositories</button></th>
   </tr></thead>
   <tbody id="body"></tbody>
@@ -329,8 +310,6 @@ const count = document.getElementById("count");
 const empty = document.getElementById("empty");
 const miss = document.getElementById("miss");
 let sortKey = "d", sortDesc = true;
-
-const maxShare = Math.max(...DATA.map(r => r.s || 0), 1);
 
 function render() {
   const q = document.getElementById("q").value.trim().toLowerCase();
@@ -377,7 +356,7 @@ function render() {
 
 function share(r) {
   if (r.s === null || r.s === undefined) { return '<span class="lang">&mdash;</span>'; }
-  return `${r.s.toFixed(1)}%<span class="bar" style="width:${(100 * r.s / maxShare).toFixed(1)}%"></span>`;
+  return `${r.s.toFixed(1)}%`;
 }
 
 // Which repository is doing the crediting. A package can be near the top of

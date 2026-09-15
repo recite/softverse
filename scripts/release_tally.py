@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 TALLY = PATHS.root / "build" / "tally"
+ZENODO_DEPOSITS = PATHS.root / "corpus" / "zenodo" / "deposits.csv"
 OUT = PATHS.root / "data" / "tally"
 
 #: Each aggregate ships as CSV and as Parquet. The CSV is for a person
@@ -272,6 +273,71 @@ def write_package_tables() -> None:
     rows.to_csv(OUT / "package_versions.csv", index=False, lineterminator="\n")
 
 
+def write_year_denominators() -> None:
+    """Deposits with analyzable code per (language, deposit year).
+
+    The denominator a package's share over time is taken against, by the
+    tally's own rule: a deposit is at risk for a language when it holds an
+    analyzable file in that language or a mention in it came out of it. Years
+    are the frame dates the corpus loader stamps on every file, read from the
+    same two files, so a package's per-year count and this denominator agree
+    on which year a deposit belongs to. A deposit with no date is a row with
+    an empty year rather than a dropped one.
+    """
+    con = duckdb.connect()
+    con.execute(
+        f"""
+        CREATE TEMP TABLE deposit_year AS
+        SELECT 'doi:10.7910/DVN/' || split_part(identifier, '/', -1) AS dataset_doi,
+               TRY_CAST(left(publication_date, 4) AS INTEGER) AS year
+        FROM read_csv_auto('{PATHS.frame / "dataverse_deposits.csv"}', all_varchar = true)
+        UNION ALL
+        SELECT dataset_doi, TRY_CAST(deposit_year AS INTEGER)
+        FROM read_csv_auto('{ZENODO_DEPOSITS}', all_varchar = true)
+        """
+    )
+    con.execute(
+        f"""
+        COPY (
+            WITH at_risk AS (
+                SELECT DISTINCT language, dataset_doi
+                FROM '{TALLY / "files.parquet"}' WHERE in_analysis_set
+                UNION
+                SELECT DISTINCT language, dataset_doi FROM '{TALLY / "mentions.parquet"}'
+            )
+            SELECT a.language, y.year, count(DISTINCT a.dataset_doi) AS n_deposits_at_risk
+            FROM at_risk a LEFT JOIN deposit_year y USING (dataset_doi)
+            GROUP BY ALL ORDER BY a.language, y.year
+        ) TO '{OUT / "language_year_at_risk.csv"}' (HEADER, DELIMITER ',')
+        """
+    )
+
+
+def _year_denominators_agree() -> list[str]:
+    """Per-year denominators must add up to the tally's per-language one.
+
+    Returns:
+        One message per language whose years do not sum to its total.
+    """
+    (n,) = (
+        duckdb.connect()
+        .execute(
+            f"""
+        SELECT count(*) FROM (
+            SELECT language, sum(n_deposits_at_risk) AS n
+            FROM read_csv_auto('{OUT / "language_year_at_risk.csv"}') GROUP BY 1
+        ) y JOIN (
+            SELECT DISTINCT language, n_deposits_at_risk
+            FROM read_csv_auto('{OUT / "usage_by_package.csv"}')
+        ) u USING (language)
+        WHERE y.n <> u.n_deposits_at_risk
+        """
+        )
+        .fetchone()
+    )
+    return [f"year denominators disagree with the tally in {n} languages"] if n else []
+
+
 def _package_deposits_agree() -> list[str]:
     """The deposit list behind every page must count to the published tally.
 
@@ -387,6 +453,7 @@ def main() -> int:
     summary = summarize()
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
     write_package_tables()
+    write_year_denominators()
 
     unknown = pd.read_csv(OUT / "unknown_names.csv")
     grc1leg = unknown.loc[unknown["name"] == "grc1leg", "n_mentions"]
@@ -502,6 +569,7 @@ def report(summary: dict) -> int:
 
     problems.extend(_denominators_recomputed(summary))
     problems.extend(_package_deposits_agree())
+    problems.extend(_year_denominators_agree())
 
     # Pooled counts must reconcile with the split they ship beside them. A
     # pooled table that disagrees with its own breakdown is worse than no
