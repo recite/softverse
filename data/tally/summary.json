@@ -48,5 +48,17 @@
    "deposits_carrying": 1194,
    "deposits_eligible": 8983
   }
+ },
+ "trawl": {
+  "collections_by_source": {
+   "dataverse": 74,
+   "zenodo": 6
+  },
+  "deposits_in_frame_by_source": {
+   "dataverse": 14674,
+   "zenodo": 1646
+  },
+  "n_files": 447289,
+  "n_mentions": 14381788
  }
 }

@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 
 import duckdb
 import pandas as pd
+import pyarrow.parquet as pq
 
 from softverse.config import PATHS
 
@@ -43,6 +44,13 @@ if TYPE_CHECKING:
 TALLY = PATHS.root / "build" / "tally"
 ZENODO_DEPOSITS = PATHS.root / "corpus" / "zenodo" / "deposits.csv"
 OUT = PATHS.root / "data" / "tally"
+FRAME = PATHS.root / "data" / "frame"
+README = PATHS.root / "README.md"
+README_START, README_END = (
+    "<!-- release-numbers:start -->",
+    "<!-- release-numbers:end -->",
+)
+LANGUAGE_NAMES = {"stata": "Stata", "r": "R", "python": "Python"}
 
 #: Each aggregate ships as CSV and as Parquet. The CSV is for a person
 #: opening it; the Parquet is for anything reading it as data, and it is not
@@ -412,7 +420,73 @@ def summarize() -> dict:
         # have. Every figure drawn from `environment_signals.parquet` is a
         # share of the first number, not of the corpus.
         "environment_coverage": environment_coverage(),
+        "trawl": trawl(files),
     }
+
+
+def trawl(files: pd.DataFrame) -> dict:
+    """How much was searched, for the README and anyone sharing the release.
+
+    The frame is the deposits the collections list, before any were found to
+    hold code, so the funnel reads from what was looked at to what was used.
+    """
+    dataverse = pd.read_csv(FRAME / "dataverse_deposits.csv")
+    frame = pd.read_csv(FRAME / "frame.csv")
+    return {
+        "collections_by_source": {
+            "dataverse": int(dataverse["collection_id"].nunique()),
+            "zenodo": int((frame["source"] == "zenodo").sum()),
+        },
+        "deposits_in_frame_by_source": {
+            "dataverse": len(dataverse),
+            "zenodo": len(pd.read_csv(ZENODO_DEPOSITS)),
+        },
+        "n_files": len(files),
+        "n_mentions": pq.ParquetFile(TALLY / "mentions.parquet").metadata.num_rows,
+    }
+
+
+def readme_numbers(summary: dict) -> str:
+    """The README's release-in-numbers block, written from `summary.json`."""
+    trawled = summary["trawl"]
+    collections = trawled["collections_by_source"]
+    frame = trawled["deposits_in_frame_by_source"]
+    rows = "\n".join(
+        f"| {LANGUAGE_NAMES.get(language, language)} | {n:,} |"
+        for language, n in summary["deposits_by_language"].items()
+    )
+    return f"""{README_START}
+## The {summary["built"][:4]} release in numbers
+
+The frame is every deposit in {sum(collections.values())} journal collections:
+{collections["dataverse"]} on Harvard Dataverse and {collections["zenodo"]} on Zenodo,
+{sum(frame.values()):,} deposits in all ({frame["dataverse"]:,} and {frame["zenodo"]:,}).
+
+- **{summary["n_deposits"]:,}** deposits held code or a dependency manifest,
+  and {summary["n_deposits_analyzable"]:,} held analyzable code.
+- **{trawled["n_files"]:,}** files were collected; {summary["n_files_analyzable"]:,} are
+  analyzed once vendored libraries and duplicate copies are set aside.
+- **{trawled["n_mentions"]:,}** package references were extracted from them,
+  resolving to **{summary["n_packages"]:,}** packages.
+
+| Language | Deposits with code |
+|---|---:|
+{rows}
+
+Not included: code inside tar, 7z and rar archives too large to download,
+files a depositor restricted, and the AEA journals, which deposit on openICPSR.
+
+Look up any package at <https://recite.github.io/softverse/lookup/>. The
+tables and the code text are at
+<https://huggingface.co/datasets/gojiberries/softverse>.
+{README_END}"""
+
+
+def write_readme(summary: dict, readme: Path = README) -> None:
+    """Replace the numbers block in the README, which must already have one."""
+    text = readme.read_text(encoding="utf-8")
+    start, end = text.index(README_START), text.index(README_END) + len(README_END)
+    readme.write_text(text[:start] + readme_numbers(summary) + text[end:])
 
 
 def environment_coverage() -> dict:
@@ -452,6 +526,7 @@ def main() -> int:
 
     summary = summarize()
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
+    write_readme(summary)
     write_package_tables()
     write_year_denominators()
 
