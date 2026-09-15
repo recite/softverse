@@ -193,6 +193,9 @@ class VendorRule(StrEnum):
     #: able to count on their own.
     V1_STATA_ADO = "v1_stata_ado"
     V2_MARKER = "v2_marker"  # DESCRIPTION+NAMESPACE, pyproject+__init__
+    #: Everything under a directory whose DESCRIPTION names a package CRAN,
+    #: its archive or Bioconductor knows: a shipped copy of that package.
+    V2_R_PACKAGE_TREE = "v2_r_package_tree"
     V3_CROSS_DATASET = "v3_cross_dataset"  # same sha256 in >=5 deposits
     V4_NAME_SHAPE = "v4_name_shape"  # basename listed in an SSC .pkg
     V5_MANUAL = "v5_manual"  # outlier triage

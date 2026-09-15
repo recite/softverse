@@ -21,9 +21,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from softverse import EXTRACTOR_VERSION
-from softverse.corpus.hygiene import classify, cross_dataset_hashes, sha256_of
+from softverse.corpus.hygiene import Verdict, classify, cross_dataset_hashes, sha256_of
 from softverse.detect.dispatch import extract_file, language_of
-from softverse.detect.manifests import is_manifest, read_manifest
+from softverse.detect.manifests import is_manifest, read_description, read_manifest
 from softverse.logging_setup import get_logger, stage
 from softverse.model.enums import (
     ANALYZABLE_STATUSES,
@@ -31,6 +31,7 @@ from softverse.model.enums import (
     Language,
     ParseStatus,
     Resolution,
+    VendorRule,
 )
 from softverse.model.io import reconcile
 from softverse.registries.resolve import Registry, normalize
@@ -153,6 +154,52 @@ def coverage_counts(
         }
         for signal in sorted(set(carrying) | set(eligible))
     }
+
+
+def _registered_package_trees(
+    corpus: list[CorpusFile], registry: Registry
+) -> dict[str, set[str]]:
+    """Deposit -> directories holding a shipped copy of a registered R package.
+
+    A replication package that unpacks `Zelig_3.5.4.tar.gz` carries Zelig's
+    `R/` sources one level below its `DESCRIPTION`, where the V2 marker rule,
+    which looks beside the file, does not see them: 8,648 files in 147
+    deposits were counted as their authors' code.
+
+    Gated on the registry so an author's own package is not caught. A
+    research compendium has a DESCRIPTION under a name no registry knows, and
+    a DESCRIPTION at the deposit root is an author depositing their package,
+    whatever its name.
+
+    Args:
+        corpus: The files being built.
+        registry: The registry a package name is checked against.
+
+    Returns:
+        The tree roots, as relative paths without a trailing slash.
+    """
+    known = {str(Resolution.KNOWN_CURRENT), str(Resolution.KNOWN_ARCHIVED)}
+    trees: dict[str, set[str]] = defaultdict(set)
+    for item in corpus:
+        parts = Path(item.relative_path).parts
+        if parts[-1] != "DESCRIPTION" or len(parts) < 2:
+            continue
+        try:
+            manifest = read_description(
+                item.path.read_text(encoding="utf-8", errors="replace")
+            )
+        except OSError:
+            continue
+        if manifest is None or not manifest.declarations:
+            continue
+        name = manifest.declarations[0].package
+        if str(registry.resolve_r(name).resolution) in known:
+            trees[item.dataset_doi].add("/".join(parts[:-1]))
+    return trees
+
+
+def _in_tree(relative_path: str, roots: Iterable[str]) -> bool:
+    return any(relative_path.startswith(f"{root}/") for root in roots)
 
 
 @dataclass(frozen=True)
@@ -295,6 +342,9 @@ def build(
         # enough to be worth vendoring -- `reghdfe` lost 43 deposits of 299,
         # `gegen` 8 of 36. The hygiene rules already knew these files were
         # vendored; this pass simply never asked.
+        package_trees = _registered_package_trees(corpus, registry)
+        stats.incr("r_package_trees", sum(len(v) for v in package_trees.values()))
+
         local_programs_by_dataset: dict[str, set[str]] = defaultdict(set)
         for item in corpus:
             if item.path.suffix.lower() not in {".do", ".ado"}:
@@ -340,6 +390,10 @@ def build(
                 shared_hashes=shared,
                 seen_in_dataset=seen_by_dataset[item.dataset_doi],
             )
+            if not verdict.is_vendored and _in_tree(
+                item.relative_path, package_trees.get(item.dataset_doi, ())
+            ):
+                verdict = Verdict(is_vendored=True, rule=VendorRule.V2_R_PACKAGE_TREE)
             file_uid = uuid.uuid5(
                 uuid.NAMESPACE_URL, f"{item.dataset_doi}/{item.relative_path}"
             ).hex
@@ -376,14 +430,26 @@ def build(
 
             if verdict.is_vendored:
                 result.counts["files_vendored"] += 1
-                status, mentions, language = ParseStatus.SKIPPED_VENDORED, [], language_of(item.path)
+                status, mentions, language = (
+                    ParseStatus.SKIPPED_VENDORED,
+                    [],
+                    language_of(item.path),
+                )
             elif verdict.duplicate_of:
                 result.counts["files_duplicate"] += 1
-                status, mentions, language = ParseStatus.SKIPPED_DUPLICATE, [], language_of(item.path)
+                status, mentions, language = (
+                    ParseStatus.SKIPPED_DUPLICATE,
+                    [],
+                    language_of(item.path),
+                )
             else:
                 seen_by_dataset[item.dataset_doi][digest] = file_uid
                 extraction, _decoded, language = extract_file(item.path)
-                status = extraction.report.status if extraction.report else ParseStatus.NOT_ANALYZED
+                status = (
+                    extraction.report.status
+                    if extraction.report
+                    else ParseStatus.NOT_ANALYZED
+                )
                 mentions = extraction.mentions
                 if status in ANALYZABLE_STATUSES:
                     result.counts["files_analyzed"] += 1
@@ -434,9 +500,13 @@ def build(
                         "raw_name": mention.raw_name,
                         "called_function": mention.called_function,
                         "pinned_version": mention.pinned_version,
-                        "normalized_name": normalize(mention.raw_name, mention_language),
+                        "normalized_name": normalize(
+                            mention.raw_name, mention_language
+                        ),
                         "resolved_package": resolved.package,
-                        "ecosystem": str(resolved.ecosystem) if resolved.ecosystem else None,
+                        "ecosystem": str(resolved.ecosystem)
+                        if resolved.ecosystem
+                        else None,
                         "resolution": str(resolved.resolution),
                         "line": mention.line,
                         "col": mention.col,

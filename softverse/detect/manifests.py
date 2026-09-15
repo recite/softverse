@@ -183,7 +183,9 @@ _KERNEL_SIGNAL = {
     "r": "r_version",
     "julia": "julia_version",
     "stata": "stata_version",
-    "matlab": "matlab_version",
+    # Not "matlab": the MATLAB kernel is MetaKernel's `matlab_kernel`, and its
+    # `language_info.version` is that package's own version (0.16.11 in all
+    # three deposits that carry one), not a MATLAB release.
 }
 
 
