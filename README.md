@@ -11,6 +11,34 @@ journal collections, across **R, Python and Stata**.
 
 see: https://www.gojiberries.io/hard-problems-about-research-software/
 
+<!-- release-numbers:start -->
+## The 2026 release in numbers
+
+The frame is every deposit in 80 journal collections:
+74 on Harvard Dataverse and 6 on Zenodo,
+16,320 deposits in all (14,674 and 1,646).
+
+- **13,985** deposits held code or a dependency manifest,
+  and 13,245 held analyzable code.
+- **447,289** files were collected; 146,483 are
+  analyzed once vendored libraries and duplicate copies are set aside.
+- **14,381,788** package references were extracted from them,
+  resolving to **4,447** packages.
+
+| Language | Deposits with code |
+|---|---:|
+| Stata | 8,942 |
+| R | 6,471 |
+| Python | 909 |
+
+Not included: code inside tar, 7z and rar archives too large to download,
+files a depositor restricted, and the AEA journals, which deposit on openICPSR.
+
+Look up any package at <https://recite.github.io/softverse/lookup/>. The
+tables and the code text are at
+<https://huggingface.co/datasets/gojiberries/softverse>.
+<!-- release-numbers:end -->
+
 ## What is measured
 
 Precisely: **software referenced in deposited replication code.**

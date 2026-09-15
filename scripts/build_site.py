@@ -171,6 +171,11 @@ def generate() -> None:
     if build_lookup(out=EXTRA / "lookup") != 0:
         raise RuntimeError("the package lookup page did not build")
 
+    from build_packages import main as build_packages
+
+    if build_packages(out=EXTRA) != 0:
+        raise RuntimeError("the package pages did not build")
+
 
 def main() -> int:
     try:

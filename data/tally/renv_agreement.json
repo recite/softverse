@@ -1,20 +1,129 @@
 {
+ "n_deposits_compared": 6209,
+ "mean_jaccard": 0.9870675468810275,
+ "pooled_jaccard": 0.9837103833084317,
+ "n_perfect_agreement": 5792,
+ "n_ours_only": 1024,
+ "n_renv_only": 208,
+ "comparison": "in-analysis R files; base R and renv's implicit rmarkdown set aside",
  "by_source": {
-  "dataverse_legacy": {
-   "n_deposits_compared": 2967,
-   "mean_jaccard": 0.967233243918731,
-   "pooled_jaccard": 0.9651427456591013,
-   "n_perfect_agreement": 2257
+  "dataverse": {
+   "n_deposits_compared": 5796,
+   "mean_jaccard": 0.9877125497645243,
+   "pooled_jaccard": 0.9868103815061693,
+   "n_perfect_agreement": 5426,
+   "n_ours_only": 728,
+   "n_renv_only": 202
   },
   "zenodo": {
-   "n_deposits_compared": 369,
-   "mean_jaccard": 0.9115419547042476,
-   "pooled_jaccard": 0.8575830195138651,
-   "n_perfect_agreement": 199
+   "n_deposits_compared": 413,
+   "mean_jaccard": 0.9780156420075468,
+   "pooled_jaccard": 0.9410271431361062,
+   "n_perfect_agreement": 366,
+   "n_ours_only": 296,
+   "n_renv_only": 6
   }
  },
- "n_renv_read_nothing": 63,
- "renv_read_nothing": [
+ "set_aside": {
+  "base_r": 1879,
+  "implicit_rmarkdown": 546,
+  "ours_outside_analysis_files": 398,
+  "outside_analysis_files": 4454
+ },
+ "n_no_analysis_r": 35,
+ "raw": {
+  "comparison": "whole deposit directory, every name renv reports",
+  "n_deposits_compared": 6244,
+  "mean_jaccard": 0.9511363158194297,
+  "pooled_jaccard": 0.9072832426009675,
+  "n_perfect_agreement": 4076,
+  "n_ours_only": 991,
+  "n_renv_only": 6656,
+  "top_renv_only": [
+   [
+    "grid",
+    662
+   ],
+   [
+    "rmarkdown",
+    645
+   ],
+   [
+    "parallel",
+    451
+   ],
+   [
+    "stats",
+    334
+   ],
+   [
+    "base",
+    136
+   ],
+   [
+    "tools",
+    110
+   ],
+   [
+    "utils",
+    96
+   ],
+   [
+    "grDevices",
+    94
+   ],
+   [
+    "renv",
+    86
+   ],
+   [
+    "splines",
+    82
+   ],
+   [
+    "methods",
+    61
+   ],
+   [
+    "graphics",
+    54
+   ],
+   [
+    "bookdown",
+    46
+   ],
+   [
+    "knitr",
+    40
+   ],
+   [
+    "compiler",
+    31
+   ],
+   [
+    "datasets",
+    30
+   ],
+   [
+    "testthat",
+    30
+   ],
+   [
+    "lattice",
+    20
+   ],
+   [
+    "Matrix",
+    20
+   ],
+   [
+    "tibble",
+    19
+   ]
+  ]
+ },
+ "n_renv_read_nothing": 72,
+ "renv_read_nothing_sample": [
   {
    "dataset_doi": "doi:10.7910/DVN/H6RZA7",
    "n_ours": 16
@@ -24,36 +133,16 @@
    "n_ours": 13
   },
   {
+   "dataset_doi": "doi:10.7910/DVN/YXMGMU",
+   "n_ours": 12
+  },
+  {
    "dataset_doi": "doi:10.7910/DVN/5TTZRQ",
    "n_ours": 4
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/SREUHV",
-   "n_ours": 6
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/DAGL4S",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/ZMZDHG",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/KGIBK5",
-   "n_ours": 1
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/RLXYCJ",
-   "n_ours": 13
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/1CCXS9",
    "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/TRIEF2",
-   "n_ours": 24
   },
   {
    "dataset_doi": "doi:10.7910/DVN/VWPPVQ",
@@ -64,103 +153,15 @@
    "n_ours": 4
   },
   {
-   "dataset_doi": "zenodo:7064906",
-   "n_ours": 3
+   "dataset_doi": "doi:10.7910/DVN/TRIEF2",
+   "n_ours": 26
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/BE99YA",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "zenodo:5748084",
-   "n_ours": 6
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/SCXPHI",
-   "n_ours": 10
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/FEQSC7",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/OKZOUX",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/W8TQHB",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/TRLSJA",
-   "n_ours": 9
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/MZUOWG",
+   "dataset_doi": "doi:10.7910/DVN/RLXYCJ",
    "n_ours": 13
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/VW1HUF",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/84NYFE",
-   "n_ours": 8
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/VTA5OA",
-   "n_ours": 8
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/IRUDXK",
-   "n_ours": 1
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/2RORMS",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "zenodo:14929025",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "zenodo:13981874",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/FRPRDP",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/SJ4IMB",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/SJI4IA",
-   "n_ours": 22
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/B4XDZP",
-   "n_ours": 21
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/LLRLQB",
-   "n_ours": 17
-  },
-  {
-   "dataset_doi": "zenodo:8168773",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/24497",
-   "n_ours": 2
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/95LWQN",
-   "n_ours": 5
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/FAA9EA",
    "n_ours": 5
   },
   {
@@ -168,24 +169,20 @@
    "n_ours": 2
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/6MRVOM",
-   "n_ours": 6
+   "dataset_doi": "doi:10.7910/DVN/ZVSHZE",
+   "n_ours": 1
   },
   {
-   "dataset_doi": "zenodo:14427583",
-   "n_ours": 15
+   "dataset_doi": "doi:10.7910/DVN/FAA9EA",
+   "n_ours": 5
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/5DEGYP",
-   "n_ours": 4
+   "dataset_doi": "zenodo:7064906",
+   "n_ours": 3
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/08RCPK",
-   "n_ours": 6
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/L8YEDW",
-   "n_ours": 2
+   "dataset_doi": "doi:10.7910/DVN/EEFXAT",
+   "n_ours": 1
   },
   {
    "dataset_doi": "doi:10.7910/DVN/DO43V5",
@@ -196,183 +193,410 @@
    "n_ours": 40
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/DDOFPS",
-   "n_ours": 14
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/ZCLECH",
-   "n_ours": 5
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/WKR2KV",
-   "n_ours": 27
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/OXBYO7",
+   "dataset_doi": "doi:10.7910/DVN/25582",
    "n_ours": 2
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/4NUQE3",
+   "dataset_doi": "doi:10.7910/DVN/33F0ZS",
+   "n_ours": 15
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OKZOUX",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/W8TQHB",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZN4TIV",
    "n_ours": 5
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SCXPHI",
+   "n_ours": 10
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FEQSC7",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OVSONU",
+   "n_ours": 17
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/DAGL4S",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/KGIBK5",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZMZDHG",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/84NYFE",
+   "n_ours": 8
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/IRUDXK",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/VW1HUF",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/MZUOWG",
+   "n_ours": 13
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/2RORMS",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/BE99YA",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/HNA4FP",
+   "n_ours": 25
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/AWXIQE",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/24497",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/XACHFI",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "zenodo:8168773",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/LLRLQB",
+   "n_ours": 17
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SJI4IA",
+   "n_ours": 22
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/B4XDZP",
+   "n_ours": 21
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/XVGPKM",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/26063",
+   "n_ours": 8
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/YDCL7Z",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/YGSKJT",
+   "n_ours": 13
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/HRLHA4",
+   "n_ours": 14
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OJWRWM",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/RYUUB9",
+   "n_ours": 9
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/BCPIDC",
+   "n_ours": 13
   }
  ],
- "n_deposits_compared": 3336,
  "n_skipped": 0,
- "mean_jaccard": 0.9610731462807981,
- "pooled_jaccard": 0.9479724560061209,
- "n_perfect_agreement": 2456,
- "renv_version": "1.2.3",
- "disagreements": [
+ "n_disagreements": 417,
+ "top_renv_only": [
+  [
+   "rmarkdown",
+   63
+  ],
+  [
+   "bookdown",
+   41
+  ],
+  [
+   "knitr",
+   13
+  ],
+  [
+   "svglite",
+   7
+  ],
+  [
+   "hexbin",
+   6
+  ],
+  [
+   "ggplot2",
+   4
+  ],
+  [
+   "stringr",
+   4
+  ],
+  [
+   "glmnet",
+   4
+  ],
+  [
+   "forcats",
+   3
+  ],
+  [
+   "ragg",
+   3
+  ],
+  [
+   "rmdformats",
+   3
+  ],
+  [
+   "abind",
+   2
+  ],
+  [
+   "arm",
+   2
+  ],
+  [
+   "betareg",
+   2
+  ],
+  [
+   "checkpoint",
+   2
+  ],
+  [
+   "codetools",
+   2
+  ],
+  [
+   "dotwhisker",
+   2
+  ],
+  [
+   "dplyr",
+   2
+  ],
+  [
+   "haven",
+   2
+  ],
+  [
+   "interplot",
+   2
+  ]
+ ],
+ "top_ours_only": [
+  [
+   "ggplot2",
+   14
+  ],
+  [
+   "dplyr",
+   13
+  ],
+  [
+   "devtools",
+   12
+  ],
+  [
+   "gridExtra",
+   11
+  ],
+  [
+   "stargazer",
+   11
+  ],
+  [
+   "MASS",
+   10
+  ],
+  [
+   "tidyr",
+   10
+  ],
+  [
+   "sandwich",
+   9
+  ],
+  [
+   "foreign",
+   9
+  ],
+  [
+   "tibble",
+   9
+  ],
+  [
+   "haven",
+   8
+  ],
+  [
+   "xtable",
+   8
+  ],
+  [
+   "Rcpp",
+   7
+  ],
+  [
+   "lubridate",
+   7
+  ],
+  [
+   "stringr",
+   7
+  ],
+  [
+   "RcppArmadillo",
+   6
+  ],
+  [
+   "lmtest",
+   6
+  ],
+  [
+   "car",
+   6
+  ],
+  [
+   "scales",
+   6
+  ],
+  [
+   "RColorBrewer",
+   6
+  ]
+ ],
+ "renv_version": "1.1.8",
+ "disagreements_sample": [
   {
-   "dataset_doi": "zenodo:14871772",
+   "dataset_doi": "doi:10.7910/DVN/SREUHV",
    "jaccard": 0.0,
    "ours_only": [
-    "DescTools",
-    "Hmisc",
-    "KernSmooth",
-    "MatchIt",
+    "../dyadEffect_0.1.tar.gz",
+    "ROCR",
     "Rcpp",
-    "broom",
-    "bunching",
-    "cowplot",
-    "devtools",
-    "digest",
-    "discSurv",
-    "dplyr",
-    "fixest",
-    "ggrepel",
-    "glmnet",
-    "gtools",
-    "haven",
-    "hdm",
+    "RcppArmadillo",
+    "RcppProgress",
+    "abind"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 0,
+   "n_shared": 0,
+   "n_union": 6,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/8E1IIM",
+   "jaccard": 0.0,
+   "ours_only": [
+    "IRdisplay",
+    "data.table",
+    "gridExtra",
+    "interflex",
     "lfe",
     "lmtest",
     "lubridate",
     "magrittr",
-    "matrixStats",
-    "multiwayvcov",
-    "numDeriv",
-    "openxlsx",
-    "quantmod",
-    "rdd",
-    "rdrobust",
-    "readstata13",
-    "readxl",
-    "rlang",
-    "scales",
+    "repr",
+    "sandwich",
     "stargazer",
-    "tidyverse",
-    "uniReg",
-    "vtable",
+    "survival"
+   ],
+   "renv_only": [],
+   "n_ours": 12,
+   "n_renv": 0,
+   "n_shared": 0,
+   "n_union": 12,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "zenodo:17267939",
+   "jaccard": 0.0,
+   "ours_only": [
+    "foreign",
+    "haven"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 0,
+   "n_shared": 0,
+   "n_union": 2,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/R99Y4S",
+   "jaccard": 0.0,
+   "ours_only": [
+    "clusterSEs",
+    "devtools"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 0,
+   "n_shared": 0,
+   "n_union": 2,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/RLLL1V",
+   "jaccard": 0.0,
+   "ours_only": [
     "xtable"
    ],
-   "renv_only": [
-    "renv"
-   ],
-   "n_ours": 38,
-   "n_renv": 1,
+   "renv_only": [],
+   "n_ours": 1,
+   "n_renv": 0,
    "n_shared": 0,
-   "n_union": 39,
-   "source": "zenodo"
+   "n_union": 1,
+   "source": "dataverse"
   },
   {
-   "dataset_doi": "zenodo:19866751",
+   "dataset_doi": "doi:10.7910/DVN/FEW2JP",
    "jaccard": 0.0,
    "ours_only": [
-    "dplyr",
-    "foreign",
-    "ggplot2",
-    "haven",
-    "ivreg",
-    "lmtest",
-    "renv",
-    "rstudioapi",
-    "sandwich",
-    "tidyr"
-   ],
-   "renv_only": [
-    "utils"
-   ],
-   "n_ours": 10,
-   "n_renv": 1,
-   "n_shared": 0,
-   "n_union": 11,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "zenodo:10145562",
-   "jaccard": 0.034482758620689655,
-   "ours_only": [
-    "Hmisc",
-    "RColorBrewer",
-    "Rfast",
-    "acs",
-    "binsmooth",
-    "cobalt",
     "digest",
     "dplyr",
-    "glmnet",
-    "gtools",
-    "haven",
-    "lfe",
-    "lubridate",
+    "fs",
+    "hashids",
     "magrittr",
-    "openxlsx",
-    "polynom",
-    "quantmod",
-    "rdd",
-    "rdrobust",
-    "readstata13",
-    "readxl",
-    "rlang",
-    "santoku",
-    "tidyverse",
-    "tigris",
-    "vtable",
-    "xtable",
-    "zipcode"
+    "shiny",
+    "shinyBS",
+    "shinyWidgets",
+    "shinyjs",
+    "stringr"
    ],
    "renv_only": [],
-   "n_ours": 29,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 29,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "zenodo:14927953",
-   "jaccard": 0.041666666666666664,
-   "ours_only": [
-    "Hmisc",
-    "RSQLite",
-    "bizdays",
-    "broom",
-    "data.table",
-    "doBy",
-    "dplyr",
-    "ggplot2",
-    "ggrepel",
-    "latex2exp",
-    "lfe",
-    "lubridate",
-    "moments",
-    "plyr",
-    "sandwich",
-    "scales",
-    "sqldf",
-    "stargazer",
-    "statar",
-    "stringr",
-    "tidyr",
-    "xtable",
-    "zoo"
-   ],
-   "renv_only": [],
-   "n_ours": 24,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 24,
-   "source": "zenodo"
+   "n_ours": 10,
+   "n_renv": 0,
+   "n_shared": 0,
+   "n_union": 10,
+   "source": "dataverse"
   },
   {
    "dataset_doi": "doi:10.7910/DVN/VAOEHQ",
@@ -407,338 +631,41 @@
    "n_renv": 1,
    "n_shared": 1,
    "n_union": 24,
-   "source": "dataverse_legacy"
+   "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/T5DKRO",
-   "jaccard": 0.14285714285714285,
-   "ours_only": [
-    "Amelia",
-    "Zelig",
-    "car",
-    "lmtest",
-    "pBrackets",
-    "sandwich"
-   ],
-   "renv_only": [],
-   "n_ours": 7,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 7,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/R9PGXI",
-   "jaccard": 0.16666666666666666,
-   "ours_only": [
-    "MASS",
-    "lmtest",
-    "readstata13",
-    "sandwich",
-    "stargazer"
-   ],
-   "renv_only": [],
-   "n_ours": 6,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 6,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "zenodo:15191154",
-   "jaccard": 0.175,
-   "ours_only": [
-    "FNN",
-    "KernSmooth",
-    "MASS",
-    "RColorBrewer",
-    "Rcpp",
-    "RhpcBLASctl",
-    "arrow",
-    "chron",
-    "colorRamps",
-    "cowplot",
-    "devtools",
-    "dplyr",
-    "evd",
-    "gam",
-    "ggmap",
-    "ggpattern",
-    "ggplot2",
-    "gridExtra",
-    "inline",
-    "lfe",
-    "ranger",
-    "rbenchmark",
-    "readr",
-    "rgeos",
-    "rjson",
-    "sandwich",
-    "scales",
-    "stargazer",
-    "terra",
-    "tidyverse",
-    "ucminf",
-    "viridis",
-    "weights"
-   ],
-   "renv_only": [],
-   "n_ours": 40,
-   "n_renv": 7,
-   "n_shared": 7,
-   "n_union": 40,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/STXADQ",
-   "jaccard": 0.2,
-   "ours_only": [
+   "dataset_doi": "doi:10.7910/DVN/UCCJIB",
+   "jaccard": 0.05263157894736842,
+   "ours_only": [],
+   "renv_only": [
+    "abind",
     "arm",
-    "gee",
-    "stargazer",
-    "zeligverse"
-   ],
-   "renv_only": [],
-   "n_ours": 5,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 5,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/UBRKHO",
-   "jaccard": 0.25,
-   "ours_only": [
-    "amen",
-    "ergm.count",
-    "ergm_3.10.4.tar.gz"
-   ],
-   "renv_only": [],
-   "n_ours": 4,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 4,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/CXA8GR",
-   "jaccard": 0.25,
-   "ours_only": [
-    "fastplm",
-    "fect",
-    "panelview"
-   ],
-   "renv_only": [],
-   "n_ours": 4,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 4,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "zenodo:7217640",
-   "jaccard": 0.25,
-   "ours_only": [
-    "Rcpp",
-    "rgdal",
-    "sf"
-   ],
-   "renv_only": [],
-   "n_ours": 4,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 4,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/1DB0FT",
-   "jaccard": 0.25,
-   "ours_only": [],
-   "renv_only": [
-    "base",
-    "tools",
-    "utils"
-   ],
-   "n_ours": 1,
-   "n_renv": 4,
-   "n_shared": 1,
-   "n_union": 4,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/T17S0X",
-   "jaccard": 0.25,
-   "ours_only": [
-    "Hmisc",
-    "QuantPsyc",
-    "Zelig",
-    "ZeligChoice",
-    "gridExtra",
-    "nnet",
-    "plyr",
-    "psych",
-    "survey"
-   ],
-   "renv_only": [],
-   "n_ours": 12,
-   "n_renv": 3,
-   "n_shared": 3,
-   "n_union": 12,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/UODSVV",
-   "jaccard": 0.2727272727272727,
-   "ours_only": [
-    "car",
-    "dataverse",
+    "betareg",
+    "checkpoint",
+    "codetools",
+    "dotwhisker",
+    "dplyr",
     "ggplot2",
-    "ggpubr",
-    "ggthemes",
-    "plyr",
-    "readtext",
-    "stargazer"
-   ],
-   "renv_only": [],
-   "n_ours": 11,
-   "n_renv": 3,
-   "n_shared": 3,
-   "n_union": 11,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/JAAPYA",
-   "jaccard": 0.3333333333333333,
-   "ours_only": [],
-   "renv_only": [
-    "base",
-    "renv",
-    "tools",
-    "utils"
-   ],
-   "n_ours": 2,
-   "n_renv": 6,
-   "n_shared": 2,
-   "n_union": 6,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/GKVNDS",
-   "jaccard": 0.35,
-   "ours_only": [
-    "car",
-    "cjoint",
-    "gridExtra",
     "haven",
     "interplot",
-    "labelled",
-    "lmtest",
-    "miceadds",
-    "multiwaycov",
-    "openxlsx",
-    "plm",
-    "plyr",
-    "tidyr"
-   ],
-   "renv_only": [],
-   "n_ours": 20,
-   "n_renv": 7,
-   "n_shared": 7,
-   "n_union": 20,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/UMP7YP",
-   "jaccard": 0.38461538461538464,
-   "ours_only": [
-    "foreign",
-    "lfe",
-    "lmtest",
-    "multiwayvcov",
-    "plm",
-    "rdd",
-    "rdrobust",
-    "tidyr"
-   ],
-   "renv_only": [],
-   "n_ours": 13,
-   "n_renv": 5,
-   "n_shared": 5,
-   "n_union": 13,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/0DE35E",
-   "jaccard": 0.4,
-   "ours_only": [
-    "MASS",
-    "car",
-    "foreign",
-    "gridExtra",
-    "ri",
-    "texreg"
-   ],
-   "renv_only": [],
-   "n_ours": 10,
-   "n_renv": 4,
-   "n_shared": 4,
-   "n_union": 10,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/J4WZGT",
-   "jaccard": 0.4,
-   "ours_only": [
-    "ggplot",
-    "readstata13",
-    "readxl"
-   ],
-   "renv_only": [],
-   "n_ours": 5,
-   "n_renv": 2,
-   "n_shared": 2,
-   "n_union": 5,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/29911",
-   "jaccard": 0.42857142857142855,
-   "ours_only": [
-    "MASS",
-    "calibrate",
-    "car",
-    "list",
     "lme4",
-    "rr",
-    "stargazer",
-    "xtable"
+    "magrittr",
+    "mi",
+    "mitools",
+    "pewdata",
+    "readr",
+    "stringr",
+    "truncnorm"
    ],
-   "renv_only": [],
-   "n_ours": 14,
-   "n_renv": 6,
-   "n_shared": 6,
-   "n_union": 14,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "zenodo:20422371",
-   "jaccard": 0.42857142857142855,
-   "ours_only": [],
-   "renv_only": [
-    "parallel",
-    "renv",
-    "splines",
-    "stats"
-   ],
-   "n_ours": 3,
-   "n_renv": 7,
-   "n_shared": 3,
-   "n_union": 7,
-   "source": "zenodo"
+   "n_ours": 1,
+   "n_renv": 19,
+   "n_shared": 1,
+   "n_union": 19,
+   "source": "dataverse"
   },
   {
    "dataset_doi": "zenodo:11386106",
-   "jaccard": 0.4334763948497854,
+   "jaccard": 0.0875,
    "ours_only": [
     "3-replication-package/add-ons/r/BMisc_1.4.6.zip",
     "3-replication-package/add-ons/r/CVXR_1.0-12.zip",
@@ -812,78 +739,697 @@
     "3-replication-package/add-ons/r/utf8_1.2.4.zip",
     "3-replication-package/add-ons/r/vctrs_0.6.5.zip",
     "3-replication-package/add-ons/r/withr_3.0.0.zip",
-    "3-replication-package/add-ons/r/zoo_1.8-12.zip",
-    "BMisc",
-    "tidymodels"
+    "3-replication-package/add-ons/r/zoo_1.8-12.zip"
    ],
-   "renv_only": [
-    "AER",
-    "Formula",
-    "KernSmooth",
-    "RColorBrewer",
-    "RcppArmadillo",
-    "RcppGSL",
-    "async",
-    "base",
-    "betareg",
-    "bit",
-    "chron",
-    "cliapp",
-    "colorspace",
-    "compiler",
-    "copula",
-    "countreg",
-    "datasets",
-    "fansi",
-    "ff",
-    "foo",
-    "fooRostream",
-    "grDevices",
-    "graphics",
-    "grid",
-    "inline",
-    "iterators",
-    "jpeg",
-    "kernlab",
-    "markdown",
-    "methods",
-    "microbenchmark",
-    "parallel",
-    "pkgcache",
-    "pkgsearch",
-    "png",
-    "randomForest",
-    "rbenchmark",
-    "rcartocolor",
-    "rmarkdown",
-    "scatterplot3d",
-    "scico",
-    "shiny",
-    "shinyjs",
-    "stats",
-    "strucchange",
-    "testRcppClass",
-    "testRcppInterfaceExporter",
-    "testRcppInterfaceUser",
-    "testRcppModule",
-    "timeDate",
-    "timeSeries",
-    "tools",
-    "tseries",
-    "utils",
-    "vcd",
-    "viridis",
-    "zoo"
-   ],
-   "n_ours": 176,
-   "n_renv": 158,
-   "n_shared": 101,
-   "n_union": 233,
+   "renv_only": [],
+   "n_ours": 80,
+   "n_renv": 7,
+   "n_shared": 7,
+   "n_union": 80,
    "source": "zenodo"
   },
   {
+   "dataset_doi": "doi:10.7910/DVN/YWO87E",
+   "jaccard": 0.12,
+   "ours_only": [],
+   "renv_only": [
+    "Hmisc",
+    "abind",
+    "arm",
+    "betareg",
+    "broom",
+    "car",
+    "checkpoint",
+    "codetools",
+    "dotwhisker",
+    "dplyr",
+    "ggplot2",
+    "haven",
+    "interplot",
+    "lme4",
+    "mi",
+    "plyr",
+    "purrr",
+    "readr",
+    "readxl",
+    "stringr",
+    "tidyr",
+    "truncnorm"
+   ],
+   "n_ours": 3,
+   "n_renv": 25,
+   "n_shared": 3,
+   "n_union": 25,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/T5DKRO",
+   "jaccard": 0.14285714285714285,
+   "ours_only": [
+    "Amelia",
+    "Zelig",
+    "car",
+    "lmtest",
+    "pBrackets",
+    "sandwich"
+   ],
+   "renv_only": [],
+   "n_ours": 7,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 7,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/R9PGXI",
+   "jaccard": 0.16666666666666666,
+   "ours_only": [
+    "MASS",
+    "lmtest",
+    "readstata13",
+    "sandwich",
+    "stargazer"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 6,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/MTLKIF",
+   "jaccard": 0.17647058823529413,
+   "ours_only": [
+    "BART",
+    "cregg",
+    "fastDummies",
+    "ggplot2",
+    "ggpubr",
+    "lme4",
+    "lubridate",
+    "magrittr",
+    "modelsummary",
+    "rlang",
+    "scales",
+    "stargazer",
+    "stringr",
+    "tidyr"
+   ],
+   "renv_only": [],
+   "n_ours": 17,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 17,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "zenodo:15543090",
+   "jaccard": 0.1839080459770115,
+   "ours_only": [
+    "DBI",
+    "Formula",
+    "KernSmooth",
+    "MASS",
+    "R.methodsS3",
+    "R.oo",
+    "R.utils",
+    "R6",
+    "RColorBrewer",
+    "Rcpp",
+    "askpass",
+    "backports",
+    "base64enc",
+    "bit",
+    "bit64",
+    "boot",
+    "brew",
+    "brio",
+    "cachem",
+    "callr",
+    "cellranger",
+    "checkmate",
+    "class",
+    "classInt",
+    "cli",
+    "clipr",
+    "cluster",
+    "codetools",
+    "colorspace",
+    "commonmark",
+    "cpp11",
+    "crayon",
+    "credentials",
+    "desc",
+    "devtools",
+    "diffobj",
+    "downlit",
+    "e1071",
+    "ellipsis",
+    "evaluate",
+    "fansi",
+    "farver",
+    "fastmap",
+    "fontawesome",
+    "forcats",
+    "foreach",
+    "fs",
+    "generics",
+    "gert",
+    "gh",
+    "gitcreds",
+    "glue",
+    "gtable",
+    "highr",
+    "hms",
+    "htmltools",
+    "htmlwidgets",
+    "httpuv",
+    "httr2",
+    "ini",
+    "isoband",
+    "iterators",
+    "jquerylib",
+    "jsonlite",
+    "labeling",
+    "later",
+    "lattice",
+    "lifecycle",
+    "magrittr",
+    "memoise",
+    "mgcv",
+    "mime",
+    "miniUI",
+    "munsell",
+    "nlme",
+    "nnet",
+    "openssl",
+    "pillar",
+    "pkgbuild",
+    "pkgconfig",
+    "pkgdown",
+    "pkgload",
+    "praise",
+    "prettyunits",
+    "processx",
+    "profvis",
+    "progress",
+    "promises",
+    "proxy",
+    "ps",
+    "purrr",
+    "ragg",
+    "rappdirs",
+    "rcmdcheck",
+    "readr",
+    "readxl",
+    "rematch",
+    "renv",
+    "rlang",
+    "roxygen2",
+    "rpart",
+    "rprojroot",
+    "rstudioapi",
+    "rversions",
+    "s2",
+    "sandwich",
+    "sass",
+    "scales",
+    "sessioninfo",
+    "shiny",
+    "sourcetools",
+    "spatial",
+    "strex",
+    "stringi",
+    "survival",
+    "sys",
+    "systemfonts",
+    "testthat",
+    "textshaping",
+    "tibble",
+    "tidyselect",
+    "tinytex",
+    "tzdb",
+    "units",
+    "urlchecker",
+    "usethis",
+    "utf8",
+    "vctrs",
+    "viridisLite",
+    "vroom",
+    "waldo",
+    "whisker",
+    "withr",
+    "wk",
+    "writexl",
+    "xfun",
+    "xml2",
+    "xopen",
+    "xtable",
+    "yaml",
+    "zip",
+    "zoo"
+   ],
+   "renv_only": [],
+   "n_ours": 174,
+   "n_renv": 32,
+   "n_shared": 32,
+   "n_union": 174,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/STXADQ",
+   "jaccard": 0.2,
+   "ours_only": [
+    "arm",
+    "gee",
+    "stargazer",
+    "zeligverse"
+   ],
+   "renv_only": [],
+   "n_ours": 5,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 5,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZWM1BL",
+   "jaccard": 0.2,
+   "ours_only": [
+    "broom",
+    "glue",
+    "haven",
+    "tidyverse"
+   ],
+   "renv_only": [],
+   "n_ours": 5,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 5,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/NRKU1F",
+   "jaccard": 0.21428571428571427,
+   "ours_only": [
+    "R.matlab",
+    "RColorBrewer",
+    "gapminder",
+    "gganimate",
+    "ggplot2",
+    "glue",
+    "haven",
+    "janitor",
+    "kableExtra",
+    "lmtest",
+    "lubridate",
+    "magrittr",
+    "readxl",
+    "rlang",
+    "sandwich",
+    "scales",
+    "sf",
+    "snakecase",
+    "stargazer",
+    "tictoc",
+    "tidyverse",
+    "viridis"
+   ],
+   "renv_only": [],
+   "n_ours": 28,
+   "n_renv": 6,
+   "n_shared": 6,
+   "n_union": 28,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/MFFV3C",
+   "jaccard": 0.2222222222222222,
+   "ours_only": [
+    "doBy",
+    "geofacet",
+    "ggplot2",
+    "ggpubr",
+    "lme4",
+    "stargazer",
+    "tidyr"
+   ],
+   "renv_only": [],
+   "n_ours": 9,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 9,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZOOVLK",
+   "jaccard": 0.23809523809523808,
+   "ours_only": [
+    "H:/Intranet/Intranet/software_programs/Core Software/R/BH_1.84.0-0.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/Formula_1.2-4.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/Hmisc/Hmisc_3.4-2.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/Hmisc_5.2-2.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/R6_2.4.1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/RcppEigen_0.3.4.0.2.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/Rcpp_1.0.5.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/assertthat_0.2.1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/base64enc_0.1-3.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/bigmemory.sri_0.1.8.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/bigmemory_4.6.4.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/cli_2.0.2.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/clipr_0.7.0.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/colorspace_1.4-1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/cpp11_0.2.1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/crayon_1.3.4.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/data.table_1.14.4.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/digest_0.6.25.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/dplyr_1.0.2.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/ellipsis_0.3.1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/fansi_0.4.1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/farver_2.0.3.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/fastglm_0.0.3.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/fixest_0.10.4.tar.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/forcats_0.5.0.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/generics_0.0.2.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/ggplot2_3.3.2.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/glue_1.4.2.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/glue_1.6.2.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/gtable_0.3.0.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/haven_2.3.1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/hms_0.5.3.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/htmltools_0.5.0.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/knitr/knitr.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/labeling_0.3.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/lfe_2.8-7.1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/lifecycle_0.2.0.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/magrittr_1.5.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/munsell_0.5.0.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/pillar_1.4.6.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/pkgconfig_2.0.3.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/plyr_1.8.6.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/purrr_0.3.4.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/readr_1.3.1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/reshape2_1.4.4.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/rmarkdown_2.3.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/sandwich_3.0-1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/scales_1.1.1.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/stargazer_5.2.2.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/stargazer_5.2.3.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/stringi_1.5.3.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/stringr_1.4.0.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/tibble_3.0.3.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/tidyselect_1.1.0.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/utf8_1.1.4.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/uuid_1.2-1.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/vctrs_0.3.4.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/vctrs_0.4.2.tar.gz",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/withr_2.3.0.zip\n",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/xtable_1.8-4.zip",
+    "H:/Intranet/Intranet/software_programs/Core Software/R/zoo_1.8-9.zip",
+    "H:/Zheng_10223/R Packages/rlang_0.4.7.zip",
+    "H:/Zheng_10223/gridExtra.zip",
+    "H:/Zheng_10223/viridis_0.6.5.tar.gz"
+   ],
+   "renv_only": [],
+   "n_ours": 84,
+   "n_renv": 20,
+   "n_shared": 20,
+   "n_union": 84,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/UBRKHO",
+   "jaccard": 0.25,
+   "ours_only": [
+    "amen",
+    "ergm.count",
+    "ergm_3.10.4.tar.gz"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 4,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "zenodo:7217640",
+   "jaccard": 0.25,
+   "ours_only": [
+    "Rcpp",
+    "rgdal",
+    "sf"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 4,
+   "source": "zenodo"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/CXA8GR",
+   "jaccard": 0.25,
+   "ours_only": [
+    "fastplm",
+    "fect",
+    "panelview"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 4,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/T17S0X",
+   "jaccard": 0.25,
+   "ours_only": [
+    "Hmisc",
+    "QuantPsyc",
+    "Zelig",
+    "ZeligChoice",
+    "gridExtra",
+    "nnet",
+    "plyr",
+    "psych",
+    "survey"
+   ],
+   "renv_only": [],
+   "n_ours": 12,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 12,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/6YNZTE",
+   "jaccard": 0.2727272727272727,
+   "ours_only": [
+    "RCurl",
+    "ROAuth",
+    "Rfacebook",
+    "devtools",
+    "longurl",
+    "smappR",
+    "streamR",
+    "twitteR"
+   ],
+   "renv_only": [],
+   "n_ours": 11,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 11,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/8TP2S7",
+   "jaccard": 0.3333333333333333,
+   "ours_only": [
+    "AICcmodavg",
+    "MASS",
+    "devtools",
+    "lme4"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 6,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SNLHH6",
+   "jaccard": 0.35714285714285715,
+   "ours_only": [
+    "Hmisc",
+    "caret",
+    "clarify",
+    "dplyr",
+    "plyr",
+    "randomForest",
+    "readxl",
+    "rockchalk",
+    "tm"
+   ],
+   "renv_only": [],
+   "n_ours": 14,
+   "n_renv": 5,
+   "n_shared": 5,
+   "n_union": 14,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/2CVG5E",
+   "jaccard": 0.36363636363636365,
+   "ours_only": [
+    "cowplot",
+    "dplyr",
+    "mediation",
+    "rdd",
+    "rdrobust",
+    "stargazer",
+    "tidyr"
+   ],
+   "renv_only": [],
+   "n_ours": 11,
+   "n_renv": 4,
+   "n_shared": 4,
+   "n_union": 11,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/QX0BSK",
+   "jaccard": 0.36363636363636365,
+   "ours_only": [
+    "benchmarkme",
+    "dplyr",
+    "renv",
+    "rmarkdown",
+    "sessioninfo",
+    "tibble",
+    "tidyverse"
+   ],
+   "renv_only": [],
+   "n_ours": 11,
+   "n_renv": 4,
+   "n_shared": 4,
+   "n_union": 11,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/15NAK8",
+   "jaccard": 0.38095238095238093,
+   "ours_only": [
+    "Matrix",
+    "OpenMx",
+    "RcppEigen",
+    "StanHeaders",
+    "fs",
+    "httpuv",
+    "kableExtra",
+    "miniUI",
+    "minqa",
+    "pkgbuild",
+    "rlang",
+    "rpf",
+    "survival"
+   ],
+   "renv_only": [],
+   "n_ours": 21,
+   "n_renv": 8,
+   "n_shared": 8,
+   "n_union": 21,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/J4WZGT",
+   "jaccard": 0.4,
+   "ours_only": [
+    "ggplot",
+    "readstata13",
+    "readxl"
+   ],
+   "renv_only": [],
+   "n_ours": 5,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 5,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/TBW4Y4",
+   "jaccard": 0.4,
+   "ours_only": [
+    "ggplot2",
+    "gridExtra",
+    "reshape2"
+   ],
+   "renv_only": [],
+   "n_ours": 5,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 5,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/0DE35E",
+   "jaccard": 0.4,
+   "ours_only": [
+    "MASS",
+    "car",
+    "foreign",
+    "gridExtra",
+    "ri",
+    "texreg"
+   ],
+   "renv_only": [],
+   "n_ours": 10,
+   "n_renv": 4,
+   "n_shared": 4,
+   "n_union": 10,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/W77NEA",
+   "jaccard": 0.4,
+   "ours_only": [
+    "boot",
+    "foreign",
+    "plyr"
+   ],
+   "renv_only": [],
+   "n_ours": 5,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 5,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/29911",
+   "jaccard": 0.42857142857142855,
+   "ours_only": [
+    "MASS",
+    "calibrate",
+    "car",
+    "list",
+    "lme4",
+    "rr",
+    "stargazer",
+    "xtable"
+   ],
+   "renv_only": [],
+   "n_ours": 14,
+   "n_renv": 6,
+   "n_shared": 6,
+   "n_union": 14,
+   "source": "dataverse"
+  },
+  {
    "dataset_doi": "doi:10.7910/DVN/LJPHFR",
-   "jaccard": 0.45,
+   "jaccard": 0.47368421052631576,
    "ours_only": [
     "MASS",
     "RColorBrewer",
@@ -896,33 +1442,12 @@
     "plm",
     "rdrobust"
    ],
-   "renv_only": [
-    "grid"
-   ],
+   "renv_only": [],
    "n_ours": 19,
-   "n_renv": 10,
+   "n_renv": 9,
    "n_shared": 9,
-   "n_union": 20,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/1YG7BI",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "base",
-    "datasets",
-    "grDevices",
-    "graphics",
-    "methods",
-    "stats",
-    "utils"
-   ],
-   "n_ours": 7,
-   "n_renv": 14,
-   "n_shared": 7,
-   "n_union": 14,
-   "source": "dataverse_legacy"
+   "n_union": 19,
+   "source": "dataverse"
   },
   {
    "dataset_doi": "doi:10.7910/DVN/28575",
@@ -935,170 +1460,107 @@
    "n_renv": 1,
    "n_shared": 1,
    "n_union": 2,
-   "source": "dataverse_legacy"
+   "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/27455",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "methods"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/35M5CV",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "stats"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/TLPMVI",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "parallel"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "zenodo:14156677",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "parallel"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/RQNVFW",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "parallel"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/NEC17Z",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "hexbin"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/N5IF8R",
+   "dataset_doi": "doi:10.7910/DVN/ELP2GA",
    "jaccard": 0.5,
    "ours_only": [
-    "SPDDD_0.14.tar.gz",
-    "corpcor"
-   ],
-   "renv_only": [
-    "grid"
-   ],
-   "n_ours": 5,
-   "n_renv": 4,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "zenodo:14792036",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "rmarkdown"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/CGHTPZ",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "methods"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/UFZTYU",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "compiler"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/U4NUKT",
-   "jaccard": 0.5,
-   "ours_only": [
-    "XML",
-    "plyr",
-    "tm"
+    "https://cran.r-project.org/src/contrib/dplyr_1.1.4.tar.gz",
+    "https://cran.r-project.org/src/contrib/haven_2.5.5.tar.gz",
+    "https://cran.r-project.org/src/contrib/randomizr_1.0.0.tar.gz",
+    "https://cran.r-project.org/src/contrib/readr_2.1.5.tar.gz"
    ],
    "renv_only": [],
-   "n_ours": 6,
-   "n_renv": 3,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "dataverse_legacy"
+   "n_ours": 8,
+   "n_renv": 4,
+   "n_shared": 4,
+   "n_union": 8,
+   "source": "dataverse"
   },
   {
-   "dataset_doi": "zenodo:21773058",
+   "dataset_doi": "doi:10.7910/DVN/QPTLBA",
    "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "methods",
-    "parallel",
-    "stats"
+   "ours_only": [
+    "attritevis"
    ],
-   "n_ours": 3,
-   "n_renv": 6,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "zenodo"
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/BISYEV",
+   "jaccard": 0.5,
+   "ours_only": [
+    "foreign"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/QKCICV",
+   "jaccard": 0.5,
+   "ours_only": [
+    "packages"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/MX5NIV",
+   "jaccard": 0.5,
+   "ours_only": [
+    "https://sites.google.com/a/stonybrook.edu/mperess/research/mnlresp_0.1.0.tar.gz"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZDKETT",
+   "jaccard": 0.5,
+   "ours_only": [
+    "xtable"
+   ],
+   "renv_only": [],
+   "n_ours": 2,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 2,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/PDX8M1",
+   "jaccard": 0.5,
+   "ours_only": [
+    "arrow",
+    "here",
+    "kableExtra",
+    "lfe",
+    "patchwork",
+    "rio",
+    "tidyverse"
+   ],
+   "renv_only": [],
+   "n_ours": 14,
+   "n_renv": 7,
+   "n_shared": 7,
+   "n_union": 14,
+   "source": "dataverse"
   },
   {
    "dataset_doi": "zenodo:8380044",
@@ -1116,154 +1578,89 @@
    "source": "zenodo"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/2IO3DL",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "grid"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/RGIMXH",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "grid",
-    "splines"
-   ],
-   "n_ours": 2,
-   "n_renv": 4,
-   "n_shared": 2,
-   "n_union": 4,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "zenodo:1116352",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "rmarkdown"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/JJMCTA",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "methods"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/28158",
+   "dataset_doi": "doi:10.7910/DVN/R3JGWS",
    "jaccard": 0.5,
    "ours_only": [
-    "apsrtable",
-    "erer",
-    "memisc",
-    "xtable"
-   ],
-   "renv_only": [],
-   "n_ours": 8,
-   "n_renv": 4,
-   "n_shared": 4,
-   "n_union": 8,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/4XQUKB",
-   "jaccard": 0.5,
-   "ours_only": [
-    "MatchIt",
-    "Matching",
-    "optmatch"
+    "https://cran.r-project.org/src/contrib/dplyr_1.1.4.tar.gz",
+    "https://cran.r-project.org/src/contrib/ggplot2_3.5.0.tar.gz",
+    "https://cran.r-project.org/src/contrib/randomizr_1.0.0.tar.gz"
    ],
    "renv_only": [],
    "n_ours": 6,
    "n_renv": 3,
    "n_shared": 3,
    "n_union": 6,
-   "source": "dataverse_legacy"
+   "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/59F366",
-   "jaccard": 0.5,
-   "ours_only": [
-    "RcppArmadillo",
-    "optmatch"
-   ],
-   "renv_only": [],
-   "n_ours": 4,
-   "n_renv": 2,
-   "n_shared": 2,
-   "n_union": 4,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/P2RD03",
+   "dataset_doi": "doi:10.7910/DVN/IPW0M9",
    "jaccard": 0.5,
    "ours_only": [],
    "renv_only": [
-    "parallel"
+    "bookdown"
    ],
    "n_ours": 1,
    "n_renv": 2,
    "n_shared": 1,
    "n_union": 2,
-   "source": "dataverse_legacy"
+   "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/QKCICV",
+   "dataset_doi": "doi:10.7910/DVN/AXZL37",
    "jaccard": 0.5,
    "ours_only": [
-    "packages"
+    "lmtest",
+    "multiwayvcov",
+    "sandwich",
+    "stargazer"
+   ],
+   "renv_only": [],
+   "n_ours": 8,
+   "n_renv": 4,
+   "n_shared": 4,
+   "n_union": 8,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZNOX0G",
+   "jaccard": 0.5,
+   "ours_only": [
+    "textables"
    ],
    "renv_only": [],
    "n_ours": 2,
    "n_renv": 1,
    "n_shared": 1,
    "n_union": 2,
-   "source": "dataverse_legacy"
+   "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/MX5NIV",
+   "dataset_doi": "doi:10.7910/DVN/U4NUKT",
    "jaccard": 0.5,
    "ours_only": [
-    "https://sites.google.com/a/stonybrook.edu/mperess/research/mnlresp_0.1.0.tar.gz"
+    "XML",
+    "plyr",
+    "tm"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/29362",
+   "jaccard": 0.5,
+   "ours_only": [
+    "foreign"
    ],
    "renv_only": [],
    "n_ours": 2,
    "n_renv": 1,
    "n_shared": 1,
    "n_union": 2,
-   "source": "dataverse_legacy"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/S73SLI",
-   "jaccard": 0.5,
-   "ours_only": [
-    "RSiena_1.1-276.zip"
-   ],
-   "renv_only": [],
-   "n_ours": 2,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse_legacy"
+   "source": "dataverse"
   }
  ]
 }

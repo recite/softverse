@@ -7,7 +7,7 @@
    "path": "https://creativecommons.org/publicdomain/zero/1.0/"
   }
  ],
- "created": "2026-08-16T01:54:08.040706+00:00",
+ "created": "2026-09-15T18:23:12.902808+00:00",
  "resources": [
   {
    "name": "usage_by_package",
@@ -48,7 +48,7 @@
       "type": "string"
      },
      {
-      "name": "n_deposits_dataverse_legacy",
+      "name": "n_deposits_dataverse",
       "type": "string"
      },
      {
@@ -64,7 +64,7 @@
       "type": "string"
      },
      {
-      "name": "n_at_risk_dataverse_legacy",
+      "name": "n_at_risk_dataverse",
       "type": "string"
      },
      {
@@ -242,7 +242,7 @@
       "type": "integer"
      },
      {
-      "name": "n_deposits_dataverse_legacy",
+      "name": "n_deposits_dataverse",
       "type": "integer"
      },
      {
@@ -258,7 +258,7 @@
       "type": "number"
      },
      {
-      "name": "n_at_risk_dataverse_legacy",
+      "name": "n_at_risk_dataverse",
       "type": "integer"
      },
      {
@@ -441,6 +441,10 @@
      },
      {
       "name": "called_function",
+      "type": "string"
+     },
+     {
+      "name": "pinned_version",
       "type": "string"
      },
      {

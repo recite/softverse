@@ -38,11 +38,15 @@ lookup cannot reach whoever wrote it.
 ## Where to go
 
 <a href="lookup/">Look up a package</a> to see its count, the denominator it
-is a share of, and which of the two repositories is doing the crediting.
+is a share of, and which of the two repositories is doing the crediting. Every
+package has its own page listing the deposits that use it, the functions they
+call and the versions they state, and a badge a maintainer can put in a README.
 
 <a href="paper/softverse.pdf">Read the paper</a> for the sampling frame, the
 extraction method, and the validation, which includes measuring the R
-extractor against R's own parser.
+extractor against R's own parser. The paper describes the August 2026 release;
+the counts on this site come from the larger 2026 collection, and the paper is
+being revised to match.
 
 <a href="data/">Take the data</a>, published as CSV under CC0, along with the
 Stata command-to-package index at

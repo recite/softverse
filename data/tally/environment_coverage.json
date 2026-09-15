@@ -1,26 +1,26 @@
 {
  "julia_version": {
-  "deposits_carrying": 6,
-  "deposits_eligible": 59
+  "deposits_carrying": 17,
+  "deposits_eligible": 322
  },
  "matlab_version": {
-  "deposits_carrying": 1,
-  "deposits_eligible": 59
+  "deposits_carrying": 0,
+  "deposits_eligible": 322
  },
  "os": {
-  "deposits_carrying": 13,
-  "deposits_eligible": 3488
+  "deposits_carrying": 92,
+  "deposits_eligible": 6434
  },
  "python_version": {
-  "deposits_carrying": 58,
-  "deposits_eligible": 408
+  "deposits_carrying": 300,
+  "deposits_eligible": 917
  },
  "r_version": {
-  "deposits_carrying": 28,
-  "deposits_eligible": 3529
+  "deposits_carrying": 183,
+  "deposits_eligible": 6628
  },
  "stata_version": {
-  "deposits_carrying": 777,
-  "deposits_eligible": 6100
+  "deposits_carrying": 1194,
+  "deposits_eligible": 8983
  }
 }

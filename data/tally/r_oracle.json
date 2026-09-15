@@ -1,32 +1,59 @@
 {
  "by_source": {
-  "dataverse_legacy": {
-   "n_files_compared": 15560,
-   "n_files_unparseable_by_r": 250,
-   "true_positives": 64249,
+  "dataverse": {
+   "n_files_compared": 85308,
+   "n_files_unparseable_by_r": 953,
+   "true_positives": 218263,
    "false_positives": 0,
-   "false_negatives": 0,
+   "false_negatives": 3,
    "precision": 1.0,
-   "recall": 1.0
+   "recall": 0.9999862553031622
   },
   "zenodo": {
-   "n_files_compared": 19910,
-   "n_files_unparseable_by_r": 1183,
-   "true_positives": 30515,
+   "n_files_compared": 26784,
+   "n_files_unparseable_by_r": 1208,
+   "true_positives": 39551,
    "false_positives": 0,
    "false_negatives": 0,
    "precision": 1.0,
    "recall": 1.0
   }
  },
- "n_files_compared": 35470,
- "n_files_unparseable_by_r": 1433,
- "true_positives": 94764,
+ "n_files_compared": 112092,
+ "n_files_unparseable_by_r": 2161,
+ "true_positives": 257814,
  "false_positives": 0,
- "false_negatives": 0,
+ "false_negatives": 3,
  "precision": 1.0,
- "recall": 1.0,
- "top_missed": [],
+ "recall": 0.9999883638394675,
+ "top_missed": [
+  [
+   "utils",
+   3
+  ]
+ ],
  "top_spurious": [],
- "examples": []
+ "examples": [
+  {
+   "path": "corpus/dataverse/files/D737FP/_archives/JOP_Simon_and_TurnbullDugarte_ReplicationFiles-3.zip_extracted/JOP_Simon_and_TurnbullDugarte_ReplicationFiles/study_coef_extraction/Horiuchi et al/packrat/src/packrat/packrat_0.4.9-2.tar.gz_extracted/packrat/R/downloader.R",
+   "missed": [
+    "utils"
+   ],
+   "spurious": []
+  },
+  {
+   "path": "corpus/dataverse/files/KCIADO/_archives/ReplicationPackage.tar.gz_extracted/ReplicationPackage/packrat/src/packrat/packrat_0.4.9-2.tar.gz_extracted/packrat/R/downloader.R",
+   "missed": [
+    "utils"
+   ],
+   "spurious": []
+  },
+  {
+   "path": "corpus/dataverse/files/OJUPMY/_archives/Replication.zip_extracted/Replication/packrat/src/packrat/packrat_0.4.8-1.tar.gz_extracted/packrat/R/downloader.R",
+   "missed": [
+    "utils"
+   ],
+   "spurious": []
+  }
+ ]
 }

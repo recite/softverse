@@ -76,6 +76,8 @@ dev = [
     { include-group = "docs" },
     "pyright>=1.1.390",
     "pydoclint>=0.5",
+    "huggingface-hub>=1.31.0",
+    "datasets>=5.0.1",
 ]
 test = [
     "pytest>=8",
@@ -87,6 +89,7 @@ docs = [
     "myst-parser",
     "sphinx-copybutton",
     "py-canon @ git+https://github.com/gojiplus/py-canon@v1",
+    "anybadge>=1.16.0",
 ]
 
 

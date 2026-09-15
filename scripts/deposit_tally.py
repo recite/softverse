@@ -1,13 +1,20 @@
-"""Create, and on request publish, the Zenodo deposit for the per-package counts.
+"""Create, and on request publish, the Zenodo deposit for the 2026 release.
 
-    uv run python scripts/deposit_tally.py             # create/update the draft
-    uv run python scripts/deposit_tally.py --show      # print its state
-    uv run python scripts/deposit_tally.py --publish   # mint the DOI
+    uv run python scripts/deposit_tally.py --new-version --hf-dataset ORG/NAME
+    uv run python scripts/deposit_tally.py --show
+    uv run python scripts/deposit_tally.py --publish
 
-The tables are already served at https://recite.github.io/softverse/data/,
-which is convenient and not archival: a GitHub Pages URL is whatever the
-repository serves today. A paper that cites its own counts needs a version of
-them that cannot move, so the same bundle goes to Zenodo under a DOI.
+A new version of the August 2026 record (concept DOI 10.5281/zenodo.21943908),
+so citations to the counts stay continuous. The version carries every table
+of the release under CC0: the per-package aggregates, and the corpus tables
+that say which package each deposit and file uses, at what version, on what
+interpreter.
+
+What it does not carry is code. File text and the snippets in `mentions` keep
+their authors' licenses -- mostly CC0, but also CC-BY and CC-BY-NC -- and a
+Zenodo record has one license, so both are published on Hugging Face instead,
+where each row carries its own, and this record links there. `mentions` goes
+up with its `snippet` column removed.
 
 Publishing is a separate act for the reason it is in the Stata index script:
 a draft is private and deletable, a DOI is neither.
@@ -17,13 +24,29 @@ from __future__ import annotations
 
 import csv
 import json
+import shutil
 import sys
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+import duckdb
+import httpx
 
 from softverse.config import PATHS, credential
-from softverse.release.zenodo_deposit import Deposit, run
+from softverse.release.zenodo_deposit import (
+    Deposit,
+    new_version,
+    replace_files,
+    run,
+    show,
+)
 
-BUNDLE = PATHS.root / "data" / "tally"
+if TYPE_CHECKING:
+    from pathlib import Path
+
+TALLY = PATHS.root / "data" / "tally"
+CORPUS = PATHS.root / "build" / "release" / "corpus"
+#: The flat directory that is uploaded, rebuilt from the two above each run.
+BUNDLE = PATHS.root / "build" / "release" / "zenodo"
 
 TITLE = (
     "Validated use: per-package counts of software loaded by "
@@ -38,14 +61,75 @@ PUBLISHED_RECORD = 21943909
 #: identifier so the two deposits are navigable from each other.
 STATA_INDEX_DOI = "10.5281/zenodo.21926099"
 
+#: From `data/tally/`: the aggregates and the files that describe them. Not
+#: its `mentions.parquet` or `files.parquet`, which are the unredacted build
+#: copies; the corpus release's versions of those go up instead.
+TALLY_FILES = (
+    "usage_by_package",
+    "usage_by_package_year",
+    "usage_by_collection",
+    "usage_by_function",
+    "unknown_names",
+    "language_presence",
+)
+TALLY_EXTRAS = (
+    "summary.json",
+    "environment_coverage.json",
+    "r_oracle.json",
+    "renv_agreement.json",
+    "datapackage.json",
+    "package_deposits.parquet",
+    "package_versions.csv",
+)
+
+#: From the corpus release: every table except `contents` and `mentions`,
+#: which is written without its snippets.
+CORPUS_FILES = (
+    "deposits.parquet",
+    "files.parquet",
+    "file_packages.parquet",
+    "package_versions.parquet",
+    "environment.parquet",
+)
+
+
+def stage_bundle(
+    tally: Path = TALLY, corpus: Path = CORPUS, out: Path = BUNDLE
+) -> list[Path]:
+    """Assemble the upload: CC0 tables only, one flat directory.
+
+    Args:
+        tally: The released aggregates.
+        corpus: The corpus release.
+        out: Where the bundle is assembled, replaced if present.
+
+    Returns:
+        The files to upload.
+    """
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    names = [f"{n}.{ext}" for n in TALLY_FILES for ext in ("csv", "parquet")]
+    for name in (*names, *TALLY_EXTRAS):
+        if (tally / name).exists():
+            shutil.copyfile(tally / name, out / name)
+    shutil.copyfile(tally / "README.md", out / "README.md")
+    for name in CORPUS_FILES:
+        shutil.copyfile(corpus / name, out / name)
+    duckdb.connect().execute(
+        f"COPY (SELECT * EXCLUDE (snippet) FROM '{corpus / 'mentions.parquet'}') "
+        f"TO '{out / 'mentions.parquet'}' (FORMAT PARQUET, COMPRESSION ZSTD)"
+    )
+    return sorted(p for p in out.iterdir() if p.is_file())
+
 
 def summary() -> dict:
-    return json.loads((BUNDLE / "summary.json").read_text())
+    return json.loads((TALLY / "summary.json").read_text())
 
 
-def description(stats: dict) -> str:
+def description(stats: dict, hf_dataset: str) -> str:
     """Written from the bundle, so the deposit page cannot overstate it."""
-    with (BUNDLE / "usage_by_package.csv").open(encoding="utf-8") as handle:
+    with (TALLY / "usage_by_package.csv").open(encoding="utf-8") as handle:
         top = max(csv.DictReader(handle), key=lambda r: int(r["n_deposits"]))
     by_source = stats["deposits_by_source"]
 
@@ -88,6 +172,20 @@ resolve to no registry, unfiltered. <code>summary.json</code> holds the
 corpus counts the shares are taken against, and <code>README.md</code> is the
 data descriptor with column definitions.</p>
 
+<p><strong>The corpus tables.</strong> <code>deposits.parquet</code> (one row
+per deposit, with its journal, year and license), <code>files.parquet</code>
+(one row per file, with its sha256 and the packages it loads),
+<code>file_packages.parquet</code>, <code>mentions.parquet</code> (one row per
+reference in code, without the code snippet), <code>package_versions.parquet</code>
+(versions stated in manifests and install calls), <code>environment.parquet</code>
+(R, Python, Stata and Julia versions and operating systems a deposit states),
+and <code>package_deposits.parquet</code> (which deposits use each package).</p>
+
+<p><strong>The code itself</strong> -- file text and snippets, under each
+deposit's own license -- is published at
+<a href="https://huggingface.co/datasets/{hf_dataset}">huggingface.co/datasets/{hf_dataset}</a>,
+with every file linked to this record's tables by sha256.</p>
+
 <p>Stata resolution uses the command-to-package index deposited separately at
 <a href="https://doi.org/{STATA_INDEX_DOI}">{STATA_INDEX_DOI}</a>. The most
 loaded package in this corpus is <code>{top["package"]}</code>, in
@@ -95,12 +193,12 @@ loaded package in this corpus is <code>{top["package"]}</code>, in
 """
 
 
-def metadata(stats: dict) -> dict:
+def metadata(stats: dict, hf_dataset: str) -> dict:
     return {
         "metadata": {
             "title": TITLE,
             "upload_type": "dataset",
-            "description": description(stats),
+            "description": description(stats, hf_dataset),
             "creators": [{"name": "Sood, Gaurav"}],
             "license": "cc-zero",
             "keywords": [
@@ -140,12 +238,26 @@ def main() -> int:
     if not token:
         print("ZENODO_API_TOKEN is not set")
         return 1
-    if not (BUNDLE / "summary.json").exists():
-        print(f"no bundle at {BUNDLE}; run scripts/release_tally.py first")
+    if (
+        not (TALLY / "summary.json").exists()
+        or not (CORPUS / "deposits.parquet").exists()
+    ):
+        print("no release; run scripts/release_tally.py and scripts/release_corpus.py")
         return 1
+    if "--hf-dataset" not in sys.argv:
+        print("pass --hf-dataset ORG/NAME: the record links to the code there")
+        return 1
+    hf_dataset = sys.argv[sys.argv.index("--hf-dataset") + 1]
 
-    stats = summary()
-    spec = Deposit(TITLE, Path(BUNDLE), metadata(stats), PUBLISHED_RECORD)
+    files = stage_bundle()
+    spec = Deposit(TITLE, BUNDLE, metadata(summary(), hf_dataset), PUBLISHED_RECORD)
+    if "--new-version" in sys.argv:
+        with httpx.Client(timeout=3600.0) as client:
+            deposit = new_version(client, token, PUBLISHED_RECORD, spec)
+            deposit = replace_files(client, token, deposit, files)
+            show(deposit)
+            print("\nnothing is published. `--publish` mints the version.")
+        return 0
     return run(spec, token, sys.argv)
 
 

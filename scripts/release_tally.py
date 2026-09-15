@@ -32,7 +32,9 @@ import shutil
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
+import duckdb
 import pandas as pd
+import pyarrow.parquet as pq
 
 from softverse.config import PATHS
 
@@ -40,7 +42,15 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 TALLY = PATHS.root / "build" / "tally"
+ZENODO_DEPOSITS = PATHS.root / "corpus" / "zenodo" / "deposits.csv"
 OUT = PATHS.root / "data" / "tally"
+FRAME = PATHS.root / "data" / "frame"
+README = PATHS.root / "README.md"
+README_START, README_END = (
+    "<!-- release-numbers:start -->",
+    "<!-- release-numbers:end -->",
+)
+LANGUAGE_NAMES = {"stata": "Stata", "r": "R", "python": "Python"}
 
 #: Each aggregate ships as CSV and as Parquet. The CSV is for a person
 #: opening it; the Parquet is for anything reading it as data, and it is not
@@ -217,6 +227,149 @@ def _resource(path: Path) -> dict:
     }
 
 
+#: What a package's page and badge are built from, so the site builds from
+#: tracked files in CI. Same rule as the headline count: resolved to a known
+#: package, and not an install or an inquiry.
+_USE = """
+    resolution IN ('known_current', 'known_archived')
+    AND construct NOT IN ('install', 'shell_install', 'stata_install', 'stata_which')
+    AND resolved_package IS NOT NULL
+"""
+
+
+def write_package_tables() -> None:
+    """Write the per-package deposit list and version summary.
+
+    `package_deposits.parquet` has one row per (language, package, deposit),
+    which is what lets a package page list the papers that use it.
+    `package_versions.csv` counts deposits per stated version, from manifests
+    and from install calls, so a maintainer can see which releases published
+    research pinned.
+    """
+    con = duckdb.connect()
+    mentions = f"'{TALLY / 'mentions.parquet'}'"
+    con.execute(
+        f"""
+        COPY (
+            SELECT language, resolved_package AS package, any_value(ecosystem)
+                   AS ecosystem, dataset_doi, any_value(source) AS source,
+                   any_value(collection_id) AS collection_id,
+                   any_value(deposit_year) AS year
+            FROM {mentions} WHERE {_USE}
+            GROUP BY language, resolved_package, dataset_doi
+            ORDER BY language, package, year, dataset_doi
+        ) TO '{OUT / "package_deposits.parquet"}' (FORMAT PARQUET, COMPRESSION ZSTD)
+        """
+    )
+    rows = con.execute(
+        f"""
+        SELECT ecosystem, package, version, version_source,
+               count(DISTINCT dataset_doi) AS n_deposits
+        FROM (
+            SELECT ecosystem, package, version_constraint AS version,
+                   manifest_kind AS version_source, dataset_doi
+            FROM '{TALLY / "declared_dependencies.parquet"}'
+            WHERE version_constraint IS NOT NULL
+            UNION ALL
+            SELECT ecosystem, coalesce(resolved_package, raw_name), pinned_version,
+                   construct, dataset_doi
+            FROM {mentions} WHERE pinned_version IS NOT NULL
+        )
+        GROUP BY ALL ORDER BY ecosystem, package, n_deposits DESC
+        """
+    ).df()
+    rows.to_csv(OUT / "package_versions.csv", index=False, lineterminator="\n")
+
+
+def write_year_denominators() -> None:
+    """Deposits with analyzable code per (language, deposit year).
+
+    The denominator a package's share over time is taken against, by the
+    tally's own rule: a deposit is at risk for a language when it holds an
+    analyzable file in that language or a mention in it came out of it. Years
+    are the frame dates the corpus loader stamps on every file, read from the
+    same two files, so a package's per-year count and this denominator agree
+    on which year a deposit belongs to. A deposit with no date is a row with
+    an empty year rather than a dropped one.
+    """
+    con = duckdb.connect()
+    con.execute(
+        f"""
+        CREATE TEMP TABLE deposit_year AS
+        SELECT 'doi:10.7910/DVN/' || split_part(identifier, '/', -1) AS dataset_doi,
+               TRY_CAST(left(publication_date, 4) AS INTEGER) AS year
+        FROM read_csv_auto('{PATHS.frame / "dataverse_deposits.csv"}', all_varchar = true)
+        UNION ALL
+        SELECT dataset_doi, TRY_CAST(deposit_year AS INTEGER)
+        FROM read_csv_auto('{ZENODO_DEPOSITS}', all_varchar = true)
+        """
+    )
+    con.execute(
+        f"""
+        COPY (
+            WITH at_risk AS (
+                SELECT DISTINCT language, dataset_doi
+                FROM '{TALLY / "files.parquet"}' WHERE in_analysis_set
+                UNION
+                SELECT DISTINCT language, dataset_doi FROM '{TALLY / "mentions.parquet"}'
+            )
+            SELECT a.language, y.year, count(DISTINCT a.dataset_doi) AS n_deposits_at_risk
+            FROM at_risk a LEFT JOIN deposit_year y USING (dataset_doi)
+            GROUP BY ALL ORDER BY a.language, y.year
+        ) TO '{OUT / "language_year_at_risk.csv"}' (HEADER, DELIMITER ',')
+        """
+    )
+
+
+def _year_denominators_agree() -> list[str]:
+    """Per-year denominators must add up to the tally's per-language one.
+
+    Returns:
+        One message per language whose years do not sum to its total.
+    """
+    (n,) = (
+        duckdb.connect()
+        .execute(
+            f"""
+        SELECT count(*) FROM (
+            SELECT language, sum(n_deposits_at_risk) AS n
+            FROM read_csv_auto('{OUT / "language_year_at_risk.csv"}') GROUP BY 1
+        ) y JOIN (
+            SELECT DISTINCT language, n_deposits_at_risk
+            FROM read_csv_auto('{OUT / "usage_by_package.csv"}')
+        ) u USING (language)
+        WHERE y.n <> u.n_deposits_at_risk
+        """
+        )
+        .fetchone()
+    )
+    return [f"year denominators disagree with the tally in {n} languages"] if n else []
+
+
+def _package_deposits_agree() -> list[str]:
+    """The deposit list behind every page must count to the published tally.
+
+    Returns:
+        One message per disagreeing (language, package).
+    """
+    con = duckdb.connect()
+    (n,) = con.execute(
+        f"""
+        SELECT count(*) FROM (
+            SELECT language, package, count(*) AS n
+            FROM '{OUT / "package_deposits.parquet"}' GROUP BY 1, 2
+        ) d FULL JOIN read_csv_auto('{OUT / "usage_by_package.csv"}') u
+          USING (language, package)
+        WHERE d.n IS DISTINCT FROM u.n_deposits
+        """
+    ).fetchone()
+    return (
+        [f"package_deposits disagrees with usage_by_package on {n} packages"]
+        if n
+        else []
+    )
+
+
 def summarize() -> dict:
     """Corpus counts, computed here so nothing downstream opens the Parquet.
 
@@ -267,7 +420,73 @@ def summarize() -> dict:
         # have. Every figure drawn from `environment_signals.parquet` is a
         # share of the first number, not of the corpus.
         "environment_coverage": environment_coverage(),
+        "trawl": trawl(files),
     }
+
+
+def trawl(files: pd.DataFrame) -> dict:
+    """How much was searched, for the README and anyone sharing the release.
+
+    The frame is the deposits the collections list, before any were found to
+    hold code, so the funnel reads from what was looked at to what was used.
+    """
+    dataverse = pd.read_csv(FRAME / "dataverse_deposits.csv")
+    frame = pd.read_csv(FRAME / "frame.csv")
+    return {
+        "collections_by_source": {
+            "dataverse": int(dataverse["collection_id"].nunique()),
+            "zenodo": int((frame["source"] == "zenodo").sum()),
+        },
+        "deposits_in_frame_by_source": {
+            "dataverse": len(dataverse),
+            "zenodo": len(pd.read_csv(ZENODO_DEPOSITS)),
+        },
+        "n_files": len(files),
+        "n_mentions": pq.ParquetFile(TALLY / "mentions.parquet").metadata.num_rows,
+    }
+
+
+def readme_numbers(summary: dict) -> str:
+    """The README's release-in-numbers block, written from `summary.json`."""
+    trawled = summary["trawl"]
+    collections = trawled["collections_by_source"]
+    frame = trawled["deposits_in_frame_by_source"]
+    rows = "\n".join(
+        f"| {LANGUAGE_NAMES.get(language, language)} | {n:,} |"
+        for language, n in summary["deposits_by_language"].items()
+    )
+    return f"""{README_START}
+## The {summary["built"][:4]} release in numbers
+
+The frame is every deposit in {sum(collections.values())} journal collections:
+{collections["dataverse"]} on Harvard Dataverse and {collections["zenodo"]} on Zenodo,
+{sum(frame.values()):,} deposits in all ({frame["dataverse"]:,} and {frame["zenodo"]:,}).
+
+- **{summary["n_deposits"]:,}** deposits held code or a dependency manifest,
+  and {summary["n_deposits_analyzable"]:,} held analyzable code.
+- **{trawled["n_files"]:,}** files were collected; {summary["n_files_analyzable"]:,} are
+  analyzed once vendored libraries and duplicate copies are set aside.
+- **{trawled["n_mentions"]:,}** package references were extracted from them,
+  resolving to **{summary["n_packages"]:,}** packages.
+
+| Language | Deposits with code |
+|---|---:|
+{rows}
+
+Not included: code inside tar, 7z and rar archives too large to download,
+files a depositor restricted, and the AEA journals, which deposit on openICPSR.
+
+Look up any package at <https://recite.github.io/softverse/lookup/>. The
+tables and the code text are at
+<https://huggingface.co/datasets/gojiberries/softverse>.
+{README_END}"""
+
+
+def write_readme(summary: dict, readme: Path = README) -> None:
+    """Replace the numbers block in the README, which must already have one."""
+    text = readme.read_text(encoding="utf-8")
+    start, end = text.index(README_START), text.index(README_END) + len(README_END)
+    readme.write_text(text[:start] + readme_numbers(summary) + text[end:])
 
 
 def environment_coverage() -> dict:
@@ -307,6 +526,9 @@ def main() -> int:
 
     summary = summarize()
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
+    write_readme(summary)
+    write_package_tables()
+    write_year_denominators()
 
     unknown = pd.read_csv(OUT / "unknown_names.csv")
     grc1leg = unknown.loc[unknown["name"] == "grc1leg", "n_mentions"]
@@ -421,6 +643,8 @@ def report(summary: dict) -> int:
         problems.append("grc1leg resolved to a package; it is in no registry")
 
     problems.extend(_denominators_recomputed(summary))
+    problems.extend(_package_deposits_agree())
+    problems.extend(_year_denominators_agree())
 
     # Pooled counts must reconcile with the split they ship beside them. A
     # pooled table that disagrees with its own breakdown is worse than no
@@ -458,8 +682,7 @@ def report(summary: dict) -> int:
         "matches the tally, "
         "grc1leg is\nunresolved, every denominator matches a recomputation from "
         "the Parquet, the\npooled counts reconcile with their per-source split, "
-        "and the ranking survives\nrestriction to the file types both corpora "
-        "collected"
+        "and every package's\ndeposit list counts to its tally"
     )
     return 0
 
