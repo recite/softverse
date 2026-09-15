@@ -150,6 +150,9 @@ convention = "google"
 # call, which it did, leaving `show()` as a bare `pass` -- a deposit tool that
 # uploads in silence and tells you nothing.
 "softverse/release/zenodo_deposit.py" = ["T201"]
+# The corpus release is DuckDB SQL over Parquet paths and enum values this
+# package defines; a `FROM` path cannot be a bound parameter (see scripts/**).
+"softverse/release/corpus.py" = ["S608"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["softverse"]
