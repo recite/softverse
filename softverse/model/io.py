@@ -149,6 +149,67 @@ def write_table(
     return target
 
 
+class TableAppender:
+    """Write a table batch by batch, each batch validated like `write_table`.
+
+    For tables too large to hold as rows: the full tally is about 30 million
+    mentions, which as Python dicts needs more memory than the machine that
+    builds it has. The file is the same Parquet `write_table` would produce,
+    written one row group per batch.
+    """
+
+    def __init__(self, name: str, directory: Path) -> None:
+        """Prepare to write ``directory/<name>.parquet``; nothing is opened yet.
+
+        Args:
+            name: Table name, for the schema lookup and the filename.
+            directory: Output directory, created on first write.
+        """
+        self.name = name
+        self.path = directory / f"{name}.parquet"
+        self.rows = 0
+        self._writer: pq.ParquetWriter | None = None
+
+    def append(self, rows: list[dict[str, Any]]) -> None:
+        """Validate one batch of rows against the schema and write it.
+
+        Args:
+            rows: The batch; an empty batch writes nothing.
+        """
+        if not rows:
+            return
+        arrow = cast_to_schema(rows, self.name)
+        validate_table(arrow, self.name)
+        if self._writer is None:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            self._writer = pq.ParquetWriter(
+                self.path, schema_for(self.name), compression="zstd"
+            )
+        self._writer.write_table(arrow)
+        self.rows += arrow.num_rows
+
+    def close(self) -> Path:
+        """Finish the file, writing an empty table if no batch had rows.
+
+        Returns:
+            The path written.
+        """
+        if self._writer is None:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            pq.write_table(
+                pa.Table.from_pylist([], schema=schema_for(self.name)),
+                self.path,
+                compression="zstd",
+            )
+        else:
+            self._writer.close()
+        logger.info(
+            "wrote table",
+            extra={"table": self.name, "rows": self.rows, "path": str(self.path)},
+        )
+        return self.path
+
+
 def read_table(name: str, directory: Path) -> pa.Table:
     """Read a table and validate it against its schema."""
     path = directory / f"{name}.parquet"

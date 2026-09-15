@@ -97,6 +97,15 @@ class BuildResult:
         since a deposit with no Stata in it was never a candidate to declare
         a Stata version and counting it as a miss understates the coverage.
         """
+        carrying, eligible = self.coverage_sets()
+        return coverage_counts(carrying, eligible)
+
+    def coverage_sets(self) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+        """The deposits behind :meth:`coverage`, so batches can be unioned.
+
+        Returns:
+            ``(carrying, eligible)``: deposit DOIs per signal.
+        """
         carrying: dict[str, set[str]] = defaultdict(set)
         for row in self.environment:
             carrying[row["signal"]].add(row["dataset_doi"])
@@ -113,13 +122,7 @@ class BuildResult:
             for signal, languages in _SIGNAL_LANGUAGES.items():
                 if row["language"] in languages:
                     eligible[signal].add(row["dataset_doi"])
-        return {
-            signal: {
-                "deposits_carrying": len(carrying.get(signal, ())),
-                "deposits_eligible": len(eligible.get(signal, ())),
-            }
-            for signal in sorted(set(carrying) | set(eligible))
-        }
+        return carrying, eligible
 
     def reconcile_files(self) -> None:
         """Assert the file dispositions account for every file seen."""
@@ -129,6 +132,68 @@ class BuildResult:
             if k.startswith("files_") and k != "files_total"
         }
         reconcile(self.counts["files_total"], parts, "files")
+
+
+def coverage_counts(
+    carrying: dict[str, set[str]], eligible: dict[str, set[str]]
+) -> dict[str, dict[str, int]]:
+    """Signal -> deposits carrying it and deposits that could have.
+
+    Args:
+        carrying: Deposit DOIs that stated each signal.
+        eligible: Deposit DOIs in a position to state it.
+
+    Returns:
+        The two counts per signal.
+    """
+    return {
+        signal: {
+            "deposits_carrying": len(carrying.get(signal, ())),
+            "deposits_eligible": len(eligible.get(signal, ())),
+        }
+        for signal in sorted(set(carrying) | set(eligible))
+    }
+
+
+@dataclass(frozen=True)
+class CorpusHashes:
+    """Every file's sha256, and the hashes found in more than one deposit.
+
+    The only state `build` needs from outside the files it is given: whether a
+    file is vendored depends on whether its exact bytes recur in other
+    deposits. Computed once over the whole corpus, it lets `build` run on a
+    batch of deposits at a time and still give every file the verdict it
+    would get in one pass.
+    """
+
+    by_path: dict[Path, str]
+    shared: frozenset[str]
+
+
+def hash_corpus(corpus: Iterable[CorpusFile]) -> CorpusHashes:
+    """Hash every readable file and find the hashes shared across deposits.
+
+    Args:
+        corpus: The files to hash.
+
+    Returns:
+        The hashes by path and the cross-deposit set.
+    """
+    items = list(corpus)
+    by_path: dict[Path, str] = {}
+    for item in items:
+        try:
+            by_path[item.path] = sha256_of(item.path)
+        except OSError:
+            continue
+    shared = frozenset(
+        cross_dataset_hashes(
+            (item.dataset_doi, by_path[item.path])
+            for item in items
+            if item.path in by_path
+        )
+    )
+    return CorpusHashes(by_path, shared)
 
 
 def _read_manifest_into(result: BuildResult, item: CorpusFile, file_uid: str) -> None:
@@ -171,6 +236,7 @@ def build(
     ssc_shipped: frozenset[str] = frozenset(),
     registry_lock_id: str = "unpinned",
     corpus_completeness: float = 1.0,
+    hashes: CorpusHashes | None = None,
 ) -> BuildResult:
     """Extract and resolve every file, producing rows for `files` and `mentions`.
 
@@ -181,6 +247,9 @@ def build(
         registry_lock_id: Stamped on every mention so a row names its instrument.
         corpus_completeness: Share of the intended corpus present. Below 1.0 the
             output is a diagnostic, not a result, and the stamp says so.
+        hashes: A corpus-wide :func:`hash_corpus`, when ``corpus`` is one batch
+            of a larger corpus. Without it the batch is hashed on its own and
+            a file duplicated only outside the batch is not recognised.
 
     Returns:
         The file rows, mention rows, declarations, environment signals and
@@ -192,20 +261,12 @@ def build(
     with stage("build", logger) as stats:
         # Pass 1: hash everything, so cross-deposit duplicates are detectable.
         # This needs the whole corpus before any verdict can be given, which is
-        # the one genuine barrier in the pipeline.
-        hashes: dict[Path, str] = {}
-        for item in corpus:
-            try:
-                hashes[item.path] = sha256_of(item.path)
-            except OSError:
-                continue
-        shared = frozenset(
-            cross_dataset_hashes(
-                (item.dataset_doi, hashes[item.path])
-                for item in corpus
-                if item.path in hashes
-            )
-        )
+        # the one genuine barrier in the pipeline -- and the reason a batched
+        # caller passes `hashes` in rather than letting each batch compute its
+        # own.
+        corpus_hashes = hashes if hashes is not None else hash_corpus(corpus)
+        hashes_by_path = corpus_hashes.by_path
+        shared = corpus_hashes.shared
         stats.incr("shared_hashes", len(shared))
         logger.info(
             "cross-deposit duplicates identified",
@@ -238,7 +299,7 @@ def build(
         for item in corpus:
             if item.path.suffix.lower() not in {".do", ".ado"}:
                 continue
-            digest = hashes.get(item.path)
+            digest = hashes_by_path.get(item.path)
             if digest is None:
                 continue
             if classify(
@@ -266,7 +327,7 @@ def build(
 
         for item in corpus:
             result.counts["files_total"] += 1
-            digest = hashes.get(item.path)
+            digest = hashes_by_path.get(item.path)
             if digest is None:
                 result.counts["files_unreadable"] += 1
                 continue
