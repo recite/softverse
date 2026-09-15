@@ -125,7 +125,7 @@ def batches(corpus: list[CorpusFile], size: int) -> Iterator[list[CorpusFile]]:
         size: Deposits per batch.
 
     Yields:
-        The files of the next ``size`` deposits, in corpus order.
+        list[CorpusFile]: The files of the next ``size`` deposits, in order.
     """
     by_deposit: dict[str, list[CorpusFile]] = {}
     for item in corpus:
