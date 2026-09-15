@@ -35,6 +35,18 @@ wheels = [
 ]
 
 [[package]]
+name = "anybadge"
+version = "1.16.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/64/08/ddad0d5398d0961d506b0489e737a06e29a963eff0f2f0a2bb2cfb36dd1f/anybadge-1.16.0.tar.gz", hash = "sha256:f4e95eca834482f9932f9020ac2fe04a5ca863728b446324a8d35b1e67faab71", size = 34616, upload-time = "2025-01-11T23:03:27.966Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/7d/01b2ac2fec808dea667b8678938156c3910219f2c45ee2e0b01e72786d72/anybadge-1.16.0-py3-none-any.whl", hash = "sha256:bc9ef2e20d875ee09237a15250a17b6fd7e67276f083d32a297963cdec179918", size = 28412, upload-time = "2025-01-11T23:03:24.857Z" },
+]
+
+[[package]]
 name = "anyio"
 version = "4.14.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2220,6 +2232,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "anybadge" },
     { name = "furo" },
     { name = "matplotlib" },
     { name = "myst-parser" },
@@ -2235,6 +2248,7 @@ dev = [
     { name = "twine" },
 ]
 docs = [
+    { name = "anybadge" },
     { name = "furo" },
     { name = "myst-parser" },
     { name = "py-canon" },
@@ -2268,6 +2282,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "anybadge", specifier = ">=1.16.0" },
     { name = "furo" },
     { name = "matplotlib", specifier = ">=3.11.1" },
     { name = "myst-parser" },
@@ -2283,6 +2298,7 @@ dev = [
     { name = "twine", specifier = ">=7.0.0" },
 ]
 docs = [
+    { name = "anybadge", specifier = ">=1.16.0" },
     { name = "furo" },
     { name = "myst-parser" },
     { name = "py-canon", git = "https://github.com/gojiplus/py-canon?rev=v1" },

@@ -32,6 +32,7 @@ import shutil
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
+import duckdb
 import pandas as pd
 
 from softverse.config import PATHS
@@ -217,6 +218,84 @@ def _resource(path: Path) -> dict:
     }
 
 
+#: What a package's page and badge are built from, so the site builds from
+#: tracked files in CI. Same rule as the headline count: resolved to a known
+#: package, and not an install or an inquiry.
+_USE = """
+    resolution IN ('known_current', 'known_archived')
+    AND construct NOT IN ('install', 'shell_install', 'stata_install', 'stata_which')
+    AND resolved_package IS NOT NULL
+"""
+
+
+def write_package_tables() -> None:
+    """Write the per-package deposit list and version summary.
+
+    `package_deposits.parquet` has one row per (language, package, deposit),
+    which is what lets a package page list the papers that use it.
+    `package_versions.csv` counts deposits per stated version, from manifests
+    and from install calls, so a maintainer can see which releases published
+    research pinned.
+    """
+    con = duckdb.connect()
+    mentions = f"'{TALLY / 'mentions.parquet'}'"
+    con.execute(
+        f"""
+        COPY (
+            SELECT language, resolved_package AS package, any_value(ecosystem)
+                   AS ecosystem, dataset_doi, any_value(source) AS source,
+                   any_value(collection_id) AS collection_id,
+                   any_value(deposit_year) AS year
+            FROM {mentions} WHERE {_USE}
+            GROUP BY language, resolved_package, dataset_doi
+            ORDER BY language, package, year, dataset_doi
+        ) TO '{OUT / "package_deposits.parquet"}' (FORMAT PARQUET, COMPRESSION ZSTD)
+        """
+    )
+    rows = con.execute(
+        f"""
+        SELECT ecosystem, package, version, version_source,
+               count(DISTINCT dataset_doi) AS n_deposits
+        FROM (
+            SELECT ecosystem, package, version_constraint AS version,
+                   manifest_kind AS version_source, dataset_doi
+            FROM '{TALLY / "declared_dependencies.parquet"}'
+            WHERE version_constraint IS NOT NULL
+            UNION ALL
+            SELECT ecosystem, coalesce(resolved_package, raw_name), pinned_version,
+                   construct, dataset_doi
+            FROM {mentions} WHERE pinned_version IS NOT NULL
+        )
+        GROUP BY ALL ORDER BY ecosystem, package, n_deposits DESC
+        """
+    ).df()
+    rows.to_csv(OUT / "package_versions.csv", index=False, lineterminator="\n")
+
+
+def _package_deposits_agree() -> list[str]:
+    """The deposit list behind every page must count to the published tally.
+
+    Returns:
+        One message per disagreeing (language, package).
+    """
+    con = duckdb.connect()
+    (n,) = con.execute(
+        f"""
+        SELECT count(*) FROM (
+            SELECT language, package, count(*) AS n
+            FROM '{OUT / "package_deposits.parquet"}' GROUP BY 1, 2
+        ) d FULL JOIN read_csv_auto('{OUT / "usage_by_package.csv"}') u
+          USING (language, package)
+        WHERE d.n IS DISTINCT FROM u.n_deposits
+        """
+    ).fetchone()
+    return (
+        [f"package_deposits disagrees with usage_by_package on {n} packages"]
+        if n
+        else []
+    )
+
+
 def summarize() -> dict:
     """Corpus counts, computed here so nothing downstream opens the Parquet.
 
@@ -307,6 +386,7 @@ def main() -> int:
 
     summary = summarize()
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
+    write_package_tables()
 
     unknown = pd.read_csv(OUT / "unknown_names.csv")
     grc1leg = unknown.loc[unknown["name"] == "grc1leg", "n_mentions"]
@@ -421,6 +501,7 @@ def report(summary: dict) -> int:
         problems.append("grc1leg resolved to a package; it is in no registry")
 
     problems.extend(_denominators_recomputed(summary))
+    problems.extend(_package_deposits_agree())
 
     # Pooled counts must reconcile with the split they ship beside them. A
     # pooled table that disagrees with its own breakdown is worse than no

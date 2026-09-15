@@ -24,7 +24,9 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from typing import TYPE_CHECKING
+from urllib.parse import quote
 
 from softverse.config import PATHS
 from softverse.logging_setup import get_logger, setup_logging
@@ -55,6 +57,37 @@ ECOSYSTEM_LABEL = {
     "pypi": "PyPI",
     "julia_general": "Julia General",
 }
+
+
+#: Registry families as they appear in a package page's URL. An archived CRAN
+#: package keeps its CRAN address: it is the same package, removed.
+ECOSYSTEM_SLUG = {
+    "cran": "cran",
+    "cran_archive": "cran",
+    "bioconductor": "bioconductor",
+    "ssc": "ssc",
+    "pypi": "pypi",
+    "julia_general": "julia",
+}
+
+
+def slug(ecosystem: str, package: str) -> tuple[str, str]:
+    """The (ecosystem, name) path segments of a package's page and badge.
+
+    PyPI names are normalized as PEP 503 does, because `scikit_learn` and
+    `Scikit-Learn` are the same distribution. CRAN names keep their case,
+    because CRAN treats `Matrix` and `matrix` as different packages.
+
+    Args:
+        ecosystem: The registry the package resolved to.
+        package: The package name as counted.
+
+    Returns:
+        URL-safe path segments.
+    """
+    family = ECOSYSTEM_SLUG.get(ecosystem, ecosystem)
+    name = re.sub(r"[-_.]+", "-", package).lower() if family == "pypi" else package
+    return family, quote(name, safe="._-")
 
 
 #: Reader-facing names for the two repositories.
@@ -98,6 +131,7 @@ def rows() -> list[dict]:
                 # a division by nothing rather than a zero.
                 "s": round(100 * deposits / at_risk, 1) if at_risk else None,
                 "m": int(row["n_mentions"]),
+                "u": "/".join(slug(row["ecosystem"], row["package"])),
                 "src": {
                     SOURCE_LABEL.get(s, s): int(row.get(f"n_deposits_{s}") or 0)
                     for s in sources
@@ -326,7 +360,7 @@ function render() {
   const shown = rows.slice(0, 500);
   body.innerHTML = shown.map(r => `
     <tr>
-      <td><span class="pkg">${esc(r.p)}</span></td>
+      <td><a class="pkg" href="../p/${r.u}/">${esc(r.p)}</a></td>
       <td class="lang">${esc(r.l)}</td>
       <td class="num">${r.d.toLocaleString()} <span class="lang">of ${r.a.toLocaleString()}</span></td>
       <td class="num">${share(r)}</td>

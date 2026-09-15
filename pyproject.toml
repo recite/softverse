@@ -87,6 +87,7 @@ docs = [
     "myst-parser",
     "sphinx-copybutton",
     "py-canon @ git+https://github.com/gojiplus/py-canon@v1",
+    "anybadge>=1.16.0",
 ]
 
 
