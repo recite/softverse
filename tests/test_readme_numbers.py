@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
-from release_tally import README, README_END, README_START, readme_numbers, write_readme
+from release_tally import README_END, README_START, readme_numbers, write_readme
 
-from softverse.config import PATHS
+# The checkout, not `PATHS.root`: the wheel job installs the package elsewhere
+# and runs these tests against the repository's files.
+REPO = Path(__file__).resolve().parent.parent
 
 
 def test_readme_block_matches_the_shipped_summary():
-    summary = json.loads((PATHS.root / "data" / "tally" / "summary.json").read_text())
-    text = README.read_text(encoding="utf-8")
+    summary = json.loads((REPO / "data" / "tally" / "summary.json").read_text())
+    text = (REPO / "README.md").read_text(encoding="utf-8")
     block = text[text.index(README_START) : text.index(README_END) + len(README_END)]
     assert block == readme_numbers(summary)
 
