@@ -44,6 +44,8 @@ _ALIASES = {
     "mit-license": "MIT",
     "apache-2.0": "Apache-2.0",
     "isc": "ISC",
+    "isc-license": "ISC",
+    "apache2.0": "Apache-2.0",
     "unlicense": "Unlicense",
     "mpl-2.0": "MPL-2.0",
     "odc-by-1.0": "ODC-By-1.0",

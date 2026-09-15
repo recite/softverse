@@ -371,7 +371,154 @@ def build(inputs: Inputs, out: Path) -> dict[str, int]:
         for path in sorted(out.glob("*.parquet"))
     }
     counts["contents"] = n_contents
+    (out / "README.md").write_text(dataset_card(out, counts), encoding="utf-8")
     return counts
+
+
+#: Tables in the order a reader meets them, with what one row is.
+CARD_TABLES = {
+    "deposits": "one replication deposit: DOI, journal, year, license, gaps",
+    "files": "one file in a deposit: path, language, sha256, packages it loads",
+    "contents": "one distinct file text, keyed by sha256 (open licenses only)",
+    "file_packages": "one package a file references, with functions and pins",
+    "mentions": "one reference in code: construct, line, resolution",
+    "package_versions": "one stated version: manifest or install call",
+    "environment": "one R/Python/Stata/Julia version or OS a deposit states",
+}
+
+
+def dataset_card(out: Path, counts: dict[str, int]) -> str:
+    """The Hugging Face dataset card, every number read from the tables.
+
+    Args:
+        out: The release directory, already written.
+        counts: Row counts per table, from :func:`build`.
+
+    Returns:
+        The card's Markdown, with YAML front matter defining one config per
+        table.
+    """
+    con = duckdb.connect()
+
+    def rows(query: str) -> list[tuple]:
+        return con.execute(query).fetchall()
+
+    deposits = f"'{out / 'deposits.parquet'}'"
+    files = f"'{out / 'files.parquet'}'"
+    tallies = sorted(p.stem for p in out.glob("tally_*.parquet"))
+    configs = [*CARD_TABLES, *tallies]
+    yaml = [
+        "---",
+        "pretty_name: Softverse",
+        "license: other",
+        "license_name: mixed",
+        "tags:",
+        "- tabular",
+        "- code",
+        "configs:",
+    ]
+    for name in configs:
+        path = "contents/*.parquet" if name == "contents" else f"{name}.parquet"
+        yaml += [f"- config_name: {name}", f'  data_files: "{path}"']
+        if name == "deposits":
+            yaml.append("  default: true")
+    yaml.append("---")
+
+    by_source = rows(
+        f"SELECT source, count(*), count(*) FILTER (WHERE n_files_analyzable > 0), "
+        f"count(*) FILTER (WHERE content_redistributable) FROM {deposits} "
+        "GROUP BY 1 ORDER BY 1"
+    )
+    licenses = rows(
+        f"SELECT license_id, content_redistributable, count(*) FROM {deposits} "
+        "GROUP BY 1, 2 ORDER BY 3 DESC"
+    )
+    (archive_only,) = rows(
+        f"SELECT count(*) FROM {deposits} "
+        "WHERE n_archives_skipped > 0 AND n_files_analyzable = 0"
+    )[0]
+    states = rows(
+        f"SELECT collection_state, count(*) FROM {deposits} "
+        "WHERE collection_state NOT IN ('complete', 'no_candidate_files') "
+        "GROUP BY 1 ORDER BY 2 DESC"
+    )
+    (too_large,) = rows(f"SELECT count(*) FROM {files} WHERE too_large")[0]
+    top = {
+        name.removeprefix("tally_"): rows(
+            f"SELECT package, n_deposits FROM '{out / (name + '.parquet')}' "
+            "ORDER BY n_deposits DESC LIMIT 5"
+        )
+        for name in tallies
+        if not name.startswith("tally_by_")
+    }
+
+    def cell(value: object) -> str:
+        if isinstance(value, bool):
+            return "yes" if value else "no"
+        if isinstance(value, int):
+            return f"{value:,}"
+        return str(value)
+
+    def table(header: list[str], body: list[tuple]) -> str:
+        lines = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+        lines += ["| " + " | ".join(cell(v) for v in r) + " |" for r in body]
+        return "\n".join(lines)
+
+    body = f"""
+# Softverse: software referenced in social science replication code
+
+Which R, Python and Stata packages the code in published replication deposits
+loads, at economics and political science journals whose data-and-code policy
+an editor verifies. One row per deposit, file, file text, package reference,
+stated version and environment signal, plus per-language tallies.
+
+**A reference is not a run.** A row says deposited code names a package: in
+`library()`, an import, a Stata command. It does not say the code executed, and
+code an author kept out of the deposit cannot be seen.
+
+## Tables
+
+{table(["config", "rows", "one row is"], [(n, counts.get(n, 0), CARD_TABLES[n]) for n in CARD_TABLES])}
+
+Per-language tallies (`{"`, `".join(tallies)}`) give, per package, the deposits
+that use it and the denominator: deposits with analyzable code in that language.
+
+## Coverage
+
+{table(["source", "deposits", "with analyzable code", "text published"], by_source)}
+
+Most-used packages:
+
+{chr(10).join(f"- **{lang}**: " + ", ".join(f"{p} ({n:,})" for p, n in pkgs) for lang, pkgs in top.items())}
+
+## Licenses
+
+File text (`contents`) and code snippets (`mentions.snippet`) are published only
+for deposits whose license allows redistribution. Everything derived -- which
+packages a file loads, at which version -- is published for every deposit.
+Custom terms of use and unrecognised identifiers are treated as not
+redistributable. Each deposit's own license is in `deposits.license_id`; NC and
+ND licenses are included and flagged there.
+
+{table(["license_id", "text published", "deposits"], licenses)}
+
+## Known gaps
+
+- {archive_only:,} deposits hold code only inside tar, 7z or rar archives too
+  large to download here; their files are not in the corpus.
+- Deposits whose collection did not complete:
+  {", ".join(f"{s} {n:,}" for s, n in states) or "none"}.
+- {too_large:,} files over 1 MB keep their metadata row but not their text.
+- The eight AEA journals, which deposit on openICPSR, are not included.
+- A package vendored into a deposit (an `renv` library, a shipped `.ado`, a
+  CRAN package's source tree) is marked `is_vendor` and not counted as used.
+
+## Source
+
+Built by [softverse](https://github.com/recite/softverse). Package lookup and
+badges: <https://recite.github.io/softverse/>.
+"""
+    return "\n".join(yaml) + "\n" + body.lstrip("\n")
 
 
 def _write_contents(con: duckdb.DuckDBPyConnection, out: Path) -> int:

@@ -25,6 +25,9 @@ from softverse.release.licenses import classify
         ("cc-by-nc-sa-4.0", "CC-BY-NC-SA-4.0"),
         ("bsd-3-clause", "BSD-3-Clause"),
         ("gpl-3.0-or-later", "GPL-3.0-or-later"),
+        # Zenodo identifiers seen in the 2026 collection.
+        ("isc-license", "ISC"),
+        ("apache2.0", "Apache-2.0"),
     ],
 )
 def test_known_licenses_are_redistributable(name, expected):

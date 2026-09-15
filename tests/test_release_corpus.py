@@ -271,3 +271,25 @@ def test_a_release_with_no_contents_is_reported_not_crashed(world):
     shutil.rmtree(out / "contents")
     (out / "contents").mkdir()
     assert "no contents written" in check(inputs, out)
+
+
+def test_the_dataset_card_names_every_table_and_its_counts(world):
+    inputs, out = world
+    counts = build(inputs, out)
+    card = (out / "README.md").read_text()
+    front = card.split("---")[1]
+    for name in (
+        "deposits",
+        "files",
+        "contents",
+        "mentions",
+        "file_packages",
+        "package_versions",
+        "environment",
+        "tally_r",
+    ):
+        assert f"config_name: {name}" in front
+    assert 'data_files: "contents/*.parquet"' in front
+    assert f"| files | {counts['files']:,} |" in card
+    assert "| custom | no | 1 |" in card
+    assert "A reference is not a run." in card
