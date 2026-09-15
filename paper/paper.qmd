@@ -446,15 +446,14 @@ n_renv_unreadable = _renv["n_renv_read_nothing"]
 # tail leans the opposite way to the population it is drawn from.
 n_renv_ours_only = _renv["n_ours_only"]
 n_renv_theirs_only = _renv["n_renv_only"]
-# Most of what renv names and this extractor does not is base R, which the
-# resolver classifies and drops and renv reports like any other package. The
-# same `BASE_R` set the resolver uses, so the two cannot drift apart.
-from softverse.registries.fetch import BASE_R  # noqa: E402
-
-# A lower bound: the artifact records the twenty commonest, so base packages
-# below that cut are not counted here and the true share is higher.
-n_renv_only_base = sum(n for name, n in _renv["top_renv_only"] if name in BASE_R)
-share_renv_only_base = n_renv_only_base / n_renv_theirs_only
+# What the aligned comparison set aside before scoring, and the score without
+# setting it aside, so the adjustment is on the page rather than trusted.
+_aside = _renv["set_aside"]
+n_renv_aside_base = _aside.get("base_r", 0)
+n_renv_aside_rmarkdown = _aside.get("implicit_rmarkdown", 0)
+n_renv_aside_outside = _aside.get("outside_analysis_files", 0)
+renv_raw_mean_jaccard = _renv["raw"]["mean_jaccard"]
+renv_raw_pooled_jaccard = _renv["raw"]["pooled_jaccard"]
 
 # Named in Limitations: Stata keywords reaching command position. Computed,
 # so that closing one of the gaps shows up here rather than leaving a stale
@@ -1067,18 +1066,20 @@ read, and scoring them would measure a decoding difference as a
 disagreement. This is the treatment the oracle already gives files R cannot
 parse.
 
-Where the two disagree, most of the gap is a difference in what counts as a
-package, not a miss. renv names `{python} f"{n_renv_theirs_only:,}"` packages
-this extractor does not, and at least
-`{python} f"{share_renv_only_base:.0%}"` of those are base R: `grid`,
-`parallel`, `stats`, packages that ship with the language, which the resolver
-classifies as base and drops and renv reports like any other dependency. Most
-of the remainder is `rmarkdown` and `knitr`, which renv infers from a `.Rmd`
-being present, not from a line of code loading them. In the other direction
-this extractor names `{python} f"{n_renv_ours_only:,}"` renv does not, spread
-thinly over ordinary third-party packages instead of concentrated in a
-category. The agreement figures above are therefore conservative: they charge
-this extractor for a filter it applies on purpose.
+Those figures compare like with like. Run over a whole deposit, renv reports
+three kinds of name this extractor leaves out on purpose, and the comparison
+sets them aside before scoring, counting each as a package in a deposit:
+`{python} f"{n_renv_aside_base:,}"` base R packages such as `grid`, `parallel`
+and `stats`, which ship with the language and which the resolver classifies
+as base; `{python} f"{n_renv_aside_rmarkdown:,}"` cases of `rmarkdown`, which
+renv adds for any `.Rmd` file even when the file loads nothing; and
+`{python} f"{n_renv_aside_outside:,}"` names found only in files outside the
+analysis set, such as a package library shipped inside the deposit. Scored
+over every file with nothing set aside, the mean Jaccard is
+`{python} f"{renv_raw_mean_jaccard:.2f}"` and the pooled Jaccard
+`{python} f"{renv_raw_pooled_jaccard:.2f}"`. After alignment, renv names
+`{python} f"{n_renv_theirs_only:,}"` packages this extractor does not, and
+this extractor names `{python} f"{n_renv_ours_only:,}"` that renv does not.
 
 This is convergent validity, and it is weaker than accuracy. `renv` performs
 the same kind of static scan over the same files and shares the same blind
