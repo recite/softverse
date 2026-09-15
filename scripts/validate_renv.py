@@ -84,6 +84,10 @@ OUTSIDE, BASE, IMPLICIT = "outside_analysis_files", "base_r", "implicit_rmarkdow
 def renv_packages(script: Path, directory: Path) -> list[tuple[str, str]] | None:
     """`(package, source file)` pairs renv finds under ``directory``.
 
+    Args:
+        script: The R script that runs `renv::dependencies`.
+        directory: The deposit's directory.
+
     Returns:
         The pairs, or None if renv failed.
     """

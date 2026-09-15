@@ -12,11 +12,11 @@ def test_aligned_names_match_once_the_by_design_differences_are_out():
         ("fixest", "/d/main.R"),
         ("grid", "/d/main.R"),
         ("rmarkdown", "/d/report.Rmd"),
-        ("AER", "/d/.checkpoint/lib/AER/demo/a.R"),
+        ("lmtest", "/d/.checkpoint/lib/lmtest/demo/a.R"),
         ("ggplot2", "/d/report.Rmd"),
     ]
     mine, theirs, set_aside = align(
-        ours_all={"fixest", "ggplot2", "AER"},
+        ours_all={"fixest", "ggplot2", "lmtest"},
         ours_analysis={"fixest", "ggplot2"},
         renv=renv,
         analysis_files=ANALYSIS,

@@ -11,6 +11,8 @@ import pandas as pd
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+# The site scripts need the docs group; the wheel job installs only the package.
+pytest.importorskip("anybadge")
 import build_packages
 from build_lookup import slug
 
