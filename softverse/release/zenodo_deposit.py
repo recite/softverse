@@ -13,6 +13,7 @@ neither is true.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -73,6 +74,14 @@ def show(deposit: dict) -> None:
     print(f"  DOI     {deposit['metadata'].get('prereserve_doi', {}).get('doi', '-')}")
 
 
+def _md5(path: Path) -> str:
+    digest = hashlib.md5(usedforsecurity=False)
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def _remote_files(client: httpx.Client, token: str, deposit_id: int) -> list[dict]:
     return client.get(
         f"{API}/deposit/depositions/{deposit_id}/files",
@@ -102,23 +111,56 @@ def sync(client: httpx.Client, token: str, spec: Deposit) -> dict:
         deposit = updated.json()
         print(f"reusing draft {deposit['id']}")
 
+    return replace_files(client, token, deposit, spec.files())
+
+
+def replace_files(
+    client: httpx.Client, token: str, deposit: dict, paths: list[Path]
+) -> dict:
+    """Make the draft's files exactly ``paths``: upload each, remove the rest.
+
+    Replace rather than skip, because the reason to re-run is that the bundle
+    changed. Remove what the bundle no longer has, because a new version's
+    draft starts with every file of the version before it, and a table that
+    was renamed or dropped would otherwise ship again beside its replacement.
+
+    Args:
+        client: The HTTP client.
+        token: The Zenodo token.
+        deposit: The draft, as the API returned it.
+        paths: The files the draft should hold.
+
+    Returns:
+        The draft after the change.
+    """
+    local = {path.name: _md5(path) for path in paths}
+    unchanged: set[str] = set()
+    for remote in _remote_files(client, token, deposit["id"]):
+        name = remote["filename"]
+        # Zenodo reports an MD5 per file. A file whose bytes have not changed
+        # stays, which on a slow link is the difference between an iteration
+        # and an afternoon; anything else goes, because Zenodo will not
+        # overwrite a file of the same name in place.
+        if local.get(name) == remote.get("checksum"):
+            unchanged.add(name)
+            continue
+        client.delete(
+            f"{API}/deposit/depositions/{deposit['id']}/files/{remote['id']}",
+            headers=auth(token),
+        ).raise_for_status()
+        if name not in local:
+            print(f"  removed  {name}")
     bucket = deposit["links"]["bucket"]
-    for path in spec.files():
-        # Replace rather than skip: the reason to re-run is that the bundle
-        # changed, and a stale file left on the draft would ship with it.
-        for remote in _remote_files(client, token, deposit["id"]):
-            if remote["filename"] == path.name:
-                client.delete(
-                    f"{API}/deposit/depositions/{deposit['id']}/files/{remote['id']}",
-                    headers=auth(token),
-                )
+    for path in paths:
+        if path.name in unchanged:
+            print(f"  kept     {path.name}")
+            continue
         with path.open("rb") as handle:
             put = client.put(
                 f"{bucket}/{path.name}", headers=auth(token), content=handle
             )
         put.raise_for_status()
-        print(f"  uploaded {path.name:<34} {path.stat().st_size:>9,} bytes")
-
+        print(f"  uploaded {path.name:<34} {path.stat().st_size:>12,} bytes")
     return client.get(
         f"{API}/deposit/depositions/{deposit['id']}", headers=auth(token)
     ).json()
