@@ -5,23 +5,23 @@
   "zenodo"
  ],
  "n_deposits": 13985,
- "n_deposits_analyzable": 13247,
- "n_files_analyzable": 159599,
- "n_packages": 4642,
- "n_unresolved_names": 12418,
+ "n_deposits_analyzable": 13245,
+ "n_files_analyzable": 146483,
+ "n_packages": 4447,
+ "n_unresolved_names": 12359,
  "n_collections": 75,
  "deposits_by_source": {
   "zenodo": 1543,
   "dataverse": 12442
  },
  "deposits_analyzable_by_source": {
-  "dataverse": 11889,
+  "dataverse": 11887,
   "zenodo": 1358
  },
  "deposits_by_language": {
   "stata": 8942,
-  "r": 6473,
-  "python": 911
+  "r": 6471,
+  "python": 909
  },
  "environment_coverage": {
   "julia_version": {
@@ -29,20 +29,20 @@
    "deposits_eligible": 322
   },
   "matlab_version": {
-   "deposits_carrying": 3,
+   "deposits_carrying": 0,
    "deposits_eligible": 322
   },
   "os": {
    "deposits_carrying": 92,
-   "deposits_eligible": 6437
+   "deposits_eligible": 6434
   },
   "python_version": {
    "deposits_carrying": 300,
-   "deposits_eligible": 919
+   "deposits_eligible": 917
   },
   "r_version": {
    "deposits_carrying": 183,
-   "deposits_eligible": 6630
+   "deposits_eligible": 6628
   },
   "stata_version": {
    "deposits_carrying": 1194,

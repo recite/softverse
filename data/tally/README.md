@@ -4,7 +4,7 @@ How often each R, Python and Stata package is loaded by the code deposited
 with published papers, at journals whose data-and-code policy the Social
 Science Data Editors record as *actively verified*.
 
-**4,642 packages · 13,247 deposits with analyzable
+**4,447 packages · 13,245 deposits with analyzable
 code · 13,985 deposits collected · built 2026-09-15**
 
 A count here is the number of deposits whose code loads the package. Adding
@@ -22,8 +22,8 @@ collections are mostly political science.
 | repository | deposits | with analyzable code |
 |---|---:|---:|
 | Zenodo (economics) | 1,543 | 1,358 |
-| Harvard Dataverse (political science) | 12,442 | 11,889 |
-| **total** | **13,985** | **13,247** |
+| Harvard Dataverse (political science) | 12,442 | 11,887 |
+| **total** | **13,985** | **13,245** |
 
 Counts pool the two. `usage_by_package.csv` also carries the split, in
 `n_deposits_zenodo` and `n_deposits_dataverse`, because the two are
@@ -40,16 +40,16 @@ columns keep visible.
 
 | file | rows | contents |
 |---|---:|---|
-| `usage_by_package.csv` | 4,642 | per-package deposit and call counts, pooled and split |
-| `usage_by_package_year.csv` | 14,661 | the same by deposit year |
-| `usage_by_collection.csv` | 22,894 | the same per journal or community |
-| `usage_by_function.csv` | 25,161 | package → function, where the source names one |
-| `unknown_names.csv` | 12,418 | names called in code that resolve to no registry |
+| `usage_by_package.csv` | 4,447 | per-package deposit and call counts, pooled and split |
+| `usage_by_package_year.csv` | 14,154 | the same by deposit year |
+| `usage_by_collection.csv` | 22,203 | the same per journal or community |
+| `usage_by_function.csv` | 21,849 | package → function, where the source names one |
+| `unknown_names.csv` | 12,359 | names called in code that resolve to no registry |
 | `language_presence.csv` | 24 | deposits containing each language, per repository |
-| `mentions.parquet` | 14,415,577 | every mention: package, function, file, line, snippet |
+| `mentions.parquet` | 14,381,788 | every mention: package, function, file, line, snippet |
 | `files.parquet` | 447,289 | the provenance spine every mention joins to |
 | `declared_dependencies.parquet` | 33,848 | what manifests declare: shipped, locked or asked for |
-| `environment_signals.parquet` | 19,997 | R, Python and Stata versions, and the OS, where a file says |
+| `environment_signals.parquet` | 19,983 | R, Python and Stata versions, and the OS, where a file says |
 | `environment_coverage.json` | | deposits stating each signal, over deposits that could |
 | `summary.json` | | corpus counts the tables are shares of |
 

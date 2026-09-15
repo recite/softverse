@@ -539,8 +539,7 @@ def report(summary: dict) -> int:
         "matches the tally, "
         "grc1leg is\nunresolved, every denominator matches a recomputation from "
         "the Parquet, the\npooled counts reconcile with their per-source split, "
-        "and the ranking survives\nrestriction to the file types both corpora "
-        "collected"
+        "and every package's\ndeposit list counts to its tally"
     )
     return 0
 

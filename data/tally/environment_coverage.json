@@ -4,20 +4,20 @@
   "deposits_eligible": 322
  },
  "matlab_version": {
-  "deposits_carrying": 3,
+  "deposits_carrying": 0,
   "deposits_eligible": 322
  },
  "os": {
   "deposits_carrying": 92,
-  "deposits_eligible": 6437
+  "deposits_eligible": 6434
  },
  "python_version": {
   "deposits_carrying": 300,
-  "deposits_eligible": 919
+  "deposits_eligible": 917
  },
  "r_version": {
   "deposits_carrying": 183,
-  "deposits_eligible": 6630
+  "deposits_eligible": 6628
  },
  "stata_version": {
   "deposits_carrying": 1194,

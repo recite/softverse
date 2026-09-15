@@ -107,7 +107,7 @@ from,stata,98
 black,stata,98
 _cons,stata,97
 grinter,stata,96
-austin,r,96
+austin,r,95
 legend,stata,94
 p2col,stata,94
 funcs_vcov_ustats,python,93
@@ -208,7 +208,6 @@ probW0,stata,52
 regdyad2,stata,52
 stepdown,stata,52
 year,stata,51
-gurobi,r,51
 psacalc2,stata,51
 hline,stata,51
 report_funcs,python,51
@@ -230,6 +229,7 @@ OptStab_FlexiblePrices,python,47
 err,stata,47
 dursel,stata,47
 SCEconomy,python,47
+gurobi,r,46
 ss_model,python,46
 stat_N,stata,46
 numup,stata,46
@@ -274,7 +274,6 @@ ivqregress,stata,40
 icbinitpcyrs,stata,40
 regression_functions,python,40
 PiecewiseLinearTax,python,40
-foo,r,39
 pscore,stata,39
 _simp,stata,39
 makex,stata,39
@@ -1085,7 +1084,6 @@ miest,stata,11
 phone,stata,11
 nextday_corr_dnp_2,stata,11
 scheme_tufte,stata,10
-unicode_data,python,10
 npesq,stata,10
 v202,stata,10
 v072,stata,10
@@ -1094,7 +1092,6 @@ n_p,stata,10
 V2007,stata,10
 clenshaw_curtis_integ,python,10
 out_of_LF,stata,10
-utility123456,r,10
 table_search,python,10
 bunch_count,stata,10
 firm_problems,python,10
@@ -1215,7 +1212,6 @@ leverage_Sim,stata,9
 MEAN_DEPVAR,stata,9
 N_l,stata,9
 p1,stata,9
-std,rmarkdown,9
 sumindex,stata,9
 health_reform_opn,stata,9
 merge_utils,python,9
@@ -1319,8 +1315,6 @@ post_CL_shortterm,stata,8
 post_CL_broad,stata,8
 post_CL_DMA,stata,8
 QUADRO,stata,8
-pkgA,r,8
-a,r,8
 a,stata,8
 _prefix_display,stata,8
 sufficient_statistics,notebook,8
@@ -1502,8 +1496,6 @@ SCEconomy_sales,python,8
 tt,stata,8
 get,stata,7
 post_CL_longterm,stata,7
-lme4.0,r,7
-bar,r,7
 fapara,stata,7
 cleanplots,stata,7
 aciccomp2016,r,7
@@ -1602,7 +1594,6 @@ campvideo,python,7
 ritest,r,7
 transport,stata,7
 condivreg,stata,7
-testRcppInterfaceUser,r,7
 equivtest,r,7
 ggflags,r,7
 skfda,python,7
@@ -1682,7 +1673,6 @@ V2008,stata,6
 V20081,stata,6
 multiple_factor,python,6
 knitroR,r,6
-pkgB,r,6
 desctable,stata,6
 FunctionsPython,python,6
 mergemodels,stata,6
@@ -2447,9 +2437,6 @@ v224,stata,4
 V20082,stata,4
 nbpmatching,python,4
 KnitroR,r,4
-css,r,4
-path_names,python,4
-test123,r,4
 stfill,stata,4
 _stddiff,stata,4
 Column,stata,4
@@ -2546,7 +2533,6 @@ mainpartyINC,stata,4
 cf_stats,python,4
 knitroWrapper,python,4
 lpinfer,r,4
-slartibartfast,rmarkdown,4
 AggFiscalModel,python,4
 aggregate_periods,stata,4
 products_model,python,4
@@ -2674,7 +2660,6 @@ hypothesis_hyperparams,python,4
 z_2013,stata,4
 _nobs,stata,4
 __constants__,python,4
-testRcppInterfaceExporter,r,4
 agele19_pop,stata,4
 probd_hat0,stata,4
 probd_hat7,stata,4
@@ -3054,8 +3039,6 @@ remoespsub,stata,3
 remoncdsub,stata,3
 remoauxsub,stata,3
 remocomsub,stata,3
-writable,rmarkdown,3
-cpp11test,r,3
 bysmeanw,stata,3
 omitted,stata,3
 binscatter3,stata,3
@@ -3240,7 +3223,6 @@ pval_graphs,stata,3
 __paths__,python,3
 __functions__,python,3
 RevoScaleR,r,3
-quanteda.corpora,rmarkdown,3
 shr_b2c,stata,3
 interplot.medline,rmarkdown,3
 is_post1500MaxCal_20km,stata,3
@@ -3577,7 +3559,6 @@ equity_issue_at,stata,3
 sd_cf7_at,stata,3
 allies,stata,3
 majpower,stata,3
-foo1,r,3
 countfit,stata,3
 _testinternalcapi,python,3
 tc.ergmterms,r,3
@@ -3774,13 +3755,6 @@ PUBINS,stata,2
 REFILLS,stata,2
 generate_graph,python,2
 mlu,stata,2
-rcbc,r,2
-..notexisting..,r,2
-dplyrr,r,2
-baz,r,2
-some.very.long,r,2
-other,r,2
-ns,r,2
 onlineldavb,python,2
 gr0002_3,stata,2
 dm79,stata,2
@@ -4007,7 +3981,6 @@ rdomval,stata,2
 remhprdi,stata,2
 remhadse,stata,2
 remoadsesub,stata,2
-YourPackage,rmarkdown,2
 npdemand,python,2
 LandUseR,r,2
 LandUseR,rmarkdown,2
@@ -4171,12 +4144,6 @@ fullyear_AITCGPmeandaysworked16,stata,2
 ncand,stata,2
 candshare,stata,2
 insamp,stata,2
-templib,r,2
-foo_0.0.1.tar.gz,r,2
-pkg,rmarkdown,2
-PKGNAME,rmarkdown,2
-myPackage,rmarkdown,2
-123__slartibartfast__321,r,2
 intermediates,notebook,2
 hank_replication,python,2
 Output_Results,python,2
@@ -4318,7 +4285,6 @@ test_text,python,2
 test_search,python,2
 test_vector,python,2
 test_graph,python,2
-Rcampdf,r,2
 TClndens_emp_b1950,stata,2
 TClndens1_manuf_b1950,stata,2
 TClndens1_agr_b1950,stata,2
@@ -4345,7 +4311,6 @@ mp_winter1,stata,2
 mt_winter1,stata,2
 npff_county_year1,stata,2
 np_hpot,stata,2
-sigma,rmarkdown,2
 newlocation,stata,2
 neworg,stata,2
 newown,stata,2
@@ -4809,7 +4774,6 @@ e_prop_mb,stata,2
 RES450,r,2
 cpi,stata,2
 nicelylabelleddummies,stata,2
-quanteda.dictionaries,rmarkdown,2
 Replay,stata,2
 ln_ruggedness,stata,2
 rainsd,stata,2
@@ -5099,7 +5063,6 @@ high_schools,python,2
 class_ranks,python,2
 update_and_merge,python,2
 tmp_joblib_,python,2
-oldtmaptools,rmarkdown,2
 Mayors,stata,2
 Politically,stata,2
 restrictiveness_fast,notebook,2
@@ -5480,8 +5443,6 @@ SegMethods,python,2
 xtitle,stata,2
 woman,stata,2
 lncapsq,stata,2
-cpp11test,rmarkdown,2
-foo2,r,2
 run_models_hr,python,2
 mc_simulations,python,2
 generate_results_MC,python,2
@@ -5975,7 +5936,6 @@ data_manager,python,2
 c1mincode,stata,2
 inglehart_pop,stata,2
 event,stata,2
-treat,rmarkdown,1
 get_data,python,1
 models_run,python,1
 models_estimate,python,1
@@ -6034,20 +5994,6 @@ tuition_08_imp1,stata,1
 log_tuition,stata,1
 ename,stata,1
 reshanpe,stata,1
-R6testA,r,1
-analyze_binomial_benchmark,python,1
-analyze_gaussian_benchmark,python,1
-analyze_binomial_two_class_benchmark,python,1
-pkgconfigtest2,r,1
-pkgconfigtest1,r,1
-pkgC,r,1
-my-awesome-group,r,1
-test-pkg,r,1
-noremotes,r,1
-42xxx,r,1
-submodule,r,1
-rlanglibtest,r,1
-pkgapi,r,1
 ./Packages/FRD_1.0.zip,r,1
 ./Packages/RDHonest_0.4.1.tar.gz,r,1
 ivcvscore,stata,1
@@ -7928,8 +7874,6 @@ _Ibefstat_2,stata,1
 sp,stata,1
 scode,stata,1
 slvNSLvn,stata,1
-ZeligFeedback,r,1
-ZeligPanel,r,1
 __________________________________________________,stata,1
 probC_hat0,stata,1
 probC0,stata,1
@@ -8396,9 +8340,6 @@ analysis_tract,stata,1
 mn96_tariff,stata,1
 mapReduce_1.2.6.tar.gz,r,1
 converse,stata,1
-revdepcheck,r,1
-openxlsx.testing.files,r,1
-corpus.JSS.papers,rmarkdown,1
 noCONstant,stata,1
 SKew,stata,1
 Small,stata,1

@@ -69,9 +69,13 @@ def renv_packages(script: Path, directory: Path) -> set[str] | None:
     if result.returncode != 0 or not result.stdout.strip():
         return None
     try:
-        return set(json.loads(result.stdout))
+        found = json.loads(result.stdout)
     except json.JSONDecodeError:
         return None
+    # renv reports a dependency it could not name as NA, which arrives as
+    # null. It names no package, so it can be neither agreement nor
+    # disagreement; left in, it crashed the comparison on the 2026 corpus.
+    return {name for name in found if isinstance(name, str)}
 
 
 def jaccard(a: set[str], b: set[str]) -> float:
