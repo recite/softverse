@@ -10,6 +10,7 @@ import csv
 import gzip
 import hashlib
 import json
+import shutil
 
 import duckdb
 import pandas as pd
@@ -92,9 +93,9 @@ def world(tmp_path):
                 "filename": "main.R",
                 "extension": ".r",
                 "language": "r",
-                "size_bytes": len(text),
+                # Left out on purpose: the tally does not record size or
+                # encoding, and a fixture that did hid an empty `contents`.
                 "sha256_local": hashlib.sha256(text).hexdigest(),
-                "encoding": "utf-8",
                 "is_vendored": False,
                 "parse_status": "ok",
                 "n_mentions": 1,
@@ -123,6 +124,23 @@ def world(tmp_path):
                 "registry_lock_id": "test",
             }
         )
+    # A Latin-1 do-file with no mentions, in the open deposit.
+    latin = "* Gräfin Müller\n".encode("latin-1")
+    latin_path = dataverse / "files" / "OPEN01" / "notes.do"
+    latin_path.write_bytes(latin)
+    files.append(
+        {
+            **files[0],
+            "file_uid": "f-latin1",
+            "relative_path": "notes.do",
+            "filename": "notes.do",
+            "extension": ".do",
+            "language": "stata",
+            "sha256_local": hashlib.sha256(latin).hexdigest(),
+            "n_mentions": 0,
+            "local_path": str(latin_path),
+        }
+    )
     tally = tmp_path / "tally"
     write_table(files, "files", tally)
     write_table(mentions, "mentions", tally)
@@ -180,7 +198,19 @@ def test_a_clean_release_passes_every_check(world):
     counts = build(inputs, out)
     assert check(inputs, out) == []
     assert counts["deposits"] == 2
-    assert counts["contents"] == 1, "only the CC0 deposit's text is published"
+    assert counts["contents"] == 2, "only the CC0 deposit's two texts are published"
+    contents = {
+        r[0]: r[1:]
+        for r in _query(
+            f"SELECT content, src_encoding, exact "
+            f"FROM '{out / 'contents' / '*.parquet'}'"
+        )
+    }
+    assert contents["library(fixest)\n"] == ("utf-8", True)
+    assert "* Gräfin Müller\n" in contents
+    assert _query(
+        f"SELECT min(length_bytes), max(length_bytes) FROM '{out / 'files.parquet'}'"
+    )[0] == (16, 20), "sizes come from disk when the tally has none"
 
     deposits = {
         r[0]: r[1:]
@@ -197,7 +227,8 @@ def test_a_clean_release_passes_every_check(world):
     assert snippets == {OPEN: "library(fixest)", CLOSED: None}
 
     assert _query(
-        f"SELECT dataset_doi, packages FROM '{out / 'files.parquet'}' ORDER BY 1"
+        f"SELECT dataset_doi, packages FROM '{out / 'files.parquet'}' "
+        "WHERE path = 'main.R' ORDER BY 1"
     ) == [(OPEN, ["fixest"]), (CLOSED, ["fixest"])]
     assert _query(
         f"SELECT package, version, version_source "
@@ -218,6 +249,7 @@ def test_a_leaked_closed_file_fails_the_check(world):
             "content": closed.decode(),
             "src_encoding": "utf-8",
             "length_bytes": len(closed),
+            "exact": True,
         }
     )
     pq.write_table(pq.read_table(shard).from_pylist(table), shard)
@@ -231,3 +263,11 @@ def test_a_wrong_tally_fails_the_check(world):
         [{"package": "fixest", "ecosystem": "cran", "n_deposits": 3}]
     ).to_parquet(out / "tally_r.parquet")
     assert any("tally_r" in p for p in check(inputs, out))
+
+
+def test_a_release_with_no_contents_is_reported_not_crashed(world):
+    inputs, out = world
+    build(inputs, out)
+    shutil.rmtree(out / "contents")
+    (out / "contents").mkdir()
+    assert "no contents written" in check(inputs, out)
