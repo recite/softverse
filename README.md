@@ -95,13 +95,13 @@ from pathlib import Path
 from softverse.detect.dispatch import extract_file
 
 result, _decoded, language = extract_file(Path("analysis.do"))
-print(language)                    # Language.STATA
+print(language)  # Language.STATA
 for m in result.mentions:
     print(m.raw_name, m.construct, m.line)
 # use      stata_command 1
 # reghdfe  stata_command 2
 # esttab   stata_command 3
-print(result.report.status)        # ParseStatus.OK
+print(result.report.status)  # ParseStatus.OK
 ```
 
 Resolution needs the registry snapshots, which the quick start below builds:
@@ -111,7 +111,7 @@ from softverse.registries.load import load_registry
 from softverse.model.enums import Language
 
 registry, _shipped = load_registry()
-registry.resolve("esttab", Language.STATA).package    # 'estout'
+registry.resolve("esttab", Language.STATA).package  # 'estout'
 registry.resolve("regress", Language.STATA).resolution  # builtin, so no package
 registry.resolve("grc1leg", Language.STATA).resolution  # unknown: in no registry
 ```
