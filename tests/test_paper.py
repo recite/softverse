@@ -50,8 +50,13 @@ def test_the_paper_types_no_numbers_it_could_compute():
     prose = re.sub(r"^\s*[-*]?\s*\[.*?\]\(.*?\)", "", prose, flags=re.MULTILINE)
 
     #: Facts about the world rather than measurements of our corpus: Zenodo's
-    #: size, a CVE, and another paper's deposit count.
-    allowed = {"7.1", "2,000", "200", "1.0", "4559"}
+    #: size, a CVE, another paper's deposit count, and three figures quoted
+    #: from prior work -- Correia and Seay's 71% of SSC downloads against 93%
+    #: of publication use, and Upton et al.'s 80% of economics deposits.
+    #: Each is attributed in the sentence that carries it, which is the only
+    #: reason it may be typed: nothing here can recompute someone else's
+    #: corpus.
+    allowed = {"7.1", "2,000", "200", "1.0", "4559", "71", "93", "80"}
     #: A four-digit year is a date, never a measurement of this corpus, so it
     #: is admitted by rule rather than by adding each one to the list above as
     #: it appears -- which is how an allowlist quietly becomes a way of

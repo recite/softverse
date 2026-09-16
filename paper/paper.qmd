@@ -434,6 +434,36 @@ n_oracle_dataverse_files = _oracle["by_source"]["dataverse"]["n_files_compared"]
 # tenth; the check that caught it is `tests/test_paper.py`, which fails on any
 # bare numeral left in the prose.
 _renv = json.loads(Path("../build/validation/renv_agreement.json").read_text())
+
+# The reachability bound, from `scripts/reachability.py`. Promised by an
+# earlier draft and never computed: the schema carried an `is_reachable`
+# column written as null. It is computed now, and what it does to the ranking
+# is reported below whether or not it flatters the measure.
+_reach = json.loads(Path("../build/validation/reachability.json").read_text())
+n_graph_complete = _reach["n_deposits_complete"]
+n_graph_master = _reach["n_deposits_with_master"]
+n_graph_considered = _reach["n_deposits_considered"]
+share_files_reachable = _reach["complete"]["share_reachable"]
+median_share_reachable = _reach["complete"]["median_share_reachable"]
+n_macro_edges = _reach["n_macro_edges"]
+n_followed_edges = _reach["n_edges"]
+reach_retained = {k: v["median_retained"] for k, v in _reach["usage"].items()}
+reach_worst = {k: v["min_retained"] for k, v in _reach["usage"].items()}
+max_rank_move = max(v["max_rank_move"] for v in _reach["usage"].values())
+reach_table = pd.DataFrame(
+    [
+        {
+            "Language": {"stata": "Stata", "r": "R", "python": "Python"}[language],
+            "Package": row["package"],
+            "Deposits": row["n_deposits"],
+            "Reached by a master": row["n_deposits_reachable_only"],
+            "Kept": f"{row['retained']:.0%}",
+            "Rank": f"{row['rank']} to {row['rank_reachable_only']}",
+        }
+        for language, block in _reach["usage"].items()
+        for row in block["top"][:5]
+    ]
+)
 n_renv_compared = _renv["n_deposits_compared"]
 renv_mean_jaccard = _renv["mean_jaccard"]
 renv_pooled_jaccard = _renv["pooled_jaccard"]
@@ -545,8 +575,8 @@ count. @upton2026software had students inspect the replication files of more
 than ten thousand economics, political science and statistics papers, and
 report which *language* each used: Stata in over 80% of economics packages,
 with no decline in fifteen years. @correia2024require resolve individual
-Stata packages, in one language and one field, as validation for a command
-rather than as a census. What is missing is the count itself, across
+Stata packages, in one language and one field, to validate a command instead
+of to take a census. What is missing is the count itself, across
 languages, with the denominator each share divides by.[^priority]
 
 [^priority]: The metric proposed here is older than this paper. I proposed
@@ -1184,10 +1214,70 @@ hand-labelled, so there is no human-validated precision or recall against
 research *use*. The labelling frame is designed and can be run; it has not
 been.
 
+### Code that nothing runs
+
+A reference is not a run, and the objection with teeth is that a deposit
+carries scripts nobody executes: a superseded draft, a helper replaced twice,
+a figure that did not survive review. Some deposits say which is which. Their
+scripts form a graph -- `source()`, `do`, `run`, `include`, a local import --
+in which a master script runs others and nothing runs the master, and the
+tally can be recomputed over the files a master reaches.
+
+`{python} f"{n_graph_master:,}"` of the corpus's
+`{python} f"{n_graph_considered:,}"` deposits have such a master, and
+`{python} f"{n_graph_complete:,}"` of those have a graph with no edge this
+reader failed to follow. Restricting to the complete ones matters, because
+Stata's idiom is to build a path from a macro: `do "$root/clean.do"` names a
+file whose identity is decided at run time, and
+`{python} f"{n_macro_edges:,}"` edges are written that way against
+`{python} f"{n_followed_edges:,}"` this reader could follow. Counting those
+targets as unreachable would measure the idiom and report it as dead code.
+
+Within the complete graphs, `{python} f"{share_files_reachable:.0%}"` of
+analyzable files are reachable from a master, and the median deposit puts
+`{python} f"{median_share_reachable:.0%}"` of its files on that path. So
+roughly a sixth of a typical deposit's code is code its own master never
+calls, and the objection is real.
+
+It does not move the ranking. Recomputed over reachable files alone, the
+twenty most loaded packages keep a median
+`{python} f"{reach_retained['stata']:.0%}"` of their Stata deposits,
+`{python} f"{reach_retained['r']:.0%}"` of their R deposits and
+`{python} f"{reach_retained['python']:.0%}"` of their Python deposits; the
+worst-hit package in any of the three keeps
+`{python} f"{min(reach_worst.values()):.0%}"`. No package moves more than
+`{python} f"{max_rank_move}"` places. The counts shrink by about a fifth and
+the order they imply survives, which is what a ranking has to do to be worth
+publishing.
+
+```{python}
+#| label: tbl-reachability
+table(
+    reach_table,
+    caption="Counts over every analyzable file, and over files a master script reaches",
+    label="tab:reachability",
+    align="llrrll",
+    note=(
+        "The five most loaded packages per language. Restricted to deposits "
+        "with a master script and a graph containing no edge that could not "
+        "be followed. \\emph{Kept} is the share of the deposits that survive "
+        "the restriction; \\emph{Rank} gives the package's position before "
+        "and after it."
+    ),
+)
+```
+
+Two things this does not do. It cannot speak for the
+`{python} f"{n_graph_considered - n_graph_master:,}"` deposits that never
+declare an entry point, which are most of them; a deposit of three
+independent scripts has no master to bound. And a file a master reaches can
+still hold a `library()` call in a branch that never executes, which no
+static reader can see.
+
 ## Limitations
 
-The gap between reference and execution, set out in the definition above, is
-bounded by the reachability analysis and not closed by it.
+The gap between reference and execution is bounded by the reachability
+analysis above and not closed by it.
 
 Costly to inflate is not impossible to inflate. An author can load a package
 they did not need, and a package bundled into a template that circulates in a
