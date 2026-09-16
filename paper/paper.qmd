@@ -33,11 +33,11 @@ abstract: |
   command that formats regression output into a table, and
   `{python} f"{n_table_makers}"` of the four most loaded also present results
   rather than estimate them. Stata appears in
-  `{python} f"{stata_to_r_ratio:.1f}"` times as many deposits as R and is
-  absent from the literature that counts research software, because that
-  literature relies on public registries such as CRAN and PyPI to say which
-  project a library name belongs to and Stata has no such registry; I
-  reconstruct one from the Statistical Software Components archive and
+  `{python} f"{stata_to_r_ratio:.1f}"` times as many deposits as R, and its
+  packages are invisible to the literature that counts research software:
+  that literature resolves a library name against a public registry such as
+  CRAN or PyPI, and the Statistical Software Components archive is not a
+  registry any of those pipelines can query. I reconstruct one from SSC and
   release it. A long tail of heavily used Stata software belongs to no
   registry at all, which caps what a credit system built on registry lookups
   can observe.
@@ -507,9 +507,24 @@ A better count would change that calculation, which makes the question what
 the available counts actually count. A download is one fetch of a file. A
 continuous-integration job that installs a package on every commit produces
 hundreds of them, a mirror produces more, and a maintainer who cuts more
-frequent releases collects more again [@sood_countpy]. A prose mention is one
+frequent releases collects more again [@sood_countpy]. The registry's own
+operators say so: PyPI stopped counting metadata requests as downloads in
+2026 after finding they were a large share of the total for widely installed
+packages, and attributed much of the remaining volume to misconfigured
+proxies and runaway build systems [@pypi2026downloads]. A prose mention is one
 sentence in a methods section [@schindler2022], recording what an author
-thought to write down.
+thought to write down -- and often not written down at all: in biology, only
+a third to a half of software mentions are formal citations, and the specific
+version is usually unrecoverable [@howison2016software].
+
+That the two disagree is not speculation. @correia2024require, validating a
+Stata command that pins package versions, resolved SSC package names out of
+economics replication code and found that the hundred most downloaded
+packages are 71% of SSC downloads but 93% of the packages publications
+actually load. The tail is where the two measures part company, and the tail
+is where a credit system does its work. Counting downloads is the standing
+answer to how much a Stata command is used [@choodari2016uptake], and it is
+the answer that disagrees.
 
 A metric used to allocate credit is a signal, and a signal is informative in
 proportion to what it costs to produce [@spence1973]. Both of these are
@@ -520,21 +535,43 @@ it is supposed to reward.
 
 Deposited code is not cheap. Economics and political science journals now ask
 authors to deposit the code behind an accepted paper, and some journals run
-that code before publication [@stodden2018; @vilhuber2020]. Adding one to a
+that code before publication [@stodden2018; @vilhuber2020; @herbert2024reproduce]. Adding one to a
 package's count there takes a paper accepted at such a journal, with the
 package loaded in the code behind it. I call a package's appearance in that
 code **validated use**.
+
+Two studies have read this kind of code before, and neither produces the
+count. @upton2026software had students inspect the replication files of more
+than ten thousand economics, political science and statistics papers, and
+report which *language* each used: Stata in over 80% of economics packages,
+with no decline in fifteen years. @correia2024require resolve individual
+Stata packages, in one language and one field, as validation for a command
+rather than as a census. What is missing is the count itself, across
+languages, with the denominator each share divides by.[^priority]
+
+[^priority]: The metric proposed here is older than this paper. I proposed
+counting package use in code rather than downloads in March 2019
+[@sood_countpy], and the first version of this collector, reading imports out
+of *Journal of Politics* Dataverse deposits, was committed in July 2023
+[@sood2023softverse]. That code and a package-level site were public before
+either study above appeared; what was missing then, and is supplied here, is
+a sampling frame, validation, and a released corpus. Others have read the
+same kind of code for the same purpose without publishing a count:
+@arelbundock2022which ran `renv` over R scripts in Dataverse deposits, and
+the AEA Data Editor's office parses do-files for user-written Stata packages
+as part of its review process [@aeadataeditor2021statapackagesearch]. Both
+are single-language, and neither reports shares against a denominator.
 
 I measure validated use across R, Python and Stata in
 `{python} f"{n_deposits_analyzable:,}"` deposits from
 `{python} f"{n_collections_tallied}"` journal collections. Three results
 follow. Packages that format output sit at the top of the table, ahead of
 every estimator. Stata appears in
-`{python} f"{stata_to_r_ratio:.1f}"` times as many deposits as R and is
-missing from the studies that count research software, because those studies
-rely on public package registries and Stata has none. And a long tail of the
-software in daily use belongs to no registry either, which caps what any
-registry-based credit system can see.
+`{python} f"{stata_to_r_ratio:.1f}"` times as many deposits as R, and its
+packages are missing from the studies that count research software, because
+those studies resolve names against a public registry and SSC is not one. And
+a long tail of the software in daily use belongs to no registry either, which
+caps what any registry-based credit system can see.
 
 ## What validated use means
 
