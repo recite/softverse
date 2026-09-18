@@ -20,10 +20,10 @@ The frame is every deposit in 80 journal collections:
 
 - **13,985** deposits held code or a dependency manifest,
   and 13,245 held analyzable code.
-- **447,289** files were collected; 146,483 are
+- **447,289** files were collected; 146,482 are
   analyzed once vendored libraries and duplicate copies are set aside.
-- **14,381,788** package references were extracted from them,
-  resolving to **4,447** packages.
+- **14,853,082** package references were extracted from them,
+  resolving to **4,565** packages.
 
 | Language | Deposits with code |
 |---|---:|
@@ -113,7 +113,8 @@ from softverse.model.enums import Language
 registry, _shipped = load_registry()
 registry.resolve("esttab", Language.STATA).package  # 'estout'
 registry.resolve("regress", Language.STATA).resolution  # builtin, so no package
-registry.resolve("grc1leg", Language.STATA).resolution  # unknown: in no registry
+registry.resolve("renvars", Language.STATA).ecosystem  # stb: Stata Technical Bulletin 60
+registry.resolve("grc1leg", Language.STATA).ecosystem  # net_site: a StataCorp developer's page
 ```
 
 `esttab` resolving to `estout` is the case a package-name list cannot handle,
@@ -203,11 +204,12 @@ is a string node, so those bytes never form a call and a walk over call nodes
 cannot reach them.
 
 Stata needed an artifact that did not exist. R has CRAN and Python has PyPI;
-Stata has no machine-readable registry. Softverse reconstructs a
-command-to-package index from SSC distribution manifests, 3,967 packages and
-7,468 commands, both counted excluding internal helper files, and releases it.
-Without that index Stata cannot be measured at all, which is why work like
-this leaves out the language this corpus uses most.
+Stata has no machine-readable registry. Its software is scattered rather than
+informal: SSC, the *Stata Journal*, the *Stata Technical Bulletin* and authors'
+own sites all serve the `.pkg` manifests that `net install` reads, and none is
+indexed by command. Softverse reconstructs a command-to-package index from all
+four and releases it. Without that index Stata cannot be measured at all, which
+is why work like this leaves out the language this corpus uses most.
 
 ## Design commitments
 

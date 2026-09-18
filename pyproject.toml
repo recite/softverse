@@ -39,6 +39,7 @@ dependencies = [
     "remotezip>=0.12.6",
     "requests>=2.34.2",
     "urllib3>=2.7.0",
+    "stdlib-list>=0.12.0",
 ]
 
 # The one place the release number is typed. The release workflow refuses a tag
@@ -156,6 +157,7 @@ convention = "google"
 # The corpus release is DuckDB SQL over Parquet paths and enum values this
 # package defines; a `FROM` path cannot be a bound parameter (see scripts/**).
 "softverse/release/corpus.py" = ["S608"]
+"softverse/build/aggregate.py" = ["S608"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["softverse"]
@@ -197,7 +199,8 @@ module-root = ""
 # fragments of the `capture`/`define`
 # abbreviation regexes. `pres` is a variable in a paper chunk. `unparseable`
 # is a standard spelling.
-ignore-words-list = "mata,ttest,fillin,ture,ine,pres,unparseable,nd"
+# `rsource` runs R from Stata, `rcall` is an SSC package, `AER` a CRAN one.
+ignore-words-list = "mata,ttest,fillin,ture,ine,pres,unparseable,nd,rsource,rcall,aer"
 
 [tool.preen]
 # Not documentation links. Schemeless on purpose: with a scheme the check's
@@ -214,4 +217,12 @@ link_ignore = [
   'github\.com/user/repo',
   # A download URL recorded in a deposit's renv.lock, published as data.
   'sites\.google\.com/a/stonybrook\.edu/mperess',
+  # Example `net from` URLs in the Stata lexer and its tests.
+  '//host/path',
+  'jslsoc\.sitehost\.iu\.edu/stata',
+  # API and raw-file bases the code appends a path to.
+  'cranlogs\.r-pkg\.org/downloads/total$',
+  'pypistats\.org/api/packages$',
+  'Statapackagesearch/$',
+  'zenodo\.org/api/files/bkt',
 ]

@@ -35,6 +35,7 @@ from softverse.config import PATHS, credential
 from softverse.release.zenodo_deposit import (
     Deposit,
     new_version,
+    publish,
     replace_files,
     run,
     show,
@@ -70,6 +71,7 @@ TALLY_FILES = (
     "usage_by_collection",
     "usage_by_function",
     "unknown_names",
+    "remote_installs",
     "language_presence",
 )
 TALLY_EXTRAS = (
@@ -77,10 +79,14 @@ TALLY_EXTRAS = (
     "environment_coverage.json",
     "r_oracle.json",
     "renv_agreement.json",
+    "reachability.json",
     "datapackage.json",
     "package_deposits.parquet",
     "package_versions.csv",
 )
+
+#: How many files the mention table is cut into for upload.
+MENTION_PARTS = 3
 
 #: From the corpus release: every table except `contents` and `mentions`,
 #: which is written without its snippets.
@@ -116,10 +122,21 @@ def stage_bundle(
     shutil.copyfile(tally / "README.md", out / "README.md")
     for name in CORPUS_FILES:
         shutil.copyfile(corpus / name, out / name)
-    duckdb.connect().execute(
-        f"COPY (SELECT * EXCLUDE (snippet) FROM '{corpus / 'mentions.parquet'}') "
-        f"TO '{out / 'mentions.parquet'}' (FORMAT PARQUET, COMPRESSION ZSTD)"
-    )
+    # In parts. Zenodo takes one stream per file and its gateway answers 502
+    # once a request has run about five minutes, which on a slow uplink is
+    # some sixty megabytes: measured, 60 MB went up in 301 s and 81 MB never
+    # did. `mentions-*.parquet` reads back as one table, and the parts are cut
+    # by deposit so no deposit's rows straddle two files.
+    con = duckdb.connect()
+    source = corpus / "mentions.parquet"
+    for part in range(MENTION_PARTS):
+        con.execute(
+            f"COPY (SELECT * EXCLUDE (snippet) FROM '{source}' "
+            f"WHERE hash(dataset_doi) % {MENTION_PARTS} = {part} "
+            "ORDER BY dataset_doi, file_uid, line) "
+            f"TO '{out / f'mentions-{part + 1}-of-{MENTION_PARTS}.parquet'}' "
+            "(FORMAT PARQUET, COMPRESSION ZSTD, COMPRESSION_LEVEL 19)"
+        )
     return sorted(p for p in out.iterdir() if p.is_file())
 
 
@@ -157,6 +174,16 @@ Dataverse's political science journals. Counts pool both and
 <code>usage_by_package.csv</code> carries the split beside every pooled total,
 since the two are very different sizes.</p>
 
+<p><strong>What changed in this version.</strong> Stata commands are resolved
+against the <em>Stata Journal</em>, the <em>Stata Technical Bulletin</em> and
+the authors' sites replication code installs from, as well as SSC, so software
+such as <code>grc1leg</code> and <code>renvars</code> is now counted rather
+than listed as unresolved. The Stata lexer no longer splits a statement at a
+newline inside a comment, which had reported command options as commands.
+Install lines record where they fetch from (<code>mentions.remote</code>,
+<code>remote_installs.csv</code>), and an R package no registry lists is
+credited to its code host when the same deposit installs it from one.</p>
+
 <p><strong>What the counts do not show.</strong> These counts say a package
 was loaded by code in the deposit. They do not say the code ran. Authors
 often leave older scripts in a deposit, and a script can load a package
@@ -168,14 +195,17 @@ openICPSR, are not included.</p>
 table. <code>usage_by_package_year.csv</code> and
 <code>usage_by_collection.csv</code> give the same counts by deposit year and
 by journal. <code>unknown_names.csv</code> lists names used in code that
-resolve to no registry, unfiltered. <code>summary.json</code> holds the
+resolve to no registry, unfiltered. <code>remote_installs.csv</code> lists
+what deposits install from outside their language's registry -- a GitHub
+repository, an author's own site -- and from where. <code>summary.json</code> holds the
 corpus counts the shares are taken against, and <code>README.md</code> is the
 data descriptor with column definitions.</p>
 
 <p><strong>The corpus tables.</strong> <code>deposits.parquet</code> (one row
 per deposit, with its journal, year and license), <code>files.parquet</code>
 (one row per file, with its sha256 and the packages it loads),
-<code>file_packages.parquet</code>, <code>mentions.parquet</code> (one row per
+<code>file_packages.parquet</code>, <code>mentions-*.parquet</code> (one table in
+three files, cut by deposit, which DuckDB and pandas read as one; one row per
 reference in code, without the code snippet), <code>package_versions.parquet</code>
 (versions stated in manifests and install calls), <code>environment.parquet</code>
 (R, Python, Stata and Julia versions and operating systems a deposit states),
@@ -256,8 +286,11 @@ def main() -> int:
             deposit = new_version(client, token, PUBLISHED_RECORD, spec)
             deposit = replace_files(client, token, deposit, files)
             show(deposit)
-            print("\nnothing is published. `--publish` mints the version.")
-        return 0
+            if "--publish" not in sys.argv:
+                print("\nnothing is published. `--publish` mints the version.")
+                return 0
+            print()
+            return publish(client, token, deposit)
     return run(spec, token, sys.argv)
 
 

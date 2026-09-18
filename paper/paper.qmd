@@ -1,5 +1,6 @@
 ---
-title: "What software does social science run on? Measuring library use in replication code"
+title: "Downloads are cheap"
+subtitle: "Validated use as a measure of research software"
 author:
   # TODO before submission: affiliation and ORCID. Left blank deliberately
   # and not filled in with a plausible guess.
@@ -16,31 +17,7 @@ keywords:
   - Stata
   - static analysis
 abstract: |
-  Software that research depends on earns its authors very little. A metric
-  that could change this is a signal, and a signal is informative in
-  proportion to what it costs to produce. The available ones are cheap. A
-  download is one fetch of a file, which a build server or a more frequent
-  release schedule will supply in quantity, and a prose mention is one
-  sentence in a methods section. Code deposited with a published paper is
-  costly by comparison: economics and political science journals now collect
-  it and a growing number run it before publication, so adding one to a
-  package's count takes a published paper that loads the package. I parse
-  every R, Python and Stata file in
-  `{python} f"{n_deposits_analyzable:,}"` such deposits from
-  `{python} f"{n_collections_tallied}"` journal collections and count what
-  each of `{python} f"{len(usage):,}"` packages is loaded by. Three results
-  follow. The most loaded package is `{python} top_stata_package`, a Stata
-  command that formats regression output into a table, and
-  `{python} f"{n_table_makers}"` of the four most loaded also present results
-  rather than estimate them. Stata appears in
-  `{python} f"{stata_to_r_ratio:.1f}"` times as many deposits as R, and its
-  packages are invisible to the literature that counts research software:
-  that literature resolves a library name against a public registry such as
-  CRAN or PyPI, and the Statistical Software Components archive is not a
-  registry any of those pipelines can query. I reconstruct one from SSC and
-  release it. A long tail of heavily used Stata software belongs to no
-  registry at all, which caps what a credit system built on registry lookups
-  can observe.
+  Counts of research software use allocate credit, and the available ones are cheap to produce: a download is one fetch of a file. I propose validated use, a package loaded in replication code deposited at a journal that checks it, as a costly signal, and measure it in `{python} f"{n_deposits_analyzable:,}"` deposits from `{python} f"{n_collections_tallied:,}"` economics and political science journal collections, which load `{python} f"{len(usage):,}"` R, Python and Stata packages. Among packages the corpus uses, validated use and downloads agree loosely, and least where automatic installation is commonest: the rank correlation is `{python} f"{agree['ssc']['used']['rho']:.2f}"` for Stata, `{python} f"{agree['cran']['used']['rho']:.2f}"` for R and `{python} f"{agree['pypi']['used']['rho']:.2f}"` for Python. Downloads track a package's position in the dependency graph more closely than its use. The most used software prepares exhibits: `{python} top_stata_package` is in `{python} f"{top_stata_share:.0%}"` of Stata deposits. Stata appears in `{python} f"{stata_to_r_ratio:.1f}"` times as many deposits as R and is missing from studies of research software because its packages are scattered across SSC, two journals' archives and authors' sites with no index across them. I build that index, `{python} f"{n_index_commands:,}"` commands in `{python} f"{n_index_packages:,}"` packages, and release it with the mention-level data.
 bibliography: references.bib
 format:
   html:
@@ -64,7 +41,13 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
+from softverse.build.downloads import agreement
+from softverse.build.downloads import read as read_versus
+from softverse.model.enums import NON_USE_CONSTRUCTS
+from softverse.registries.load import INDEX_FILE
+from softverse.registries.lock import pinned_directory, read_lock
 from softverse.stata.builtins import curated
+from softverse.stata.index import credited
 
 sys.path.insert(0, str(Path(__file__).parent if "__file__" in dir() else "."))
 from exhibits import figure, table  # noqa: E402
@@ -109,8 +92,14 @@ at_risk = (
 # defined inside the deposit -- none of which were ever candidates for registry
 # resolution, so leaving them in the denominator deflates the unresolved rate
 # by an order of magnitude -- both figures are computed below.
-NOT_THIRD_PARTY = ("builtin", "base_or_stdlib", "local_program")
-candidates = mentions[~mentions["resolution"].isin(NOT_THIRD_PARTY)]
+# It also excludes install and inquiry lines. `ssc install estout` states a
+# dependency and is not a use, the headline tally already leaves it out, and
+# counting it here measured the resolver on a population the paper reports
+# nothing else about.
+NOT_THIRD_PARTY = ("builtin", "base_or_stdlib", "local_program", "local_relative")
+NON_USE = {str(c) for c in NON_USE_CONSTRUCTS}
+uses = mentions[~mentions["construct"].isin(NON_USE)]
+candidates = uses[~uses["resolution"].isin(NOT_THIRD_PARTY)]
 mentions_by_language = mentions.groupby("language").size().to_dict()
 
 # Computed, not typed. The naive rate is quoted in the text to show how much
@@ -125,11 +114,31 @@ r_mentions_per_file = mentions_by_language.get("r", 0) / max(
 )
 # The released index's own size, read from the index rather than typed, so the
 # paper cannot disagree with the artifact it cites.
-INDEX = "../registries/snapshots/ssc/stata_command_index.parquet"
-n_ssc_packages, n_ssc_commands = con.execute(
-    f"SELECT count(DISTINCT package), count(DISTINCT command) "
-    f"FROM '{INDEX}' WHERE NOT is_helper"
-).fetchone()
+# Through the lock, so it is the index the tally was resolved against and not
+# whichever copy happens to be on disk.
+_lock = read_lock()
+INDEX = pinned_directory("stata_index", _lock, payload=INDEX_FILE) / INDEX_FILE
+# Counted as the released record counts them, so the paper and the deposit it
+# cites print the same numbers: commands and packages excluding helper files,
+# and packages per archive over every manifest the archive serves.
+_index_all = con.execute(f"SELECT * FROM '{INDEX}'").df()
+_commands = _index_all[~_index_all["is_helper"]]
+n_index_packages = _commands["package"].nunique()
+n_index_commands = _commands["command"].nunique()
+index_by_source = _index_all.groupby("source")["package"].nunique().to_dict()
+index = _index_all[_index_all.apply(credited, axis=1)]
+n_ssc_packages = index_by_source.get("ssc", 0)
+n_journal_packages = index_by_source.get("stata_journal", 0)
+n_stb_packages = index_by_source.get("stb", 0)
+n_net_packages = index_by_source.get("net", 0)
+_net = _index_all[_index_all["source"] == "net"]
+n_net_hosts = _net["issue"].nunique()
+share_net_on_github = (
+    _net[_net["issue"].str.contains("github")]["package"].nunique()
+    / max(1, n_net_packages)
+)
+_index_source = json.loads((INDEX.parent / "source.json").read_text())
+n_net_unreachable = len(_index_source.get("net_sites_unreachable", []))
 # Quoted in Validation, so computed rather than typed.
 n_stata_builtin_calls = int(
     (mentions["language"].eq("stata") & mentions["resolution"].eq("builtin")).sum()
@@ -144,6 +153,14 @@ _verified = json.loads(
 # zero and silently understates the whole point. This equals the official
 # count because the crawl only asked about names that were unresolved or
 # SSC-attributed; anything the curated list already knew was never queried.
+# The SSC tier checked against a list compiled independently, by
+# `scripts/validate_index.py`.
+index_check = json.loads(Path("../build/validation/index_agreement.json").read_text())
+n_base_ado = len(
+    json.loads(
+        (pinned_directory("stata_base_ado", _lock) / "names.json").read_text()
+    )
+)
 n_verified_added = len(
     {n for n, ok in _verified["commands"].items() if ok} - set(curated().forms)
 )
@@ -158,7 +175,8 @@ n_verified_added = len(
 _ssc_commands = {
     r[0]
     for r in con.execute(
-        f"SELECT DISTINCT lower(command) FROM '{INDEX}' WHERE NOT is_helper"
+        f"SELECT DISTINCT lower(command) FROM '{INDEX}' "
+        "WHERE NOT is_helper AND source = 'ssc'"
     ).fetchall()
 }
 _readded = mentions[
@@ -201,7 +219,7 @@ code_files_largest = int(pd.Series([n for _, n in _sized[3 * _q :]]).median())
 # collapsing them lets a bug hide inside a stated limitation.
 #
 # Read from the ledger alone. The first version of this asked which deposits
-# were absent from `files.parquet` and labelled the remainder "no code files
+# were absent from `files.parquet` and labeled the remainder "no code files
 # in the deposit" -- which quietly counted 99 deposits collected after the
 # tally was last built, plus 136 records that are not outcomes at all but
 # requeue markers left by an earlier cap raise, carrying no counts and only
@@ -239,8 +257,8 @@ share_collected = n_deposits_collected / len(_last)
 n_spanned_deposits = sum(1 for _r in _last.values() if _r.get("n_spanned"))
 
 # The findings paragraphs. Every claim there is a computation here, including
-# the qualitative one: which of the top Stata packages are output formatters
-# is a fixed, checkable list of names, not a judgement made at writing time.
+# the qualitative one: which of the top Stata packages are exhibit preparation tools
+# is a fixed, checkable list of names, not a judgment made at writing time.
 # `presence` is per (source, language) now that both repositories go through
 # one tally, so the headline counts sum across sources and the disciplinary
 # comparison indexes into them rather than reading a second file.
@@ -393,16 +411,202 @@ median_deposit_unresolved = float(_per_deposit["rate"].median())
 p90_deposit_unresolved = float(_per_deposit["rate"].quantile(0.9))
 share_deposits_fully_resolved = float((_per_deposit["sum"] == 0).mean())
 
+# Validated use against the registries' own download counts. The counts are
+# pinned snapshots like the registries, the table is built by
+# `softverse.build.downloads`, and everything quoted is read off it.
+versus = pd.read_csv(TALLY / "downloads_vs_use.csv")
+agree = agreement(read_versus(TALLY / "downloads_vs_use.csv"))
+REGISTRY_NAME = {"ssc": "Stata (SSC)", "cran": "R (CRAN)", "pypi": "Python (PyPI)"}
+agreement_table = pd.DataFrame(
+    [
+        {
+            "registry": REGISTRY_NAME[e],
+            "used": f"{a['used']['n']:,}",
+            "rho, used": f"{a['used']['rho']:.2f}",
+            "in 20 or more": f"{a['used']['rho_20']:.2f}",
+            "counted": f"{a['registry']['n']:,}",
+            "ever used": f"{a['registry']['ever_used']:.0%}",
+            "rho, counted": f"{a['registry']['rho']:.2f}",
+            "top 100 used": f"{a['registry']['top100_used']}",
+        }
+        for e, a in agree.items()
+    ]
+)
+# Ranks among the packages the corpus uses, which is the population the
+# sentence that quotes them is about.
+_used = versus[versus["n_deposits"].gt(0) & versus["downloads"].notna()].copy()
+_used["rank_by_use"] = _used.groupby("ecosystem")["n_deposits"].rank(
+    ascending=False, method="min"
+)
+_used["rank_by_downloads"] = _used.groupby("ecosystem")["downloads"].rank(
+    ascending=False, method="min"
+)
+_cran = agree["cran"]
+_deps = _cran["dependencies"]
+
+
+def _download_rank(package: str, ecosystem: str) -> int:
+    row = _used[_used["package"].eq(package) & _used["ecosystem"].eq(ecosystem)]
+    return int(row["rank_by_downloads"].iloc[0])
+
+
+def _use_rank(package: str, ecosystem: str) -> int:
+    row = _used[_used["package"].eq(package) & _used["ecosystem"].eq(ecosystem)]
+    return int(row["rank_by_use"].iloc[0])
+
+
+def _furthest(ecosystem: str, *, above: bool, n: int = 4) -> str:
+    """The packages ranked furthest above, or below, their download rank.
+
+    Among packages in at least five deposits, the same rule the figure labels
+    by, so the prose names what the figure shows and both move together.
+    """
+    d = versus[
+        versus["ecosystem"].eq(ecosystem)
+        & versus["downloads"].gt(0)
+        & versus["n_deposits"].ge(5)
+    ].copy()
+    # Among packages in at least five deposits, so an unused package, which
+    # the table now carries too, is never named as "over-ranked".
+    d["gap"] = d["downloads"].rank(ascending=False) - d["n_deposits"].rank(ascending=False)
+    picked = d.nlargest(n, "gap") if above else d.nsmallest(n, "gap")
+    names = [f"`{p}`" for p in picked["package"]]
+    return ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def ordinal(n: int) -> str:
+    """`4th`, `281st`: a rank as a reader says it."""
+    suffix = "th" if n % 100 in (11, 12, 13) else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n:,}{suffix}"
+
+
+n_pypi_counted = agree["pypi"]["registry"]["n"]
+
+# Where the software a deposit uses lives, per language and per deposit. The
+# registry a language is known by is one place among several, and which others
+# matter differs by language -- which is the finding, so it is computed for
+# all three rather than asserted for one.
+LOCATIONS = {
+    "cran": "primary registry",
+    "pypi": "primary registry",
+    "ssc": "primary registry",
+    "bioconductor": "secondary archive",
+    "cran_archive": "secondary archive",
+    "stata_journal": "secondary archive",
+    "stb": "secondary archive",
+    "github": "code host",
+    "gitlab": "code host",
+    "bitbucket": "code host",
+    "net_site": "author's site",
+}
+LOCATION_ORDER = [
+    "primary registry",
+    "secondary archive",
+    "code host",
+    "author's site",
+    "unresolved",
+]
+_located = candidates.assign(
+    location=candidates["ecosystem"].map(LOCATIONS).where(
+        ~candidates["resolution"].eq("unknown"), "unresolved"
+    )
+).dropna(subset=["location"])
+_at_risk = _located.groupby("language")["dataset_doi"].nunique()
+_in_location = (
+    _located.groupby(["language", "location"])["dataset_doi"].nunique().unstack(fill_value=0)
+)
+location_share = _in_location.div(_at_risk, axis=0).reindex(columns=LOCATION_ORDER, fill_value=0)
+where_software_lives = pd.DataFrame(
+    [
+        {
+            "language": {"stata": "Stata", "r": "R", "python": "Python"}[language],
+            "deposits": f"{_at_risk[language]:,}",
+            **{c: f"{location_share.loc[language, c]:.1%}" for c in LOCATION_ORDER},
+        }
+        for language in ("stata", "r", "python")
+    ]
+)
+share_stata_secondary = float(location_share.loc["stata", "secondary archive"])
+share_stata_net = float(location_share.loc["stata", "author's site"])
+share_r_code_host = float(location_share.loc["r", "code host"])
+share_r_secondary = float(location_share.loc["r", "secondary archive"])
+share_r_archived = (
+    _located[_located["ecosystem"].eq("cran_archive")]["dataset_doi"].nunique()
+    / _at_risk["r"]
+)
+share_unresolved = location_share["unresolved"].to_dict()
+n_stata_beyond_ssc = int(
+    _located[
+        _located["language"].eq("stata")
+        & _located["location"].isin(["secondary archive", "author's site"])
+    ]["dataset_doi"].nunique()
+)
+n_stata_beyond_ssc_packages = int(
+    _located[
+        _located["language"].eq("stata")
+        & _located["location"].isin(["secondary archive", "author's site"])
+    ]["resolved_package"].nunique()
+)
+
+# A remote install vouches for a name only inside its own deposit. The looser
+# rule -- the corpus installs this name from a code host *somewhere* -- is
+# reported beside it rather than applied, so a reader can see what it would add.
+_hosted = set(
+    mentions[mentions["ecosystem"].isin(["github", "gitlab", "bitbucket"])]["raw_name"]
+)
+_r_unknown = candidates[
+    candidates["language"].eq("r") & candidates["resolution"].eq("unknown")
+]
+n_r_hosted_elsewhere_deposits = int(
+    _r_unknown[_r_unknown["raw_name"].isin(_hosted)]["dataset_doi"].nunique()
+)
+n_r_unknown_deposits = int(_r_unknown["dataset_doi"].nunique())
+
+# What is left, labeled by hand. Every name used in at least this many
+# deposits that nothing above accounts for was looked up and given a category,
+# and the file is released; the threshold is where the list stops being
+# software and becomes typos and one deposit's own helpers.
+residue = pd.read_csv("../data/validation/unregistered_labelled.csv")
+if residue["category"].isna().any():
+    raise ValueError("unregistered_labelled.csv has unlabelled rows")
+RESIDUE_MIN_DEPOSITS = int(residue["n_deposits"].min())
+SOFTWARE_CATEGORIES = [
+    "formal archive not indexed",
+    "code host",
+    "author site",
+    "commercial",
+    "unidentified",
+]
+residue_table = (
+    residue.sort_values("n_deposits", ascending=False)
+    .groupby("category")
+    .agg(
+        names=("name", "size"),
+        **{"most used": ("name", lambda n: ", ".join(n[:3]))},
+    )
+    .reindex(
+        [*SOFTWARE_CATEGORIES, "official, undocumented", "local program", "not software"]
+    )
+    .dropna()
+    .reset_index()
+)
+residue_table["names"] = residue_table["names"].astype(int)
+n_residue_names = len(residue)
+n_residue_software = int(residue["category"].isin(SOFTWARE_CATEGORIES).sum())
+n_residue_not_software = n_residue_names - n_residue_software
+
 # Named in Validation. The most *widespread* unresolved Stata name, ranked by
 # deposits rather than mentions: one deposit calling something six hundred
 # times is one user of it, and a mention-ranked list is a ranking of whichever
 # deposits are largest.
-_stata_unknown = mentions[
-    (mentions["language"] == "stata") & (mentions["resolution"] == "unknown")
+_stata_unknown = candidates[
+    candidates["language"].eq("stata") & candidates["resolution"].eq("unknown")
 ]
 _by_deposits = _stata_unknown.groupby("normalized_name")["dataset_doi"].nunique()
 top_unresolved_stata = f"`{_by_deposits.idxmax()}`"
-n_grc1leg_deposits = int(_by_deposits.max())
+n_top_unresolved_deposits = int(_by_deposits.max())
+n_unresolved_stata_names = len(_by_deposits)
+n_unresolved_stata_singletons = int((_by_deposits == 1).sum())
 stata_unknown_share_of_all = len(_stata_unknown) / max(
     1, int(candidates["resolution"].eq("unknown").sum())
 )
@@ -521,87 +725,41 @@ stata_builtin_share = (
 )
 ```
 
-The most widely used piece of third-party software in social science
-replication code is a table formatter. `{python} top_stata_package`, a Stata
-command whose job is turning regression output into a formatted table,
-appears in `{python} f"{top_stata_share:.0%}"` of the Stata deposits in this
-corpus, ahead of every estimator.
+Download counts and published code disagree about which research software matters. This paper reads the code behind `{python} f"{n_deposits_analyzable:,}"` papers at journals that check what authors deposit. In that code, `stargazer` is the `{python} ordinal(_use_rank("stargazer", "cran"))` most used R package and the `{python} ordinal(_download_rank("stargazer", "cran"))` most downloaded. The packages with the most downloads are ones nobody chose; they come along as dependencies of something else. The most used software of all formats tables. And Stata, which is in `{python} f"{stata_to_r_ratio:.1f}"` times as many deposits as R, has been left out of studies of research software because nothing mapped a Stata command to the package that provides it.
 
-Software that research depends on earns its authors very little
-[@howison2011; @smith2016]. Someone choosing between writing a paper and
-writing a package is choosing between something a hiring committee knows how
-to value and something it does not, and that calculation is one reason a good
-deal of research software never gets written [@sood_countpy].
+Software that research depends on earns its authors little [@howison2011; @smith2016]. A hiring committee knows what a paper is worth and not what a package is worth, so useful software goes unwritten [@sood_countpy]. A better count would change that, which raises the question of what the current counts measure.
 
-A better count would change that calculation, which makes the question what
-the available counts actually count. A download is one fetch of a file. A
-continuous-integration job that installs a package on every commit produces
-hundreds of them, a mirror produces more, and a maintainer who cuts more
-frequent releases collects more again [@sood_countpy]. The registry's own
-operators say so: PyPI stopped counting metadata requests as downloads in
-2026 after finding they were a large share of the total for widely installed
-packages, and attributed much of the remaining volume to misconfigured
-proxies and runaway build systems [@pypi2026downloads]. A prose mention is one
-sentence in a methods section [@schindler2022], recording what an author
-thought to write down -- and often not written down at all: in biology, only
-a third to a half of software mentions are formal citations, and the specific
-version is usually unrecoverable [@howison2016software].
+A count used to give credit is a signal, and a signal is worth what it costs to produce [@spence1973]. The current ones are cheap. A download is one fetch of a file. A build server that installs a package on every commit produces hundreds of downloads, a mirror produces more, and a maintainer who releases more often collects more again [@sood_countpy]. PyPI's own operators found in 2026 that metadata requests were a large share of the downloads of widely installed packages, and that much of the rest came from misconfigured proxies and runaway build systems [@pypi2026downloads]. A mention in prose is one sentence in a methods section [@schindler2022], and often the sentence is missing: in biology, between a third and a half of software mentions are formal citations, and the version is usually lost [@howison2016software].
 
-That the two disagree is not speculation. @correia2024require, validating a
-Stata command that pins package versions, resolved SSC package names out of
-economics replication code and found that the hundred most downloaded
-packages are 71% of SSC downloads but 93% of the packages publications
-actually load. The tail is where the two measures part company, and the tail
-is where a credit system does its work. Counting downloads is the standing
-answer to how much a Stata command is used [@choodari2016uptake], and it is
-the answer that disagrees.
+Deposited code is not cheap. Economics and political science journals ask authors to deposit the code behind an accepted paper, and some run it before publication [@stodden2018; @vilhuber2020; @herbert2024reproduce]. To add one to a package's count there, someone has to get a paper accepted at such a journal with the package loaded in its code. I call a package's appearance in that code **validated use**.
 
-A metric used to allocate credit is a signal, and a signal is informative in
-proportion to what it costs to produce [@spence1973]. Both of these are
-close to free. An author who wants a larger download count can change their
-release schedule, so the committee reading that number learns as much about
-release practice as about use, and a metric that cheap invites the behaviour
-it is supposed to reward.
+The cost is what separates this count from two I built before it. In 2018 I counted how often public GitHub repositories import each Python package [@sood2018countpy], and in 2025 I estimated the same from a random sample of repositories [@sood2025user]. Both count use rather than fetches, and both share a weaker form of the defect in downloads: anyone can push a repository. Nobody can move a count over verified deposits without publishing a paper.[^priority]
 
-Deposited code is not cheap. Economics and political science journals now ask
-authors to deposit the code behind an accepted paper, and some journals run
-that code before publication [@stodden2018; @vilhuber2020; @herbert2024reproduce]. Adding one to a
-package's count there takes a paper accepted at such a journal, with the
-package loaded in the code behind it. I call a package's appearance in that
-code **validated use**.
+[^priority]: I proposed counting package use in code instead of downloads in March 2019 [@sood_countpy]. The first version of this collector, which read imports out of *Journal of Politics* Dataverse deposits, was committed in July 2023 [@sood2023softverse]. It lacked a sampling frame, validation, an index for Stata and a released corpus. This paper supplies them.
 
-Two studies have read this kind of code before, and neither produces the
-count. @upton2026software had students inspect the replication files of more
-than ten thousand economics, political science and statistics papers, and
-report which *language* each used: Stata in over 80% of economics packages,
-with no decline in fifteen years. @correia2024require resolve individual
-Stata packages, in one language and one field, to validate a command instead
-of to take a census. What is missing is the count itself, across
-languages, with the denominator each share divides by.[^priority]
+I measure validated use in R, Python and Stata across `{python} f"{n_deposits_analyzable:,}"` deposits from `{python} f"{n_collections_tallied:,}"` journal collections, and ask three questions:
 
-[^priority]: The metric proposed here is older than this paper. I proposed
-counting package use in code rather than downloads in March 2019
-[@sood_countpy], and the first version of this collector, reading imports out
-of *Journal of Politics* Dataverse deposits, was committed in July 2023
-[@sood2023softverse]. That code and a package-level site were public before
-either study above appeared; what was missing then, and is supplied here, is
-a sampling frame, validation, and a released corpus. Others have read the
-same kind of code for the same purpose without publishing a count:
-@arelbundock2022which ran `renv` over R scripts in Dataverse deposits, and
-the AEA Data Editor's office parses do-files for user-written Stata packages
-as part of its review process [@aeadataeditor2021statapackagesearch]. Both
-are single-language, and neither reports shares against a denominator.
+1. **RQ1 (Validity of usage metrics):** How far do validated use and download counts agree, and which software does each overstate?
+2. **RQ2 (Registries as instruments):** What does counting through a package registry leave out, in each language, and where does the missing software live?
+3. **RQ3 (Field-specific dependence):** Which software does each field depend on?
 
-I measure validated use across R, Python and Stata in
-`{python} f"{n_deposits_analyzable:,}"` deposits from
-`{python} f"{n_collections_tallied}"` journal collections. Three results
-follow. Packages that format output sit at the top of the table, ahead of
-every estimator. Stata appears in
-`{python} f"{stata_to_r_ratio:.1f}"` times as many deposits as R, and its
-packages are missing from the studies that count research software, because
-those studies resolve names against a public registry and SSC is not one. And
-a long tail of the software in daily use belongs to no registry either, which
-caps what any registry-based credit system can see.
+The paper adds two things to the counts. One is the measurement: a sampling frame, a validated extractor for three languages, and the mention-level record, released so the counts can be recomputed. The other is an index from Stata commands to the packages that provide them, built from the distribution manifests of SSC, the *Stata Journal*, the *Stata Technical Bulletin* and the authors' sites that replication code installs from. Sergio Correia compiled such a list for SSC alone, for the AEA Data Editor's package scanner [@reiner2021packagesearch]. Nothing covered the other three archives, and `grc1leg`, one of the most used Stata packages in this corpus, lives in none of the lists an SSC index can hold.
+
+## Related work
+
+### How the use of research software has been measured
+
+Most of what is known comes from reading papers. In a hand-coded sample of ninety biology articles, most software mentions were informal, a minority were formal citations, and the software mentioned was often impossible to find or to pin to a version [@howison2016software]. Later work automated the reading. Nearly five thousand PDFs in biomedicine and economics were annotated by hand to train extractors [@du2021softcite]; one such extractor was run over PubMed Central and its output built into a knowledge graph [@schindler2022]; the mentions in the biomedical literature were released at scale [@istrate2022czsoftware]. The same pipeline shows citation practice improving slowly in the coronavirus literature [@du2022cord19] and shows retracted articles using less open-source software than matched controls [@schindler2023retracted].
+
+Citation counts of software are the second instrument, and the studies that use them mostly document why they fail. Software is rarely cited in the databases built to index research outputs [@park2019software]. One widely used R package is cited under many inconsistent forms [@li2019lme4], and the citation formats R packages ask for change over a package's life [@wang2024rcitation]. Institutional repositories hold very little software as a recognized output [@carlin2023where].
+
+All of these read what authors wrote about software. This paper reads the software they ran, which removes the step at which a use goes unrecorded. Three efforts have read code before. One executed the R files in over 2,000 Harvard Dataverse deposits to ask whether they ran [@trisovic2022]. One had students inspect the replication files of more than ten thousand economics, political science and statistics papers and record which *language* each used [@upton2026software], and another classified economics replication packages by file extension to the same end [@kranz2023usage]. One resolved SSC package names out of economics replication code, to validate a Stata command that pins package versions, and found that the hundred most downloaded packages are 71% of SSC downloads but 93% of the packages publications load [@correia2024require]. None publishes per-package counts across languages with the denominator each share divides by. Two unpublished efforts come close: `renv` run over R scripts in Dataverse deposits [@arelbundock2022which], and the AEA Data Editor's scan of do-files for SSC packages during review [@aeadataeditor2021statapackagesearch; @reiner2021packagesearch]. Downloads remain the standing answer to how much a Stata command is used [@choodari2016uptake].
+
+### What a count is for
+
+The case that software work is under-rewarded is older than these measurements. Scientists write software inside a reputation system that pays in publications and citations, which shapes what gets written and whether it is maintained [@howison2011], and most learn to write it from peers rather than from training [@hannay2009scientists]. A review of what funders, maintainers and scientists would need to measure, from funding through use to scientific impact, found few measures of use [@howison2015ecosystem]. The software citation principles are the normative answer: cite software as one cites a paper [@smith2016]. A recent study paired articles with their code repositories and found that a large share have code contributors who are not authors [@brown2026code]. It measures who wrote the code behind a paper; this paper measures whose code the paper's analysis ran on.
+
+A count that gives credit will be gamed if it can be. Citation counts are inflated through reference metadata that never appears in the article [@besancon2024sneaked], and researchers choosing what to read respond to whichever indicators are put in front of them [@lemke2021conjoint]. So the question to ask of any count is what it costs to move. This paper asks it of downloads and of its own measure.
 
 ## What validated use means
 
@@ -611,35 +769,141 @@ The estimand:
 > analyzable script in language *L*, the share that statically reference
 > package *P*.
 
-The unit is the deposit, not the mention. A deposit calling `ggplot2` two
-hundred times is one user of `ggplot2`, and a mention-weighted count would
-rank whichever deposits happen to be largest.
+The unit is the deposit, not the mention. A deposit that calls `ggplot2` two
+hundred times is one user of `ggplot2`. A count weighted by mentions would
+rank the largest deposits.
 
-Static reference is not execution. A deposit may load a package in a
-superseded script, inside a dead branch, or in setup code that never runs, and
-code kept out of the deposit is invisible to us. A replication package is a
-curated artifact rather than a forensic copy of an environment
-[@trisovic2022]. Reachability from master scripts is reported as a sensitivity
-analysis, which bounds dead code without pretending to observe execution.
+A static reference is not a run. A deposit may load a package in an old
+script, in a branch that never executes, or in setup code that never runs,
+and code left out of the deposit cannot be seen at all. A replication package
+is a curated artifact, not a copy of the environment that produced the paper
+[@trisovic2022]. Where a deposit has a master script, the counts can be
+recomputed over the files it reaches, and the ranking holds.[^reach]
 
-Reference also means direct reference. A deposit loading `fixest` also runs
-`Rcpp` and `sandwich`, and neither is counted. That is the right choice for a
-credit metric: what an author chose and what their choice pulled in are
-different quantities, and crediting the closure would hand the top of the
-table to whatever the popular packages happen to depend on.
+[^reach]: In the `{python} f"{n_graph_complete:,}"` deposits whose master
+script's calls can all be followed, the median deposit has
+`{python} f"{median_share_reachable:.0%}"` of its files on that path, and
+recomputing over reachable files moves no package among the twenty most used
+by more than `{python} f"{max_rank_move}"` places. The appendix has the
+details.
 
-Expanding the closure is a separate exercise, and possible in two of the three
-languages. R declares dependencies in `DESCRIPTION`, Python in a
-distribution's `requires_dist`, and both can be walked mechanically. An SSC
-`.pkg` manifest records them, when it records them at all, as prose in a
-free-text field. The `reghdfe` manifest reads
-`Requires: Stata version 11.2 and ftools from SSC (q.v.)`, so extracting a
-graph from it means parsing English.
+A reference also means a direct one. A deposit that loads `fixest` also runs
+`Rcpp` and `sandwich`, and neither is counted. What an author chose and what
+the choice pulled in are different quantities, and crediting the closure
+would put whatever popular packages depend on at the top of the table.
 
-The closest prior work executed R code from over 2,000 Harvard Dataverse
-deposits to study reproducibility [@trisovic2022]. This paper takes a similar
-corpus and asks which libraries the code loads, across three languages
-instead of one.
+The closure could be added for two of the three languages. R declares
+dependencies in `DESCRIPTION` and Python in a distribution's `requires_dist`,
+and both can be walked by machine. An SSC `.pkg` manifest records them, when
+it records them at all, as prose: the `reghdfe` manifest reads
+`Requires: Stata version 11.2 and ftools from SSC (q.v.)`.
+
+## Methods
+
+### Sampling frame
+
+```{python}
+#| label: frame-table
+located = frame[frame["collection_id"].notna() & (frame["collection_id"] != "")]
+zen = located[located["source"] == "zenodo"]
+unlocated = frame[frame["notes"].fillna("").str.startswith("unlocated")]
+
+# The Dataverse half of the frame, enumerated collection by collection rather
+# than declared: one request returns a journal's whole dataset list, so these
+# are counted deposits and not an estimate.
+_dv_path = Path("../data/frame/dataverse_deposits.csv")
+dv = pd.read_csv(_dv_path) if _dv_path.exists() else pd.DataFrame()
+n_dv_deposits = len(dv)
+n_dv_collections = dv["collection_id"].nunique() if len(dv) else 0
+n_frame_total = int(zen["n_records_declared"].sum()) + n_dv_deposits
+```
+
+The frame is the list of journals whose data-and-code policy the Social
+Science Data Editors *actively verify*, from their Data and Code Availability
+Standard. The frame spans two repositories because the two hold different
+disciplines: Zenodo's verified collections are economics journals, and
+Harvard Dataverse's journal collections are mostly political science. The
+first appendix lists the collections.
+
+
+Each Dataverse collection's deposits were listed in full through the
+repository's API, paging where a collection exceeded one page, so the counts
+are enumerated and not taken from the repository's own figures. One
+collection present in a 2024 snapshot, `regionalstatistics`, no longer exists.
+Six collections returned nothing on a first pass; five of them answered
+minutes later and were retried, and the sixth is the one that is gone.
+
+`{python} len(unlocated)` journals on the list are recorded as **unlocated**:
+eight AEA titles deposit to openICPSR, which this corpus does not cover, and
+two could not be placed. Every Zenodo community slug was checked before use,
+because Zenodo ignores an unknown `communities=` filter and returns all 7.1
+million records.
+
+
+Of `{python} f"{n_deposits_declared:,}"` Zenodo deposits attempted,
+`{python} f"{n_deposits_collected:,}"`
+(`{python} f"{share_collected:.0%}"`) yielded files. \Cref{tab:coverage}, in
+the first appendix, gives the reason for each of the rest: an archive over the
+size cap, a multi-part archive that was not reassembled, or a download that
+failed.
+
+
+### Measurement
+
+
+Strings and comments are excluded by structure. In a syntax tree,
+`cat("run library(dplyr)")` is a call whose argument is a string node, so a
+walk over call nodes never sees the text inside it. Regular expressions give
+no such guarantee, and the appendix measures the difference.
+
+Stata needed an index. R has CRAN and Python has PyPI, so an import can be
+looked up. Stata has no registry that maps a command to its package, so the
+mapping was rebuilt from distribution manifests:
+`{python} f"{n_index_packages:,}"` packages and
+`{python} f"{n_index_commands:,}"` commands across four kinds of archive,
+released with this paper.
+
+One such list already existed for SSC. Sergio Correia compiled a
+command-to-package list for the AEA Data Editor's package scanner
+[@reiner2021packagesearch], by a route that shares no code with the crawl
+here. The two lists hold `{python} f"{index_check['n_shared']:,}"` commands in
+common and name the same package for
+`{python} f"{index_check['n_same_package']:,}"` of them. The crawl holds
+`{python} f"{index_check['n_only_ours']:,}"` SSC commands that list lacks and
+lacks `{python} f"{index_check['n_only_theirs']:,}"` it holds, most of them
+internal subroutines.
+
+A manifest lists the files a package ships, which is not the list of commands
+it provides. Two rules close the gap. A file named by Stata's convention for
+internal subroutines, such as `_eststo` or `reghdfe_p`, is a helper: a call to
+it counts as a use of its package, and it is not reported as a command of its
+own. A journal package is credited with a command only when it also ships
+that command's help file, because an article's package bundles whatever its
+example needs; a *Stata Journal* package for calibrating Cox models ships a
+copy of `grc1leg.ado`. A command found in more than one archive is credited
+to the first of SSC, the *Journal*, the *Bulletin* and the authors' sites to
+list it, since journal authors mirror their software to SSC.
+
+One kind of package has no command to find. `egen n = nvals(x)` calls
+official `egen`, which runs a file named `_gnvals.ado`, and a package such as
+`egenmore` is a collection of such files. Each `egen` call is therefore read
+twice, as the command and as the file its function lives in, and the file
+resolves to official Stata where Stata ships it and to its package where a
+package does.
+
+The download counts are existing data. SSC's are the monthly hits behind
+Stata's `ssc hot`, served by RePEc. CRAN's come from one mirror's logs through
+`cranlogs` [@csardi2015cranlogs]. PyPI's are a monthly dump of its public
+download table for the fifteen thousand most downloaded projects
+[@vankemenade2026toppypi]. Each is pinned by date and digest beside the
+registries.
+
+Shares are not comparable across languages. `{python} top_python_package`
+appears in `{python} f"{top_python_share:.0%}"` of Python deposits because
+Python in a replication package almost always means a dataframe pipeline.
+Stata's most used package reaches `{python} f"{top_stata_share:.0%}"` over a
+much longer tail, because Stata does natively what a Python deposit imports a
+library to do. The two are shares of different kinds of deposit.
 
 ## Results
 
@@ -666,9 +930,8 @@ table(
         "The ten packages appearing in the most deposits in each language. "
         "\\emph{deposits} counts deposits referencing the package; "
         "\\emph{of} is the number of deposits containing analyzable code in "
-        "that language, which is the only denominator these shares are "
-        "comparable against. A deposit counts once however many times it "
-        "calls the package."
+        "that language, and the share divides by it. A deposit counts once "
+        "however many times it calls the package."
     ),
 )
 ```
@@ -676,25 +939,20 @@ table(
 Every count pools both repositories: `{python} f"{n_zenodo_deposits:,}"`
 deposits of economics from Zenodo and
 `{python} f"{n_dataverse_deposits:,}"` of political science from Harvard
-Dataverse, across `{python} f"{n_collections_tallied}"` collections. The
+Dataverse, across `{python} f"{n_collections_tallied:,}"` collections. The
 released table carries the split beside every pooled total, because the two
-halves are very different sizes and a pooled number with no breakdown asks a
-reader to take the composition on trust.
+halves differ in size.
 
-Every count is a share of the deposits **at risk**, meaning those that contain
-analyzable code in that language. A share against any other denominator is not
-comparable to anything.
+Every count is a share of the deposits **at risk**: those that contain
+analyzable code in the language. A deposit counts as at risk for a language
+when it holds an analyzable file in that language or when a reference in that
+language came out of it. The second clause covers notebooks and literate
+documents, whose file type is `ipynb` or `Rmd` while the code inside is
+Python or R; without it a deposit whose only Python lives in a notebook would
+enter the numerator of every Python package it loads and the denominator of
+none.
 
-Literate documents make that denominator harder to compute than it looks. A
-Jupyter notebook's file type is `ipynb` and the code inside it is Python, so
-counting file types alone puts a deposit whose only Python lives in a notebook
-into the numerator of every Python package it loads and into the denominator
-of none. A deposit therefore counts as at risk for a language when it holds an
-analyzable file in that language *or* when a reference in that language came
-out of it. The correction is exact for R, Python and Stata: every deposit with
-chunks in one of them yields at least one reference in it.
-
-### The most-used research software formats tables
+### What published code loads
 
 ```{python}
 #| label: fig-credit
@@ -710,19 +968,150 @@ figure(
 )
 ```
 
-Of the ten most widely used Stata packages (\cref{tab:top-packages}),
-`{python} f"{n_table_makers}"` format output instead of estimating anything:
+Of the ten most used Stata packages (\cref{tab:top-packages}),
+`{python} f"{n_table_makers:,}"` prepare exhibits and estimate nothing:
 `{python} table_makers_list`. \cref{fig:credit} shows the same ordering with
-the formatters marked. The single most used is
-`{python} top_stata_package`, in `{python} f"{top_stata_share:.0%}"` of Stata
-deposits, ahead of every regression command.
+those packages marked. The most used of all is `{python} top_stata_package`,
+in `{python} f"{top_stata_share:.0%}"` of Stata deposits, ahead of every
+regression command.
 
-For a credit metric this has an awkward implication. A large share of what
-research depends on is the machinery for turning estimates into a publishable
-exhibit, and whoever writes that machinery has produced something the field
-uses constantly and cites almost never.
+Much of what research depends on, then, is the machinery that turns estimates
+into a publishable table or figure, and the field uses that machinery
+constantly and cites it almost never.
 
-### Most deposits contain Stata, which studies of research software omit
+### RQ1: Validated use and download counts
+
+```{python}
+#| label: tbl-agreement
+table(
+    agreement_table,
+    caption="Agreement between validated use and download counts, from both sides",
+    label="tab:agreement",
+    align="lrrrrrrr",
+    note=(
+        "\\emph{used} is packages the corpus uses that the registry has a "
+        "download count for, and the two columns after it are Spearman rank "
+        "correlations between deposits and downloads among them, and among "
+        "those in at least twenty deposits. \\emph{counted} is every package "
+        "the registry has a count for; \\emph{ever used} is the share of those "
+        "in any deposit, the correlation after it counts an unused package as "
+        "zero, and the last column is how many of the hundred most downloaded "
+        "are used at all. SSC counts hits in one month, CRAN downloads over a "
+        "year from one mirror, and PyPI thirty days for its fifteen thousand "
+        "most downloaded projects, so its \\emph{counted} is that list and not "
+        "PyPI. Every comparison is of ranks within one registry."
+    ),
+)
+```
+
+```{python}
+#| label: fig-downloads
+figure(
+    "figures/downloads.pdf",
+    caption="Deposits using a package against its downloads",
+    label="fig:downloads",
+    note=(
+        "Packages used in at least five deposits, on logarithmic axes. "
+        "Labeled are the packages ranked furthest above and furthest below "
+        "their download rank, chosen by rank difference."
+    ),
+)
+```
+
+```{python}
+#| label: fig-reach
+figure(
+    "figures/reach.pdf",
+    caption="Share of a registry's packages used in any deposit, by download decile",
+    label="fig:reach",
+    note=(
+        "Packages the registry has a download count for, split into tenths by "
+        "that count. For PyPI the tenths are of its fifteen thousand most "
+        "downloaded projects."
+    ),
+)
+```
+
+The answer depends on which packages you ask about, so \cref{tab:agreement}
+asks from both sides. Start from every package a registry counts. Downloads
+then say a good deal about *whether* this field uses a package.
+`{python} f"{agree['cran']['registry']['ever_used']:.0%}"` of CRAN appears in
+any deposit; `{python} f"{agree['cran']['registry']['deciles'][-1]:.0%}"` of
+its most downloaded tenth does, against
+`{python} f"{agree['cran']['registry']['deciles'][0]:.0%}"` of its least
+downloaded, and `{python} agree['cran']['registry']['top100_used']` of the
+hundred most downloaded packages appear somewhere (\cref{fig:reach}). Now
+start from the packages the field uses. Downloads say much less about *how
+much*. Among R packages in at least twenty deposits, the ones a committee
+would ask about, the rank correlation is
+`{python} f"{agree['cran']['used']['rho_20']:.2f}"`. `stargazer` is
+`{python} ordinal(_use_rank("stargazer", "cran"))` among R packages by
+validated use and `{python} ordinal(_download_rank("stargazer", "cran"))` by
+downloads.
+
+The two counts disagree for two reasons, and only one bears on this paper's
+argument. The first is that they count different people. Downloads pool
+everyone who uses R or Python; this corpus is economics and political
+science. `{python} _furthest("pypi", above=False)` rank far higher by
+downloads than by use here partly because most Python is not written by
+social scientists. Holding the audience fixed shows how much of the gap that
+explains. Among the `{python} _cran['task_view']['n']` R packages the corpus
+uses that CRAN's *Econometrics* and *Causal Inference* task views list, which
+is software written for this field, the correlation rises from
+`{python} f"{_cran['used']['rho']:.2f}"` to
+`{python} f"{_cran['task_view']['rho']:.2f}"`.
+
+The second reason is that a download is cheap, and it shows in what downloads
+track. Across the R packages the corpus uses, downloads correlate at
+`{python} f"{_deps['rho_downloads']:.2f}"` with the number of other packages
+that install the package as a dependency; validated use correlates with that
+number at `{python} f"{_deps['rho_use']:.2f}"`. Downloads come close to
+measuring a package's place in the dependency graph. The R packages ranked
+furthest below their download rank, `{python} _furthest("cran", above=False)`
+(\cref{fig:downloads}), are all installed by other software, on every machine
+and build server that installs the other software. Given a package's reverse
+dependencies, downloads add a partial rank correlation of
+`{python} f"{_deps['rho_partial']:.2f}"` with use.
+
+One prediction failed. I expected agreement to rise once heavily depended-on
+packages were set aside, at two cut-offs fixed in advance. It fell, to
+`{python} f"{_deps['rho_at_most_100']:.2f}"` among packages with at most a
+hundred reverse dependencies and `{python} f"{_deps['rho_at_most_10']:.2f}"`
+with at most ten. The packages set aside are the head of both lists,
+`ggplot2` and `dplyr`, where the two counts agree, and among packages nothing
+depends on, downloads carry little signal of any kind. I computed the partial
+correlation above after seeing that result, so it describes and does not test.
+
+Agreement also falls as automatic installation rises across registries. It is
+highest for Stata, `{python} f"{agree['ssc']['used']['rho']:.2f}"`, where
+`{python} top_stata_package` leads both lists and a package is installed only
+when a person types `ssc install`. It is lower for R, whose packages declare
+dependencies that install with them, and lowest for Python,
+`{python} f"{agree['pypi']['used']['rho']:.2f}"`, where continuous
+integration reinstalls an environment on every commit. The costly-signal argument predicts this order. Three registries are three observations.
+
+Concentration differs too. The hundred most downloaded CRAN packages take
+`{python} f"{agree['cran']['registry']['top100_share_of_downloads']:.0%}"` of
+CRAN's downloads and
+`{python} f"{agree['cran']['registry']['top100_share_of_use']:.0%}"` of the
+package uses in this corpus. For SSC the two shares are
+`{python} f"{agree['ssc']['registry']['top100_share_of_downloads']:.0%}"` and
+`{python} f"{agree['ssc']['registry']['top100_share_of_use']:.0%}"`, close to
+each other and well below the 93% share of package loads that
+@correia2024require report for economics code, on a different corpus in an
+earlier month.
+
+A download count exists only where a registry keeps one. Software the corpus
+finds in the *Stata Journal*, the *Bulletin*, an author's site or a GitHub
+repository has none. `{python} f"{agree['pypi']['used']['n_censored']:,}"` of
+the Python packages the corpus uses fall below the
+`{python} f"{n_pypi_counted:,}"` projects PyPI's counts cover, which tells us
+one thing about them: each has fewer downloads than every project on that
+list. Ranked as tied at the bottom, they move the Python correlation from
+`{python} f"{agree['pypi']['used']['rho']:.2f}"` to
+`{python} f"{agree['pypi']['used']['rho_censored']:.2f}"`.
+
+### RQ2: What a registry leaves out
 
 ```{python}
 #| label: fig-languages
@@ -743,17 +1132,114 @@ figure(
 `{python} f"{n_stata_deposits:,}"` deposits contain analyzable Stata against
 `{python} f"{n_r_deposits:,}"` with R and
 `{python} f"{n_python_deposits:,}"` with Python, roughly
-`{python} f"{stata_to_r_ratio:.1f}"` Stata deposits for every R one, and
-\cref{fig:languages} shows the split is disciplinary rather than incidental.
+`{python} f"{stata_to_r_ratio:.1f}"` Stata deposits for every R one.
+\cref{fig:languages} shows that the split follows discipline: economics
+deposits are Stata, and political science deposits are mixed.
 
 Studies of research software cover R and Python, the two languages with
-public package registries. The omission is not random with respect to what it
-leaves out. It drops the language most of this work is written in, and it
-drops it because counting Stata is harder, so the discipline that uses Stata
-most disappears from the record for a reason that has nothing to do with how
-much software it uses.
+public package registries. That leaves out the language most of this code is
+written in, and it leaves it out because Stata is harder to count, so the
+discipline that uses Stata most drops from the record for a reason unrelated
+to how much software it uses. The next subsection measures what the
+registries miss.
 
-### The formatter leads every journal; second place follows the field
+### Registries: what they cover and what they miss
+
+```{python}
+#| label: tbl-locations
+table(
+    where_software_lives,
+    caption="Where the software a deposit uses lives",
+    label="tab:locations",
+    align="lrrrrrr",
+    note=(
+        "Share of deposits using at least one package found in each place, "
+        "over deposits with any use that could name a third-party package; a "
+        "deposit can appear in several columns. The primary registry is SSC, "
+        "CRAN or PyPI. Secondary archives are the \\emph{Stata Journal} and "
+        "the \\emph{Stata Technical Bulletin} for Stata, and Bioconductor and "
+        "the CRAN archive for R. A code host is credited only when the deposit "
+        "itself installs the package from one. \\emph{Unresolved} is a deposit "
+        "using at least one name that none of these accounts for."
+    ),
+)
+```
+
+A package can be counted only if the name in the code can be looked up
+somewhere. For R and Python one registry does almost all of that work. For
+Stata no single registry does, and \cref{tab:locations} shows where the rest
+of its software lives.
+
+Stata's software is scattered, not informal. SSC holds
+`{python} f"{n_ssc_packages:,}"` packages. The *Stata Journal* and its
+predecessor, the *Stata Technical Bulletin*, publish the software behind their
+articles: `{python} f"{n_journal_packages:,}"` and
+`{python} f"{n_stb_packages:,}"` packages. Authors serve more from their own
+sites; `grc1leg`, which combines graphs under one legend, comes from a
+StataCorp developer's page and from nowhere else. All of these use the format
+`net install` reads, a `stata.toc` listing packages and a `.pkg` manifest
+listing each package's files, and none was indexed by command. I indexed all
+four. `{python} f"{n_stata_beyond_ssc:,}"` deposits use at least one of the
+`{python} f"{n_stata_beyond_ssc_packages:,}"` packages that an index of SSC
+alone reports as belonging to nothing, among them `renvars`, published in the
+*Bulletin*.
+
+Authors' sites have no list, so they are found from the code. Every
+`net install ..., from(URL)` line in the corpus names one, and each site named
+is then crawled whole from its own `stata.toc`, because `net install` is
+typed once by hand and most deposits that use a command carry no install line
+for it. Looking up the names still unplaced led to three more sites, one of
+them the new home of the SPost suite. Together that is
+`{python} f"{n_net_packages:,}"` packages on `{python} f"{n_net_hosts:,}"`
+hosts, `{python} f"{share_net_on_github:.0%}"` of them on GitHub, and
+`{python} f"{n_net_unreachable}"` addresses that no longer serve a manifest.
+A site no deposit installs from is not found. That bounds this tier by the
+corpus in a way the other three are not.
+
+Registries lose software as well as lacking it.
+`{python} f"{share_r_archived:.0%}"` of R deposits load a package that CRAN
+has since archived. A lookup against today's CRAN calls those unknown, and
+they are nearly all of R's secondary column.
+
+Off-registry software is not peculiar to Stata. In R it lives on GitHub.
+`{python} f"{share_r_code_host:.1%}"` of R deposits load a package that CRAN
+and Bioconductor lack and that the deposit itself installs with
+`install_github` or a relative. A name is credited to a code host only when the same deposit installs it from one.
+Pooling the evidence would let one deposit's `install_github("someone/utils")`
+vouch for every unresolved `utils` in the corpus. Relaxing the rule to names
+installed from a code host anywhere in the corpus would account for
+`{python} f"{n_r_hosted_elsewhere_deposits:,}"` of the
+`{python} f"{n_r_unknown_deposits:,}"` R deposits with an unresolved name.
+
+```{python}
+#| label: tbl-residue
+table(
+    residue_table,
+    caption="Names no archive accounts for, labeled by hand",
+    label="tab:residue",
+    align="lrl",
+    note=(
+        f"Every name used in at least {RESIDUE_MIN_DEPOSITS} deposits that "
+        "resolves to nothing, in all three languages, looked up one at a time. "
+        "The labeled file is released with the data."
+    ),
+)
+```
+
+What is left is short enough to read. `{python} f"{n_residue_names:,}"`
+names appear in at least `{python} f"{RESIDUE_MIN_DEPOSITS}"` deposits and
+resolve to nothing. I looked each one up (\cref{tab:residue}).
+`{python} f"{n_residue_software:,}"` are software. The other
+`{python} f"{n_residue_not_software:,}"` are not: commands official Stata
+ships without documenting, programs a deposit defines for itself, and text
+the lexer read as code. Below that threshold sit
+`{python} f"{n_unresolved_stata_singletons:,}"` Stata names that each appear
+in one deposit: typos, macro fragments and one author's helpers.
+
+Stata is hard to count because its software has no single registry. An index
+removes that difficulty.
+
+### RQ3: Field-specific software dependence
 
 ```{python}
 #| label: tbl-collections
@@ -774,95 +1260,196 @@ table(
 ```
 
 `{python} top_stata_package` is the most loaded Stata package in
-`{python} f"{n_estout_first}"` of the `{python} f"{n_collections_shown}"`
+`{python} f"{n_estout_first:,}"` of the `{python} f"{n_collections_shown:,}"`
 largest collections (\cref{tab:collections}), in economics and political
 science alike.
 
-Second place is not the same everywhere, and it separates the two fields.
-Across all `{python} f"{n_ranked_collections}"` collections holding at least
-`{python} f"{MIN_STATA_DEPOSITS}"` Stata deposits, `reghdfe`, a
-fixed-effects estimator, outranks `coefplot` in
-`{python} f"{n_econ_reghdfe}"` of the `{python} f"{n_econ_shown}"` economics
-collections, and `coefplot`, which draws coefficient plots, outranks
-`reghdfe` in `{python} f"{n_polsci_coefplot}"` of the
-`{python} f"{n_polsci_shown}"` political science ones.
+Second place differs by field. Across the
+`{python} f"{n_ranked_collections}"` collections with at least
+`{python} f"{MIN_STATA_DEPOSITS}"` Stata deposits, `reghdfe`, a fixed-effects
+estimator, outranks `coefplot` in `{python} f"{n_econ_reghdfe:,}"` of the
+`{python} f"{n_econ_shown:,}"` economics collections, and `coefplot`, which
+draws coefficient plots, outranks `reghdfe` in
+`{python} f"{n_polsci_coefplot:,}"` of the `{python} f"{n_polsci_shown:,}"`
+political science collections.
 
-Repository is the obvious confound, since the frame's two halves are nearly
-one discipline each, and a 2024 scrape differs from a 2026 one in more than
-subject. It survives the check.
-`{python} f"{n_econ_in_dataverse}"` of those economics collections deposit to
-Harvard Dataverse, so for them the repository, the vintage and the collection
-method are all held fixed against the political science journals beside them,
-and the split still appears.
+Repository could explain the split, since each half of the frame is nearly
+one discipline and a 2024 scrape differs from a 2026 one in more than subject.
+It does not. `{python} f"{n_econ_in_dataverse}"` of the economics
+collections deposit to Harvard Dataverse beside the political science
+journals, with the same repository, vintage and collection method, and the
+split appears among them too.
 
-Pooling is what makes this visible. A single ranking over the whole corpus
-puts the formatters on top and conceals that the tool underneath them differs
-by field.
+A single ranking over the whole corpus puts the exhibit tools on top and
+hides that the estimator beneath them differs by field.
 
-### Some of the most-used software is in no registry at all
+## Discussion and Recommendations
 
-`{python} top_unresolved_stata` is the most widespread Stata command the
-resolver cannot attribute to any package, and it appears in
-`{python} f"{n_grc1leg_deposits}"` deposits. StataCorp distributes it from
-their own website and no registry indexes it. The same pattern holds below
-it: `dcdensity` from its author's page, `btscs` from a replication archive,
-`prvalue` and `listcoef` from the SPost suite distributed with a textbook.
+### What better counts are for
 
-A credit system built on registries cannot see any of them, and indexing SSC
-more carefully will not help, because these were never on SSC. That caps what
-anyone can currently count about Stata, and the cap is a property of the
-ecosystem rather than of the resolver. R and Python have nothing comparable:
-a package outside CRAN or PyPI is rare.
+These counts have two uses. The first is credit. A package in
+`{python} f"{top_stata_share:.0%}"` of the Stata deposits at verified journals
+gives its author a number that anyone can look up in the released tables.
 
-## What better counts are for
+The second is choosing what to test. Work on software reliability has to pick
+packages to examine, and picking by reputation reproduces what the field
+already believes. The companion project `kasauti` probes every release of a
+package for results that changed without notice, and it picks its targets
+partly by how often a function appears in real code. Validated-use counts
+answer that question, and they point at the packages where a silent change
+would touch the most published work.
 
-These counts have two uses, and the second is the one that motivated
-collecting them at this scale.
+### Limitations
 
-The first is credit itself. A package in
-`{python} f"{top_stata_share:.0%}"` of the Stata deposits at policy-verified
-journals gives a software author something a hiring committee can check,
-which a download count does not. Every package's number is published rather
-than summarised, so the claim can be verified by whoever is evaluating it.
+Costly to inflate is not impossible to inflate. An author can load a package
+they did not need, and a package bundled into a template that circulates in a
+subfield collects counts without anyone choosing it. The unit cost is the
+cost of a paper, not of a package, so the measure resists the cheap
+manipulation that download counts invite and not a determined one.
 
-The second is deciding what to test. Work on software reliability has to
-choose which packages to examine, and choosing by reputation reproduces
-whatever the field already believes. The sibling project `kasauti` runs
-probes against every release of a package to find where results changed
-without anyone saying so, and it picks targets partly by how often a function
-appears in real code. Validated-use counts answer that question directly, and
-they point at the packages where a silent change would touch the most
-published work.
+The counts weight every deposit alike. A package used once in each of fifty
+short papers and one used throughout a single large project score fifty to
+one. That answers "how many pieces of research chose this" and not "how much
+research depends on this".
 
-## Sampling frame
+The corpus comes from two collections with different instruments behind them.
+The Harvard Dataverse material is a January 2024 scrape that kept only `.do`,
+`.r` and `.py` files; the Zenodo material is whole deposits, including
+notebooks, knitr documents and `.ado` files. A package used mainly inside a
+literate document is under-counted on the Dataverse side, and the two
+collections are two years apart. Recomputing every ranking on the file types
+both collections share shows what that costs. For Stata and R all twenty top
+places hold. For Python, `ipython` and `spacy` drop out of the top twenty and
+four other packages move, none above rank fourteen; Python is the language
+whose code most often lives in a notebook. The top ten in every language, the part the tables print, does not change.
 
-```{python}
-#| label: frame-table
-located = frame[frame["collection_id"].notna() & (frame["collection_id"] != "")]
-zen = located[located["source"] == "zenodo"]
-unlocated = frame[frame["notes"].fillna("").str.startswith("unlocated")]
+Deposits whose archives exceed the size cap yield no code, and they are
+code-heavy: the median archive in the smallest quartile holds
+`{python} f"{code_files_smallest}"` code files and the median in the largest
+holds `{python} f"{code_files_largest}"`. `{python} f"{n_spanned_deposits}"`
+deposits split a package across `.z01`, `.7z.002` or `.partN.rar` segments,
+which are not reassembled; only the last segment carries the archive's
+directory, so the download completes and the first read fails.
 
-# The Dataverse half of the frame, enumerated collection by collection rather
-# than declared: one request returns a journal's whole dataset list, so these
-# are counted deposits and not an estimate.
-_dv_path = Path("../data/frame/dataverse_deposits.csv")
-dv = pd.read_csv(_dv_path) if _dv_path.exists() else pd.DataFrame()
-n_dv_deposits = len(dv)
-n_dv_collections = dv["collection_id"].nunique() if len(dv) else 0
-n_frame_total = int(zen["n_records_declared"].sum()) + n_dv_deposits
-```
+Stata resolution reflects a command's status today, not its status when the
+code was written. A command that was user-written in 2010 and later absorbed
+into official Stata resolves as official, which can manufacture a trend for
+anyone reading these counts over time.
 
-The inclusion rule comes from outside this paper. It is the journal list maintained by the
-**Social Science Data Editors** in the Data and Code Availability Standard:
-journals whose data-and-code policy the editors *actively verify*. That is a
-criterion a reader can check, and it avoids the trap of a frame assembled from
-whatever a keyword search happened to return.
+Two false positives remain: SSC packages whose only command is a single
+common token attract stray matches from Mata-style assignments outside a
+`mata:` block. At present they are `{python} residual_false_positives`.
 
-The frame spans two repositories, which is not a convenience: they hold
-different disciplines. Zenodo's verified collections are economics;
-Harvard Dataverse's journal collections are mostly political science, and a
-study of only one would describe a field while claiming to describe social
-science.
+The lexer still reads some text as code. A do-file can hold prose an author
+never commented out, log output pasted back into the script, and fragments of
+Mata or R outside any block the lexer recognizes, and their first words land
+in command position. `{python} f"{n_residue_not_software}"` of the
+`{python} f"{n_residue_names}"` names in \cref{tab:residue} are of this kind,
+`the` and `this` among them, and Stata keywords account for
+`{python} f"{n_keyword_noise:,}"` more mentions across
+`{python} f"{n_keyword_noise_deposits}"` deposits. They inflate the
+unresolved rate and nothing else: a word of English cannot collide with a
+package name.
+
+The index of authors' sites is bounded by the corpus. SSC and the two
+journals are crawled whole, but a site is found only if some deposit installs
+from it or if looking up an unplaced name led to it. Software served from a
+site no deposit names stays unresolved. Sites also die:
+`{python} f"{n_net_unreachable}"` of the addresses deposits install from no
+longer serve a manifest, and for some commands, `btscs` among them, the only
+copies left are the ones authors shipped inside their deposits.
+
+Julia files are collected and not parsed, so Julia is reported as language
+presence only, as are MATLAB, SAS and SPSS. MATLAB has no import statement
+and no registry to resolve against.
+
+Which version ran is mostly not recorded. Code names the packages it loads
+and almost never the release, so these counts pool a package across its
+history. Where a file does say, the release records it: a Stata `version`
+statement in `{python} f"{n_stata_version:,}"` of the
+`{python} f"{n_stata_version_of:,}"` deposits holding a do-file, an
+`renv.lock` or a bundled `DESCRIPTION` in `{python} f"{n_r_version}"` of
+`{python} f"{n_r_version_of:,}"` deposits with R code, and a notebook's own
+record of the interpreter that ran it. At
+`{python} f"{share_stata_version:.0%}"` coverage for the best of these, the
+environment table supports checking particular deposits and not estimating a
+distribution.
+
+### Recommendations
+
+Research software is credited badly because the numbers available to credit
+it with are cheap to produce. This paper offers one that is not: a count of
+the packages that published, verified replication code loads, over
+`{python} f"{n_deposits_analyzable:,}"` deposits and
+`{python} f"{len(usage):,}"` packages.
+
+The software social science leans on hardest, `{python} top_stata_package`
+first, prepares exhibits, and a download count does not show that. The
+language most of this code is written in was left out of studies of research
+software for want of an index, and the index is now public. Registries miss
+something in every language: in Stata, two journals' archives and authors'
+sites; in R, GitHub.
+
+A committee cannot reward what it cannot count [@sood_countpy]. Evaluation
+committees and the designers of credit systems should use validated use where
+they now use downloads or citations to software papers. Moving it by one
+costs a published, verified paper, a build server cannot inflate it, and every
+package's count is published.
+
+## Data and code availability
+
+The Stata command-to-package index is deposited at
+[10.5281/zenodo.21926099](https://doi.org/10.5281/zenodo.21926099) under CC0,
+with `{python} f"{n_index_commands:,}"` commands across
+`{python} f"{n_index_packages:,}"` packages, as a record of its own.
+
+The mention-level record and the aggregates are deposited at
+[10.5281/zenodo.21943908](https://doi.org/10.5281/zenodo.21943908) under CC0,
+covering `{python} f"{len(usage):,}"` packages, with counts by year and by
+journal. Each mention carries its package, the function where the source
+names one, the file, the line and a snippet, so the counts can be recomputed
+without re-parsing the corpus. The deposited code itself,
+`{python} f"{n_files:,}"` files, stays at the archives it came from. The
+tables are also served at <https://recite.github.io/softverse/data/>, and each
+package can be looked up at <https://recite.github.io/softverse/lookup/>. Both
+DOIs resolve to the latest version of their record.
+
+The extraction pipeline, the resolver and the sampling frame are at
+<https://github.com/recite/softverse>.
+
+## Reproducibility
+
+The corpus, the registry snapshots, the download counts and the extractor are
+pinned, and the first appendix lists each pin. Every mention carries the
+extractor version and the registry lock that produced it.
+
+## Acknowledgements
+
+Daniel Weitzel contributed to an earlier version of this project.
+
+## Competing interests
+
+The author has no competing financial interests. The argument that better
+counts would increase the production of research software is the author's
+own [@sood_countpy], and the paper releases the index it says the field
+lacks.
+
+## Funding
+
+This research received no external funding.
+
+## Author contributions
+
+Sole author. Conceptualization, methodology, software, data curation, formal
+analysis, and writing.
+
+## References
+
+::: {#refs}
+:::
+
+
+# Appendix: Sampling frame, coverage and provenance {#sec-apparatus}
 
 ```{python}
 #| label: tbl-frame
@@ -897,36 +1484,6 @@ table(
 )
 ```
 
-The Dataverse figure is enumerated rather than declared. One request returns
-a journal collection's entire dataset list, so these are counted deposits and
-not a figure supplied by the repository, and a collection too large for one
-listing was paged instead.
-
-The enumeration turned up two things that belong in the record, because a frame that
-only reports its successes is not a frame. One journal collection present in
-a 2024 snapshot, `regionalstatistics`, no longer exists: Harvard answers
-"Can't find dataverse with identifier". And six collections returned nothing
-on one pass, of which five succeeded minutes later, transient, and
-distinguished from the one that is genuinely gone, because retrying the first
-kind works and retrying the second never will.
-
-`{python} len(unlocated)` DCAS journals are recorded as **unlocated** rather
-than omitted: eight AEA titles live on openICPSR, and two could not be placed.
-A coverage gap belongs in the frame as a row, not in a silence.
-
-Every collection is verified before use. Zenodo does not reject an unknown
-`communities=` filter, it ignores it and returns all 7.1 million records, so
-an unverified slug would substitute the entire archive for one journal, an error
-shaped like abundance.
-
-
-Of `{python} f"{n_deposits_declared:,}"` Zenodo deposits attempted,
-`{python} f"{n_deposits_collected:,}"`
-(`{python} f"{share_collected:.0%}"`) yielded files. \Cref{tab:coverage} itemises the rest
-rather than summarising them, because the reasons are not interchangeable. A size
-cap is a deliberate choice, an unreassembled multi-part archive is a format the pipeline
-declined to handle, and a failure is a bug or an outage.
-
 ```{python}
 #| label: coverage
 table(
@@ -934,15 +1491,13 @@ table(
     caption="Why a deposit yielded no code",
     label="tab:coverage",
     note=(
-        "Zenodo deposits that produced no analyzable file, by reason. The "
-        "size cap and the unreassembled multi-part archives are deliberate "
-        "choices and are recoverable; the single failure is a zip using a "
-        "compression method Python does not implement."
+        "Zenodo deposits that produced no analyzable file, by reason. "
+        "Deposits over the size cap and multi-part archives could be "
+        "recovered; the single failure is a zip using a compression method "
+        "Python does not implement."
     ),
 )
 ```
-
-## Measurement
 
 ```{python}
 #| label: tbl-mechanism
@@ -951,7 +1506,7 @@ table(
         [
             ("R", "tree-sitter syntax walk"),
             ("Python", "stdlib ast, tokenize fallback"),
-            ("Stata", "purpose-built lexer, SSC command-to-package index"),
+            ("Stata", "purpose-built lexer, command-to-package index"),
             (".Rmd / .qmd / .Rnw", "knitr chunk splitter, routed per engine"),
             (".ipynb", "per cell, kernel language from the metadata"),
         ],
@@ -968,32 +1523,34 @@ table(
 )
 ```
 
-Two choices carry most of the weight. The first is that strings and comments
-are excluded structurally instead of being stripped out beforehand. In a
-syntax tree, `cat("run library(dplyr)")` is a call whose argument is a string
-node; those bytes never form a call, so a walk over call nodes cannot see
-them. Regex detection offers no such guarantee, and the validation section
-measures the difference.
+```{python}
+#| label: provenance
+lock = json.loads(Path("../registries/registries.lock.json").read_text())
+table(
+    pd.DataFrame(
+        [
+            {"registry": k, "snapshot": v["date"], "sha256": v["sha256"][:16]}
+            for k, v in lock.items()
+        ]
+    ),
+    caption="Pinned registry snapshots",
+    label="tab:provenance",
+    note=(
+        "Every mention carries the lock identifier of the registry snapshot "
+        "it was resolved against, so a count can be reproduced against the "
+        "registry as it stood rather than as it stands. \\texttt{stata\\_index} "
+        "is the command-to-package index, \\texttt{stata\\_official} the list "
+        "of official Stata commands checked against StataCorp's help server, "
+        "\\texttt{stata\\_base\\_ado} the file names in Stata's base directory, "
+        "and \\texttt{pypi\\_import\\_map} the table from Python import "
+        "names to distributions."
+    ),
+    align="lll",
+)
+```
 
-The second is that Stata needed an artifact that did not exist. R has CRAN and
-Python has PyPI, so an import can be looked up. Stata has no machine-readable
-registry, so a command→package index had to be reconstructed from SSC
-distribution manifests, `{python} f"{n_ssc_packages:,}"` packages and
-`{python} f"{n_ssc_commands:,}"` commands, and is released alongside this
-paper. Without it Stata cannot be measured at all, which is the mechanical
-reason prior work has left out the language social science uses most.
 
-Shares are not comparable across languages, and the denominators are why.
-`{python} top_python_package` appears in
-`{python} f"{top_python_share:.0%}"` of Python deposits, because Python in a
-replication package almost always means a dataframe pipeline. Stata's most
-common package reaches `{python} f"{top_stata_share:.0%}"` over a much longer
-tail, because Stata does natively what a Python deposit imports a library to
-do. Reading the gap as "Python users are more consistent" would misread it:
-these are shares of different kinds of deposit, and the two languages are not
-substitutes for each other in this corpus.
-
-## Validation {#sec-baseline}
+# Appendix: Validation of static parsing {#sec-baseline}
 
 ```{python}
 #| label: resolution
@@ -1022,24 +1579,23 @@ table(
 )
 ```
 
-Each check below establishes one thing, and the text says which.
+### Coverage
 
-Registry resolution measures coverage, not precision: a local module can
-share a name with a real distribution, and nothing here would notice.
-`{python} f"{unknown_share:.1%}"` of third-party-candidate mentions resolve
-to no registry, and every such name is enumerated in the released tables.
+Resolution measures coverage, not precision: a deposit's own module can share
+a name with a real distribution and still resolve.
+`{python} f"{unknown_share:.1%}"` of the mentions that could name a
+third-party package resolve to no registry, and the released tables list
+every such name.
 
-The denominator does more work than the rate. Against *all* mentions the same
-figure is `{python} f"{naive_unknown_share:.1%}"`, a flattering way to
-describe identical data: it divides by
-`{python} f"{n_stata_builtin_calls:,}"` Stata builtin calls that were never
-candidates for registry resolution and so could never have been unresolved.
-The rate reported here uses the mentions that could name a package, which is
-`{python} f"{unknown_share / naive_unknown_share:.0f}"` times larger and is
-the number a reader should use to discount the coverage claim.
+The denominator matters. Against all mentions the same rate is
+`{python} f"{naive_unknown_share:.1%}"`, because that denominator includes
+`{python} f"{n_stata_builtin_calls:,}"` calls to official Stata commands that
+could never be unresolved. The rate above, over mentions that could name a
+package, is `{python} f"{unknown_share / naive_unknown_share:.0f}"` times
+larger.
 
-So does the unit. Per deposit, which is the unit used everywhere else in this
-paper, the distribution sits nowhere near the pooled figure:
+Per deposit, the unresolved share is far below the pooled rate
+(\cref{tab:unresolved}).
 
 ```{python}
 #| label: tbl-unresolved
@@ -1056,199 +1612,137 @@ table(
     caption="Unresolved share, pooled and per deposit",
     label="tab:unresolved",
     note=(
-        "Restricted to mentions that could name a third-party package. The "
-        "pooled figure and the median deposit answer different questions, "
-        "and the gap between them is the point: the pooled rate describes a "
-        "minority of deposits."
+        "Restricted to mentions that could name a third-party package. A "
+        "minority of deposits hold most of the unresolved mentions."
     ),
 )
 ```
 
 Every candidate mention resolves in
-`{python} f"{share_deposits_fully_resolved:.0%}"` of deposits. The pooled
-figure is accurate and describes a minority: read it as an upper bound on how
-much of a typical deposit goes unnamed.
+`{python} f"{share_deposits_fully_resolved:.0%}"` of deposits.
 
-Language explains most of what is left. Stata carries
-`{python} f"{stata_unknown_share_of_all:.0%}"` of all unresolved mentions,
-and the bulk of that traces to the registry gap described above, where
-`{python} top_unresolved_stata` and the SPost commands are used widely and
-indexed nowhere. No amount of indexing SSC reaches them. Any measurement of
-Stata software use, this one or another, is bounded by that gap rather than
-by how carefully the indexing was done. What remains after it is lexer error,
-enumerated in the limitations below and not netted out.
+Stata holds `{python} f"{stata_unknown_share_of_all:.0%}"` of all unresolved
+mentions, spread over `{python} f"{n_unresolved_stata_names:,}"` names, of
+which `{python} f"{n_unresolved_stata_singletons:,}"` appear in a single
+deposit. The most widespread, `{python} top_unresolved_stata`, is in
+`{python} f"{n_top_unresolved_deposits:,}"` deposits. \cref{tab:residue}
+accounts for every name above the labeling threshold; below it are lexer
+errors and authors' own programs.
 
-An unresolved mention means no package could be named for it, which is a
-different thing from no package existing. Two constructs make that
-distinction explicit instead of letting it inflate the rate: `{python} f"{n_local_relative:,}"` Python relative imports
-(`from .models import Constants` names a module in the deposit, not a
-distribution) and `{python} f"{n_dynamic:,}"` names built at run time
-(`library(pkg, character.only = TRUE)`, where the package is a variable and
-no static analysis can know it). Both are reported in their own categories.
-An earlier version of this pipeline folded both into `unknown`, which
-overstated the unresolved rate and credited some of them to real packages
-that happen to share a name: `models`, `results` and `log` are distributions
-on PyPI as well as things people call their own files.
+Two kinds of name are neither resolved nor unresolved.
+`{python} f"{n_local_relative:,}"` are Python imports of a module in the
+deposit itself, relative (`from .models import Constants`) or absolute when a
+file of that name sits in the deposit. `{python} f"{n_dynamic:,}"` are names
+built at run time, as in `library(pkg, character.only = TRUE)`, where the
+package is a variable. Both are reported in their own categories, since
+`models`, `results` and `log` are PyPI distributions as well as names people
+give their own files.
 
-Stata's builtin list is measured rather than curated. It is the one place
-where an omission does damage: a command that official Stata provides but the
-list lacks falls through to the SSC index, and if some package ships a file of
-that name, the mention is credited there. So every command in the corpus was
-checked against StataCorp's public help server, which is the vendor's own
-answer to whether a command is official.
+### Official Stata commands
 
-That check changed more than expected. It moved
-`{python} f"{n_verified_added}"` commands out of "resolves to nothing",
-including `ds`, `pca` and `testparm`, and it removed every case where a
-command claimed by both official Stata and an SSC package had been credited to
-the package. With the curated list alone the unresolved rate on this same
-corpus is `{python} f"{curated_only_share:.1%}"` against
-`{python} f"{unknown_share:.1%}"`, and
-`{python} f"{n_misattributed:,}"` mentions would have gone to an SSC package
-that merely ships a file of the same name. Much of what looked like a coverage
-gap was ignorance of Stata on this end, and the method was never the limit.
+An omission from the list of official Stata commands does damage: a command
+Stata provides that the list lacks falls through to the SSC index, and if a
+package ships a file of that name, the use is credited to the package. Every
+command name in the corpus was therefore checked against StataCorp's public
+help server. The server answers only for commands with a help page, and Stata
+ships utilities without one, `_dots` and `tset` among them, so the list also
+takes every `.ado` file name in the base directory of a Stata installation,
+read from a public container build: `{python} f"{n_base_ado:,}"` names.
 
-Reading the check takes care. Every query returns HTTP 200, including for
-names that do not exist, so existence is read from the body text; and the
-server documents concepts and functions as well as commands, so pages from the
-User's Guide and function manuals are excluded. Without that second filter the
-system variables `_n` and `_b` and the function `e()` are reported as official
-Stata commands.
+The check moved `{python} f"{n_verified_added}"` commands, including `ds`,
+`pca` and `testparm`, from unresolved to official, and it removed every case
+where a command claimed by both official Stata and an SSC package had been
+credited to the package. With the curated list alone, the unresolved rate on
+this corpus is `{python} f"{curated_only_share:.1%}"` against
+`{python} f"{unknown_share:.1%}"`, and `{python} f"{n_misattributed:,}"`
+mentions would have gone to an SSC package that ships a file of the same
+name. The help server returns HTTP 200 for every query, so existence is read
+from the page text, and pages from the User's Guide and the function manual
+are excluded, since they document `_n`, `_b` and `e()`, which are not
+commands.
 
-Agreement with a second tool gives a different kind of evidence.
-`renv::dependencies()` (`{python} renv_version`) over
+### Agreement with `renv`
+
+`renv::dependencies()` (`{python} renv_version`), run over
 `{python} f"{n_renv_compared:,}"` of the corpus's
-`{python} f"{n_r_deposits:,}"` R deposits gives a mean per-deposit
-Jaccard of `{python} f"{renv_mean_jaccard:.2f}"` and a pooled Jaccard of
-`{python} f"{renv_pooled_jaccard:.2f}"`;
-`{python} f"{renv_perfect_share:.0%}"` of deposits agree exactly. Both are
-reported because they answer different questions: the mean weights every
-deposit equally, the pooled figure every package-deposit pair, so a headline
-cannot be flattered by deposits with one obvious package in them.
+`{python} f"{n_r_deposits:,}"` R deposits, gives a mean per-deposit Jaccard
+of `{python} f"{renv_mean_jaccard:.2f}"` and a pooled Jaccard of
+`{python} f"{renv_pooled_jaccard:.2f}"`, and
+`{python} f"{renv_perfect_share:.0%}"` of deposits agree exactly. The mean
+weights every deposit equally and the pooled figure every package-deposit
+pair. `{python} f"{n_renv_unreadable:,}"` deposits are excluded because renv
+returned nothing for them: it runs with `errors = "ignored"` and skips a file
+it cannot decode.
 
-A further `{python} f"{n_renv_unreadable:,}"` deposits are excluded, because
-renv returned nothing at all for them. It runs with `errors = "ignored"` and
-drops a file it cannot decode in silence, so those are files one side never
-read, and scoring them would measure a decoding difference as a
-disagreement. This is the treatment the oracle already gives files R cannot
-parse.
-
-Those figures compare like with like. Run over a whole deposit, renv reports
-three kinds of name this extractor leaves out on purpose, and the comparison
-sets them aside before scoring, counting each as a package in a deposit:
-`{python} f"{n_renv_aside_base:,}"` base R packages such as `grid`, `parallel`
-and `stats`, which ship with the language and which the resolver classifies
-as base; `{python} f"{n_renv_aside_rmarkdown:,}"` cases of `rmarkdown`, which
-renv adds for any `.Rmd` file even when the file loads nothing; and
+The comparison sets aside three kinds of name that renv reports and this extractor leaves out: `{python} f"{n_renv_aside_base:,}"` base R
+packages such as `grid` and `stats`; `{python} f"{n_renv_aside_rmarkdown:,}"`
+cases of `rmarkdown`, which renv adds for any `.Rmd` file; and
 `{python} f"{n_renv_aside_outside:,}"` names found only in files outside the
-analysis set, such as a package library shipped inside the deposit. Scored
-over every file with nothing set aside, the mean Jaccard is
+analysis set, such as a package library shipped inside a deposit. Without
+setting these aside, the mean Jaccard is
 `{python} f"{renv_raw_mean_jaccard:.2f}"` and the pooled Jaccard
-`{python} f"{renv_raw_pooled_jaccard:.2f}"`. After alignment, renv names
+`{python} f"{renv_raw_pooled_jaccard:.2f}"`. After it, renv names
 `{python} f"{n_renv_theirs_only:,}"` packages this extractor does not, and
 this extractor names `{python} f"{n_renv_ours_only:,}"` that renv does not.
 
-This is convergent validity, and it is weaker than accuracy. `renv` performs
-the same kind of static scan over the same files and shares the same blind
-spots: a package named only in a string, or loaded through a variable, is
-invisible to both. Agreement therefore shows that two implementations of one
-idea agree, and says nothing about whether either is right. What it can catch
-is an implementation error on this side large enough to show against an
-independent codebase, which is why the per-deposit disagreements are written
-out and not reduced to the headline.
+This is agreement between two static scans of the same files, and it is
+weaker than accuracy: a package named only in a string, or loaded through a
+variable, is invisible to both.
 
-Syntactic accuracy has a true oracle. For "does this file contain a call to
-`library` whose argument is `x`", R's own parser defines the answer, so
-disagreement is an error on this side and the error rate is exact.
-Running R's parser over
-`{python} f"{n_oracle_files:,}"` `.R` files across both repositories and
-recursing its expression trees gives precision
+### Agreement with R's parser
+
+Whether a file contains a call to `library` with argument `x` has an exact
+answer, given by R's own parser. Running R's parser over
+`{python} f"{n_oracle_files:,}"` `.R` files from both repositories and
+walking its expression trees gives precision
 `{python} f"{oracle_precision:.4f}"` and recall
-`{python} f"{oracle_recall:.4f}"` over
-`{python} f"{n_oracle_pairs:,}"` name-file pairs.
+`{python} f"{oracle_recall:.4f}"` over `{python} f"{n_oracle_pairs:,}"`
+name-file pairs, `{python} f"{n_oracle_dataverse_files:,}"` of the files from
+Dataverse. `{python} f"{n_oracle_unparseable:,}"` files that R could not parse
+are excluded. The oracle's own walk had to handle a one-element result, a
+`character.only = T` written with the symbol `T`, calls such as
+`base::library(c)`, and `pkg::fun()` used as a default argument; the one
+disagreement that was the extractor's error, `"m"::baz()` with a string on
+the left, is fixed.
 
-Both repositories, because for a while it was one. The check globbed the
-Zenodo directory and its result was reported as though it described the
-corpus, which left `{python} f"{n_oracle_dataverse_files:,}"` Dataverse files
-vouched for by a measurement that had never read them. Extending it found a
-disagreement immediately, and the disagreement was the oracle's.
+The extractor also runs, as a test, against `renv`'s own test fixture, which
+lists thirteen ways of loading a package and states which must be found.
 
-A further `{python} f"{n_oracle_unparseable:,}"` files R itself could not
-parse. Those are excluded from the score instead of counted as clean, since a
-file nobody can parse may well have dependencies, and scoring it as empty
-would award credit for finding nothing in it.
-
-How that figure was reached matters as much as its value, because a broken
-comparison also produces perfect agreement. Six disagreements were
-adjudicated by running R and watching what it did, and five were the
-oracle's fault. It unboxed a one-element result into a bare string, so a lone
-`LearnBayes` was read as eight packages named after its letters. It skipped
-every `character.only = TRUE` call, though a string literal there is still a
-literal. It could not see through `base::library(c)`, because such a call's
-head is itself a call. It never descended into a function's formals, hiding
-every `pkg::fun()` used as a default argument. And it tested the flag against
-the literal `TRUE` while the corpus writes `character.only = T`, which is a
-symbol, so `library(pkg, character.only = T)` inside a loop was read as a
-dependency named `pkg`. The sixth was an error here: `"m"::baz()` is legal R
-and the extractor dropped it.
-
-Where the two disagreed about `requireNamespace(pkg)`, running R settled it:
-`library(pkg)` with `pkg <- "stats"` errors, so the symbol is the name, while
-`requireNamespace(pkg)` returns `TRUE`, so the symbol is a variable.
-
-A score tuned against the data it grades proves little, so the extractor is
-also checked against ground truth written by someone else: `renv`'s own test
-fixture, which enumerates thirteen loader spellings and states in its comments
-which ones must be found. That check failed where the oracle had passed,
-because two implementations sharing a blind spot look exactly like two
-implementations agreeing. It found `xfun::pkg_attach(c("g", "h"))` and
-`pkg_attach2("i", "j")` unhandled. Both are handled now, and the fixture runs
-as a test.
-
-The oracle bounds one thing exactly, whether the tree-sitter walk sees what R
-sees. It says nothing about Stata, nothing about resolution against CRAN, and
-nothing about whether a `library()` call means the analysis used the package.
-
-One claim is missing from all of this. No probability sample has been
-hand-labelled, so there is no human-validated precision or recall against
-research *use*. The labelling frame is designed and can be run; it has not
-been.
+This check covers one thing exactly: whether the syntax walk sees what R
+sees. It says nothing about Stata, about resolution against CRAN, or about
+whether a `library()` call means the analysis used the package. No sample has
+been labeled by hand for use, so there is no precision or recall against
+research use.
 
 ### Code that nothing runs
 
-A reference is not a run, and the objection with teeth is that a deposit
-carries scripts nobody executes: a superseded draft, a helper replaced twice,
-a figure that did not survive review. Some deposits say which is which. Their
-scripts form a graph -- `source()`, `do`, `run`, `include`, a local import --
-in which a master script runs others and nothing runs the master, and the
-tally can be recomputed over the files a master reaches.
+A deposit can hold scripts nothing runs: an old draft, a helper that was
+replaced, a figure cut in review. Where a deposit has a master script, the
+files it reaches can be told from the files it does not, and the counts can be
+recomputed over the reachable ones.
 
-`{python} f"{n_graph_master:,}"` of the corpus's
-`{python} f"{n_graph_considered:,}"` deposits have such a master, and
-`{python} f"{n_graph_complete:,}"` of those have a graph with no edge this
-reader failed to follow. Restricting to the complete ones matters, because
-Stata's idiom is to build a path from a macro: `do "$root/clean.do"` names a
-file whose identity is decided at run time, and
-`{python} f"{n_macro_edges:,}"` edges are written that way against
-`{python} f"{n_followed_edges:,}"` this reader could follow. Counting those
-targets as unreachable would measure the idiom and report it as dead code.
+A master is a script that runs other scripts and is run by none, through
+`source()`, `do`, `run`, `include` or a local import.
+`{python} f"{n_graph_master:,}"` of `{python} f"{n_graph_considered:,}"`
+deposits have one, and in `{python} f"{n_graph_complete:,}"` of those every
+edge could be followed. The rest mostly build a path from a macro, as in
+`do "$root/clean.do"`, which names a file only at run time;
+`{python} f"{n_macro_edges:,}"` edges are written that way, against
+`{python} f"{n_followed_edges:,}"` that could be followed. Counting a macro
+edge as unreachable would report an idiom as dead code, so those deposits are
+left out.
 
-Within the complete graphs, `{python} f"{share_files_reachable:.0%}"` of
-analyzable files are reachable from a master, and the median deposit puts
-`{python} f"{median_share_reachable:.0%}"` of its files on that path. So
-roughly a sixth of a typical deposit's code is code its own master never
-calls, and the objection is real.
-
-It does not move the ranking. Recomputed over reachable files alone, the
-twenty most loaded packages keep a median
-`{python} f"{reach_retained['stata']:.0%}"` of their Stata deposits,
+In the deposits with a complete graph,
+`{python} f"{share_files_reachable:.0%}"` of analyzable files are reachable
+from the master, and the median deposit has
+`{python} f"{median_share_reachable:.0%}"` of its files on that path.
+Recomputed over reachable files alone, the twenty most used packages keep a
+median `{python} f"{reach_retained['stata']:.0%}"` of their Stata deposits,
 `{python} f"{reach_retained['r']:.0%}"` of their R deposits and
-`{python} f"{reach_retained['python']:.0%}"` of their Python deposits; the
-worst-hit package in any of the three keeps
-`{python} f"{min(reach_worst.values()):.0%}"`. No package moves more than
-`{python} f"{max_rank_move}"` places. The counts shrink by about a fifth and
-the order they imply survives, which is what a ranking has to do to be worth
-publishing.
+`{python} f"{reach_retained['python']:.0%}"` of their Python deposits. The
+package hit hardest keeps `{python} f"{min(reach_worst.values()):.0%}"`, and
+no package moves more than `{python} f"{max_rank_move}"` places. The counts
+shrink and the order holds.
 
 ```{python}
 #| label: tbl-reachability
@@ -1267,208 +1761,7 @@ table(
 )
 ```
 
-Two things this does not do. It cannot speak for the
-`{python} f"{n_graph_considered - n_graph_master:,}"` deposits that never
-declare an entry point, which are most of them; a deposit of three
-independent scripts has no master to bound. And a file a master reaches can
-still hold a `library()` call in a branch that never executes, which no
-static reader can see.
-
-## Limitations
-
-The gap between reference and execution is bounded by the reachability
-analysis above and not closed by it.
-
-Costly to inflate is not impossible to inflate. An author can load a package
-they did not need, and a package bundled into a template that circulates in a
-subfield collects counts without anyone choosing it. The cost of a unit is
-the cost of the paper, not of the package, so what this measure resists is
-the cheap manipulation that download counts invite, and not a determined one.
-
-The counts also weight every deposit alike. A package used once in each of
-fifty short papers and one used throughout a single large project score fifty
-to one, which is the right answer for "how many pieces of research chose
-this" and the wrong one for "how much research depends on this".
-
-The corpus is two collections with different instruments behind them. The
-Harvard Dataverse material is a January 2024 scrape that retained only `.do`,
-`.r` and `.py` files; the Zenodo material is whole deposits, including
-notebooks, knitr documents and `.ado`. A package used mainly inside a
-literate document is therefore under-counted on the Dataverse side, and the
-two collections are two years apart.
-
-Recomputing every ranking on the file types both collections share measures
-what that costs, and the cost differs by language. For Stata and R all twenty
-top places hold. For Python they do not: `ipython` and `spacy` drop out of
-the top twenty and four other packages move, none of them above rank
-fourteen. Python is the language whose code most often lives in a notebook,
-and notebooks are what the 2024 scrape did not collect, so this is where the
-gap should appear. The top ten in every language, which is what the tables in
-this paper print, does not change.
-
-Deposits whose only content exceeds the archive size cap yield no code, and
-the tail this excludes is not data without code. Code files scale with archive
-size: a median of `{python} f"{code_files_smallest}"` code files in the
-smallest quartile of archives against `{python} f"{code_files_largest}"` in
-the largest. The gap therefore runs against large, code-heavy projects rather
-than against large datasets.
-
-Multi-part archives are not reassembled.
-`{python} f"{n_spanned_deposits}"` deposits split a package across `.z01`,
-`.7z.002` or `.partN.rar` segments. Only the tail segment carries the central
-directory, so it downloads at exactly the size the repository states and
-lists every member before failing on the first read, which presents as a
-corrupt download when nothing was corrupted. These are counted, not retried,
-since no number of retries assembles one segment.
-
-Stata resolution reflects today's status, not the status when the code was
-written. A command that was user-written in 2010 and later absorbed into
-official Stata resolves against what it is now, which can manufacture a trend
-for anyone reading these counts over time.
-
-Two false positives survive, and are named here instead of suppressed. SSC
-packages whose only command is a single common token attract stray matches
-from Mata-style bare assignments outside a `mata:` block, which the lexer
-cannot recognise as Mata. Currently `{python} residual_false_positives`. A
-rule against single-letter commands would hide the next instance, and since
-the count is computed, the list shrinks on its own as causes are fixed.
-
-Three lexer gaps remain open and countable. Stata keywords reach command
-position in contexts the lexer does not model: `in` and `using` after an
-old-style `/* */` line continuation, and `str` inside an `infile dictionary`
-block, where a line such as `str FACT_ID 5-12` declares a storage type rather
-than calling anything. Together that is `{python} f"{n_keyword_noise:,}"`
-mentions across `{python} f"{n_keyword_noise_deposits}"` deposits. They
-inflate the unresolved rate and do nothing else, since a keyword cannot
-collide with an SSC package name and so nothing is misattributed. A blocklist
-would remove the symptom and leave the contexts unmodelled, so the number is
-reported instead.
-
-MATLAB, SAS and SPSS are reported as language presence only. MATLAB has no
-import statement and no resolvable registry, so attributing toolboxes would be
-unbounded error.
-
-Which version ran is mostly not recorded. Code names the packages it loads
-and almost never the release it loaded them at, so these counts pool a
-package across its whole history. Where a file does say, this release now
-records it: a Stata `version` statement in
-`{python} f"{n_stata_version:,}"` of the
-`{python} f"{n_stata_version_of:,}"` deposits holding a do-file, an
-`renv.lock` or a bundled `DESCRIPTION` in `{python} f"{n_r_version}"` of
-`{python} f"{n_r_version_of:,}"` with R code, and a notebook's own note of
-the interpreter that executed it. At
-`{python} f"{share_stata_version:.0%}"` coverage for the best-covered of
-these, the environment table supports checking particular deposits and not
-estimating a distribution, which is why the denominator ships beside it. A
-reader who wants the share of economics papers still on an unsupported Stata
-cannot have it from this corpus. A reader who wants to know what the deposits
-that do say were running can.
-
-## Conclusion
-
-Research software is credited badly because the numbers available to credit
-it with are cheap to produce. This paper offers one that is not: a count of
-the packages that published, policy-verified replication code loads, over
-`{python} f"{n_deposits_analyzable:,}"` deposits and
-`{python} f"{len(usage):,}"` packages.
-
-What the counts show is not what a download ranking would suggest. The
-software social science leans on hardest is the software that prepares its
-exhibits, and `{python} top_stata_package` leads every one of the largest
-journal collections in both disciplines. Underneath that, the tools differ by
-field rather than by repository. The language carrying most of this work,
-Stata, is missing from the literature on research software for a mechanical
-reason: it has no registry mapping a command to a package, so this paper
-built one. And a long tail of software that researchers use constantly sits
-outside every registry, which is a ceiling on what any credit system built
-on registry lookups can reach. That ceiling belongs to the ecosystem, and no
-amount of care in the method moves it.
-
-The counts are static reference and not execution, they weight every deposit
-alike, and they cover two disciplines and not the whole field. Each of those
-is measured above. What they support is modest and concrete: a software author can point at a number a committee can check, and
-work on software reliability can choose its targets by how much published
-research would be touched.
-
-## Data and code availability
-
-The Stata command-to-package index is deposited at
-[10.5281/zenodo.21926099](https://doi.org/10.5281/zenodo.21926099) under CC0,
-with `{python} f"{n_ssc_commands:,}"` commands across
-`{python} f"{n_ssc_packages:,}"` packages. It is released separately from
-this paper because its usefulness does not depend on this corpus: anyone
-counting Stata needs the same mapping.
-
-The pipeline makes four things, and they are not equally public. The
-**corpus** is the deposited code itself, `{python} f"{n_files:,}"` files, too
-large to redistribute and in any case already public at the archives it came
-from. The **atomic record** is one row per mention, carrying the package, the
-function where the source names one, the file, the line and a snippet. The
-**aggregates** are sums of that record, by package, year, journal and
-function. The **registry** is the instrument rather than a result: the CRAN,
-PyPI and SSC name tables that turn a token into a package, pinned so a count
-can be reproduced rather than merely repeated.
-
-The atomic record and the aggregates are deposited at
-[10.5281/zenodo.21943909](https://doi.org/10.5281/zenodo.21943909) under CC0,
-covering `{python} f"{len(usage):,}"` packages, with the counts by year and
-by journal alongside them. Releasing the mention rows and not only their sums
-is what lets a reader disagree with a decision made here and recount without
-re-parsing the corpus. The same tables are served at
-<https://recite.github.io/softverse/data/>, and every package can be looked
-up by name at <https://recite.github.io/softverse/lookup/>, so a software
-author or an evaluating committee can check a number instead of taking the
-top ten in \cref{tab:top-packages} on trust. The archived version is the one
-to cite: a repository serves whatever it holds today.
-
-The extraction pipeline, the resolver and the frame are at
-<https://github.com/recite/softverse>.
-
-## Reproducibility
-
-The corpus, the registry snapshots and the extractor are all pinned. Every
-mention carries the extractor version, grammar version and registry lock that
-produced it, plus its source line and a snippet, so any number here can be
-traced to the text it came from without re-running anything.
-
-```{python}
-#| label: provenance
-lock = json.loads(Path("../registries/registries.lock.json").read_text())
-table(
-    pd.DataFrame([{"registry": k, "sha256": v[:16]} for k, v in lock.items()]),
-    caption="Pinned registry snapshots",
-    label="tab:provenance",
-    note=(
-        "Every mention carries the lock identifier of the registry snapshot "
-        "it was resolved against, so a count can be reproduced against the "
-        "registry as it stood rather than as it stands."
-    ),
-    align="ll",
-)
-```
-
-## Acknowledgements
-
-Daniel Weitzel contributed to an earlier version of this project.
-
-## Competing interests
-
-The author has no competing financial interests. Two intellectual ones are
-worth naming. The argument that better counts would increase the production
-of research software is taken from the author's own earlier writing
-[@sood_countpy], and the paper releases the artefact it argues the field
-lacks, so it both proposes a metric and supplies it.
-
-## Funding
-
-This research received no external funding.
-
-## Author contributions
-
-Sole author. Conceptualisation, methodology, software, data curation, formal
-analysis, and writing.
-
-## References
-
-::: {#refs}
-:::
+This check has two limits. It says nothing about the
+`{python} f"{n_graph_considered - n_graph_master:,}"` deposits with no master
+script, which are most of them. And a file a master reaches can still load a
+package inside a branch that never runs, which no static reader can see.

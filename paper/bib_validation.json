@@ -1,8 +1,8 @@
 {
-  "checked_at": "2026-08-16T03:38:25.545066+00:00",
+  "checked_at": "2026-09-18T02:34:23.494027+00:00",
   "bibliography": "paper/references.bib",
-  "n_entries": 8,
-  "n_verified": 8,
+  "n_entries": 37,
+  "n_verified": 37,
   "results": [
     {
       "key": "trisovic2022",
@@ -58,6 +58,209 @@
       "ok": true,
       "reason": "verified",
       "doi": "10.2307/1882010",
+      "registered_title": null
+    },
+    {
+      "key": "correia2024require",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1177/1536867X241297915",
+      "registered_title": null
+    },
+    {
+      "key": "upton2026software",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1080/26939169.2026.2725967",
+      "registered_title": null
+    },
+    {
+      "key": "choodari2016uptake",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1177/1536867X1601600110",
+      "registered_title": null
+    },
+    {
+      "key": "istrate2022czsoftware",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.48550/arXiv.2209.00693",
+      "registered_title": null
+    },
+    {
+      "key": "brown2026biomedical",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1371/journal.pcbi.1014260",
+      "registered_title": null
+    },
+    {
+      "key": "sood2023softverse",
+      "ok": true,
+      "reason": "verified by URL",
+      "doi": null,
+      "registered_title": null
+    },
+    {
+      "key": "herbert2024reproduce",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1111/caje.12728",
+      "registered_title": null
+    },
+    {
+      "key": "arelbundock2022which",
+      "ok": true,
+      "reason": "verified by URL",
+      "doi": null,
+      "registered_title": null
+    },
+    {
+      "key": "kranz2023usage",
+      "ok": true,
+      "reason": "verified by URL",
+      "doi": null,
+      "registered_title": null
+    },
+    {
+      "key": "aeadataeditor2021statapackagesearch",
+      "ok": true,
+      "reason": "verified by URL",
+      "doi": null,
+      "registered_title": null
+    },
+    {
+      "key": "pypi2026downloads",
+      "ok": true,
+      "reason": "verified by URL",
+      "doi": null,
+      "registered_title": null
+    },
+    {
+      "key": "howison2016software",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1002/asi.23538",
+      "registered_title": null
+    },
+    {
+      "key": "du2021softcite",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1002/asi.24454",
+      "registered_title": null
+    },
+    {
+      "key": "park2019software",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1016/j.joi.2019.03.005",
+      "registered_title": null
+    },
+    {
+      "key": "li2019lme4",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1016/j.joi.2019.02.007",
+      "registered_title": null
+    },
+    {
+      "key": "howison2015ecosystem",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1093/reseval/rvv014",
+      "registered_title": null
+    },
+    {
+      "key": "brown2026code",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1162/qss.a.465",
+      "registered_title": null
+    },
+    {
+      "key": "hannay2009scientists",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1109/secse.2009.5069155",
+      "registered_title": null
+    },
+    {
+      "key": "carlin2023where",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.7717/peerj-cs.1546",
+      "registered_title": null
+    },
+    {
+      "key": "schindler2023retracted",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1162/qss_a_00275",
+      "registered_title": null
+    },
+    {
+      "key": "besancon2024sneaked",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1002/asi.24896",
+      "registered_title": null
+    },
+    {
+      "key": "lemke2021conjoint",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1002/asi.24445",
+      "registered_title": null
+    },
+    {
+      "key": "du2022cord19",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.7717/peerj-cs.1022",
+      "registered_title": null
+    },
+    {
+      "key": "wang2024rcitation",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.1007/s11192-024-05064-6",
+      "registered_title": null
+    },
+    {
+      "key": "reiner2021packagesearch",
+      "ok": true,
+      "reason": "verified by URL",
+      "doi": null,
+      "registered_title": null
+    },
+    {
+      "key": "sood2018countpy",
+      "ok": true,
+      "reason": "verified by URL",
+      "doi": null,
+      "registered_title": null
+    },
+    {
+      "key": "sood2025user",
+      "ok": true,
+      "reason": "verified by URL",
+      "doi": null,
+      "registered_title": null
+    },
+    {
+      "key": "csardi2015cranlogs",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.32614/CRAN.package.cranlogs",
+      "registered_title": null
+    },
+    {
+      "key": "vankemenade2026toppypi",
+      "ok": true,
+      "reason": "verified",
+      "doi": "10.5281/zenodo.22225583",
       "registered_title": null
     }
   ]

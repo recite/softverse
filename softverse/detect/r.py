@@ -30,6 +30,8 @@ fails loudly instead of silently returning zero mentions for every R file.
 
 from __future__ import annotations
 
+import re
+from dataclasses import replace
 from functools import cache
 from typing import TYPE_CHECKING
 
@@ -72,10 +74,48 @@ _INSTALLERS = {
     "install_github",
     "install_gitlab",
     "install_bitbucket",
+    "install_git",
+    "install_url",
+    "install_local",
+    "install_bioc",
     "install_version",
     "install_cran",
     "p_install",
+    "p_install_gh",
+    "githubinstall",
+    "gh_install_packages",
+    "pak",
+    "pkg_install",
 }
+
+#: Installers whose name is only an installer inside its namespace:
+#: `renv::install("u/r")` is, a bare `install()` is devtools building the
+#: working directory.
+_NAMESPACED_INSTALLERS = {("renv", "install"), ("BiocManager", "install")}
+
+#: The host an installer fetches from when its argument does not say.
+_DEFAULT_HOST = {
+    "install_github": "github.com",
+    "p_install_gh": "github.com",
+    "p_load_gh": "github.com",
+    "p_load_current_gh": "github.com",
+    "githubinstall": "github.com",
+    "gh_install_packages": "github.com",
+    "install_gitlab": "gitlab.com",
+    "install_bitbucket": "bitbucket.org",
+}
+
+#: `remotes`/`pak` reference prefixes: `github::user/repo`, `bioc::limma`.
+_REF_HOSTS = {
+    "github": "github.com",
+    "gitlab": "gitlab.com",
+    "bitbucket": "bitbucket.org",
+}
+
+#: A built package file: `Zelig_5.1.6.1.tar.gz`, `fansi_0.5.0.zip`.
+_PACKAGE_FILE = re.compile(
+    r"(?P<name>[A-Za-z][A-Za-z0-9.]*)_(?P<version>\d[\w.\-]*?)\.(?:tar\.gz|tgz|zip)$"
+)
 
 #: Calls naming a package, mapped to the keyword that carries it.
 #:
@@ -275,7 +315,7 @@ def _handle_loader(call: Node, source: bytes, construct: Construct) -> list[Ment
     ]
 
 
-def _handle_multi(call: Node, source: bytes) -> list[Mention]:
+def _handle_multi(call: Node, source: bytes, callee: str) -> list[Mention]:
     """``p_load(dplyr, ggplot2, install = FALSE)``.
 
     Only positional arguments are packages. v1 split on commas and stripped from
@@ -289,11 +329,11 @@ def _handle_multi(call: Node, source: bytes) -> list[Mention]:
         value = arg.child_by_field_name("value")
         if value is None:
             continue
-        out.extend(_multi_names(value, source))
+        out.extend(_multi_names(value, source, callee))
     return out
 
 
-def _multi_names(value: Node, source: bytes) -> list[Mention]:
+def _multi_names(value: Node, source: bytes, callee: str) -> list[Mention]:
     """One positional argument of a multi-loader, which may be a vector.
 
     `xfun::pkg_attach(c("g", "h"))` names two packages. Reading arguments one
@@ -301,6 +341,12 @@ def _multi_names(value: Node, source: bytes) -> list[Mention]:
     it fell through and named none.
     """
     if (literal := _string_value(value, source)) is not None:
+        if callee in _DEFAULT_HOST:
+            # `p_load_gh("trinker/pacman")` loads `pacman`. Recording the
+            # argument whole made `trinker/pacman` a package that was used.
+            name, _version, remote = _install_target(literal, callee)
+            mention = _mention(name, Construct.P_LOAD, value, source)
+            return [replace(mention, remote=remote)] if name else []
         return [_mention(literal, Construct.P_LOAD, value, source)]
     if value.type == "identifier":
         return [_mention(_text(value, source), Construct.P_LOAD, value, source)]
@@ -311,13 +357,72 @@ def _multi_names(value: Node, source: bytes) -> list[Mention]:
                 continue
             inner = arg.child_by_field_name("value")
             if inner is not None:
-                out.extend(_multi_names(inner, source))
+                out.extend(_multi_names(inner, source, callee))
         return out
     return []
 
 
+def _install_target(literal: str, callee: str) -> tuple[str, str | None, str | None]:
+    """What one installer argument names: ``(package, version, remote)``.
+
+    ``remote`` is where the package comes from when that is not the language's
+    own registry -- the only record a deposit leaves of where off-registry
+    software lives. It is None for a plain name, which means CRAN.
+    """
+    spec, host = literal.strip(), _DEFAULT_HOST.get(callee, "github.com")
+    prefix, separator, rest = spec.partition("::")
+    if separator:
+        # `github::user/repo`, `bioc::limma`, `url::https://...`.
+        if prefix in {"cran", "bioc", "standard"}:
+            name, _, version = rest.partition("@")
+            return name, version or None, None
+        spec, host = rest, _REF_HOSTS.get(prefix, host)
+    if built := _PACKAGE_FILE.search(spec):
+        # A path or URL to a built package: the file names it and its version.
+        # Recording the literal made `~/fansi_0.5.0.zip` a package name.
+        return built["name"], built["version"], spec if "://" in spec else None
+    if "://" in spec or spec.endswith(".git"):
+        # People paste the address bar. On `https://github.com/user/repo`
+        # `split("/")[1]` is the empty string between the scheme's slashes,
+        # which once published a package named "".
+        address = spec.split("://", 1)[-1].removesuffix(".git").rstrip("/")
+        parts = address.split("/")
+        # A code host needs host/user/repo before it has named a package.
+        needed = 3 if parts[0] in _REF_HOSTS.values() else 2
+        if len(parts) < needed:
+            return "", None, None
+        return parts[needed - 1] if needed == 3 else parts[-1], None, address
+    if spec.startswith(("~", ".", "/")) or prefix == "local":
+        # A source directory on the author's machine names nothing we can use.
+        return "", None, None
+    if "/" in spec:
+        # "user/repo", "user/repo@ref", "user/repo/subdir", "user/repo#12".
+        path, _, ref = spec.partition("@")
+        parts = [part for part in path.split("#", 1)[0].split("/") if part]
+        if len(parts) < 2:
+            return "", None, None
+        return parts[1], ref or None, f"{host}/{parts[0]}/{parts[1]}"
+    name, _, version = spec.partition("@")
+    remote = host if callee in {"githubinstall", "gh_install_packages"} else None
+    return name, version or None, remote
+
+
+def _string_values(value: Node, source: bytes) -> list[tuple[str, Node]]:
+    """String literals in an argument, reading through one ``c(...)``."""
+    if (literal := _string_value(value, source)) is not None:
+        return [(literal, value)]
+    if value.type == "call" and _callee_name(value, source)[0] == "c":
+        return [
+            pair
+            for arg in _arguments(value)
+            if arg.child_by_field_name("name") is None
+            and (inner := arg.child_by_field_name("value")) is not None
+            for pair in _string_values(inner, source)
+        ]
+    return []
+
+
 def _handle_installer(call: Node, source: bytes, callee: str) -> list[Mention]:
-    out: list[Mention] = []
     args = _arguments(call)
     for arg in args:
         if arg.child_by_field_name("name") is not None:
@@ -325,43 +430,23 @@ def _handle_installer(call: Node, source: bytes, callee: str) -> list[Mention]:
         value = arg.child_by_field_name("value")
         if value is None:
             continue
-        literal = _string_value(value, source)
-        if literal is None:
-            continue
-        if callee.startswith("install_") and "/" in literal:
-            # "user/repo", "user/repo@ref", "user/repo/subdir" and -- because
-            # people paste the address bar -- "https://github.com/user/repo".
-            # On the URL form `split("/")[1]` is the empty string between the
-            # scheme's own slashes, so three deposits contributed a package
-            # named "" that reached the published unresolved-names table.
-            path = literal
-            if "://" in path:
-                path = path.split("://", 1)[1]
-                path = path.split("/", 1)[1] if "/" in path else ""
-            parts = [p for p in path.split("/") if p]
-            repo, _, ref = parts[1].partition("@") if len(parts) > 1 else ("", "", "")
-            if repo:
-                out.append(
-                    _mention(
-                        repo,
-                        Construct.INSTALL,
-                        value,
-                        source,
-                        pinned_version=ref or None,
-                    )
-                )
-        else:
-            out.append(
-                _mention(
-                    literal,
-                    Construct.INSTALL,
-                    value,
-                    source,
-                    pinned_version=_install_version_arg(args, source, callee),
-                )
+        out = []
+        # `install.packages(c("a", "b"))` installs two packages. Reading only
+        # a bare string literal named neither.
+        for literal, node in _string_values(value, source):
+            name, version, remote = _install_target(literal, callee)
+            if not name:
+                continue
+            mention = _mention(
+                name,
+                Construct.INSTALL,
+                node,
+                source,
+                pinned_version=version or _install_version_arg(args, source, callee),
             )
-        break
-    return out
+            out.append(replace(mention, remote=remote))
+        return out
+    return []
 
 
 def _install_version_arg(args: list[Node], source: bytes, callee: str) -> str | None:
@@ -477,13 +562,16 @@ def extract(source: str | bytes) -> ExtractResult:
                     )
 
         elif node.type == "call":
-            callee, _namespace = _callee_name(node, data)
+            callee, namespace = _callee_name(node, data)
             if callee is not None:
                 if construct := _LOADERS.get(callee):
                     mentions.extend(_handle_loader(node, data, construct))
                 elif callee in _MULTI_LOADERS:
-                    mentions.extend(_handle_multi(node, data))
-                elif callee in _INSTALLERS:
+                    mentions.extend(_handle_multi(node, data, callee))
+                elif (
+                    callee in _INSTALLERS
+                    or (namespace, callee) in _NAMESPACED_INSTALLERS
+                ):
                     mentions.extend(_handle_installer(node, data, callee))
                 elif callee in _PACKAGE_ARG:
                     mentions.extend(_handle_package_arg(node, data, callee))

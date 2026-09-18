@@ -29,6 +29,27 @@ every one of ~15,000 shipped ado files would mean 15,000 more fetches, so
 confirmation is done lazily for the commands that actually appear in the corpus,
 which is the only set whose classification can change a published number.
 
+SSC is one of three archives. The *Stata Journal* and its predecessor the
+*Stata Technical Bulletin* publish the software that accompanies their articles
+in the same ``stata.toc`` / ``.pkg`` format, one directory per issue, and
+``net install`` reads all three alike. Indexing SSC alone reported ``renvars``
+(STB-60, 105 deposits), ``xtserial`` (SJ 3-2) and ``dropmiss`` as belonging to
+no archive, when each has been in a formal, citable one for twenty years.
+
+The journal archives need one rule SSC does not. An article's package bundles
+whatever its example needs to run, so ``st0357`` -- a Cox calibration tool --
+ships a copy of ``grc1leg.ado``. Crediting ``grc1leg``'s 486 deposits to it
+would be the filename caveat at its worst. A journal package is therefore
+credited with a command only when it also ships that command's help file,
+which a package does for what it publishes and not for what it borrows.
+
+The fourth tier is everything else `net install` reaches: an author's own site
+serving the same ``.pkg`` format, which is where ``grc1leg`` (a StataCorp
+developer's page) and ``polychoric`` live. No list of such sites exists, so they
+are discovered from the corpus -- every ``net install x, from(URL)`` a deposit
+contains names one -- and that is a limit worth stating: a site no deposit
+names is not found. The documented-command rule applies to them too.
+
 Historical validity is recorded but not solved here: ``distribution_date`` is
 the mirror's current date, so a mapping is a *current* fact. Resolving 2010 code
 against a 2026 index can manufacture trends, and the resolver treats
@@ -37,7 +58,11 @@ time-inconsistent mappings accordingly.
 
 from __future__ import annotations
 
+import gzip
+import hashlib
+import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from enum import StrEnum
@@ -48,12 +73,29 @@ import httpx
 from softverse.logging_setup import get_logger, stage
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from pathlib import Path
 
 logger = get_logger(__name__)
 
 SSC_MIRROR = "http://fmwww.bc.edu/repec/bocode"
 LETTERS = "abcdefghijklmnopqrstuvwxyz_"
+
+#: Archives laid out as a top-level ``stata.toc`` of issues, each with its own
+#: ``stata.toc`` of packages.
+ISSUE_ARCHIVES = {
+    "stata_journal": "https://www.stata-journal.com/software",
+    "stb": "https://www.stata.com/stb",
+}
+
+#: `st0085_2` is the second update of `st0085`. The update replaces the
+#: original, so both name one package.
+#: Hosts the archive crawls already cover; a `from()` pointing at one is not a
+#: net site.
+_ARCHIVE_URLS = ("fmwww.bc.edu", "stata-journal.com", "stata.com/stb")
+
+_UPDATE_SUFFIX = re.compile(r"_\d+$")
+_HELP_SUFFIXES = (".hlp", ".sthlp", ".ihlp")
 
 
 class Evidence(StrEnum):
@@ -63,6 +105,9 @@ class Evidence(StrEnum):
     PROGRAM_DEFINE = "program_define"
     #: Inferred from an `f <cmd>.ado` line in the .pkg manifest.
     FILENAME = "filename"
+    #: No command at all: the package ships Mata, schemes or data and no
+    #: `.ado`. Recorded so `ssc install moremata` names something known.
+    PACKAGE_ONLY = "package_only"
 
 
 #: Suffixes marking an ado as an internal helper rather than a user command.
@@ -114,20 +159,35 @@ class StataPackage:
     distribution_date: date | None = None
     #: Every file the package ships, as written in the manifest.
     files: list[str] = field(default_factory=list)
+    #: The journal issue a package appeared in; None for SSC.
+    issue: str | None = None
+
+    @property
+    def _basenames(self) -> list[str]:
+        # Manifest paths can be relative (`f ../_/_eststo.ado`) or carry the
+        # package directory (`f dm88/renvars.ado`); only the file matters.
+        return [e.replace("\\", "/").rsplit("/", 1)[-1] for e in self.files]
 
     @property
     def ado_files(self) -> list[str]:
-        """Basenames of shipped ``.ado`` files.
+        """Basenames of shipped ``.ado`` files, extension removed."""
+        return [n[:-4] for n in self._basenames if n.lower().endswith(".ado")]
 
-        Manifest paths can be relative (``f ../_/_eststo.ado``), so the
-        directory part is discarded.
-        """
-        out = []
-        for entry in self.files:
-            name = entry.replace("\\", "/").rsplit("/", 1)[-1]
-            if name.lower().endswith(".ado"):
-                out.append(name[:-4])
-        return out
+    @property
+    def documented(self) -> frozenset[str]:
+        """Lowercased names the package ships a help file for."""
+        return frozenset(
+            n.rsplit(".", 1)[0].lower()
+            for n in self._basenames
+            if n.lower().endswith(_HELP_SUFFIXES)
+        )
+
+    @property
+    def canonical(self) -> str:
+        """The package name with a journal update suffix removed."""
+        if self.source not in ISSUE_ARCHIVES:
+            return self.package
+        return _UPDATE_SUFFIX.sub("", self.package)
 
 
 def is_helper(command: str, package: str, siblings: set[str]) -> bool:
@@ -157,10 +217,15 @@ def parse_pkg(text: str, package: str, source: str = "ssc") -> StataPackage:
     pkg = StataPackage(package=package, source=source)
     for line in text.splitlines():
         line = line.rstrip()
-        if line.startswith(("f ", "F ")):
-            entry = line[2:].strip()
-            if entry:
-                pkg.files.append(entry)
+        if line[:2] in {"f ", "F ", "g ", "G "}:
+            # `f file`, `f PLATFORM file`, and `g PLATFORM file [installed-as]`.
+            # Reading everything after the letter as the filename made
+            # `f WIN64 usespss.ado` a file called `WIN64 usespss.ado`, so the
+            # package shipped no command anyone could type; platform-specific
+            # lines are how packages with compiled plugins list their files.
+            parts = line[2:].split()
+            if parts:
+                pkg.files.append(parts[-1])
         elif line.startswith("d "):
             body = line[2:].strip()
             if body.startswith("Distribution-Date:"):
@@ -217,18 +282,41 @@ def confirms_namesake(ado_text: str, name: str) -> bool:
     return name in defined_programs(ado_text)
 
 
-class SSCClient:
-    """Polite HTTP client for the Boston College RePEc mirror."""
+@dataclass(frozen=True)
+class Manifest:
+    """One ``.pkg`` manifest as fetched, before anything is inferred from it.
+
+    Kept verbatim in the snapshot so that a change of rule -- which files count
+    as commands, which as documentation -- re-derives the index from what the
+    archives served on the day, not from what they serve now.
+    """
+
+    source: str
+    package: str
+    url: str
+    text: str
+    issue: str | None = None
+
+
+def _toc_entries(toc: str, kind: str) -> list[str]:
+    """Names on the ``t`` (directory) or ``p`` (package) lines of a ``stata.toc``."""
+    found = re.findall(rf"^{kind}[ \t]+(\S+)", toc, re.MULTILINE)
+    # `t ..` links back up, and `p -` continues the previous description.
+    return [name for name in found if name not in {"..", "-"}]
+
+
+class ArchiveClient:
+    """Polite HTTP client for the SSC mirror and the two journal archives."""
 
     def __init__(self, timeout: float = 30.0) -> None:
-        """Open a client against the SSC mirror."""
+        """Open a client."""
         self._client = httpx.Client(
             timeout=timeout,
             follow_redirects=True,
             headers={"User-Agent": "softverse (research; github.com/recite/softverse)"},
         )
 
-    def __enter__(self) -> SSCClient:
+    def __enter__(self) -> ArchiveClient:
         """Enter the context manager, returning this client."""
         return self
 
@@ -236,113 +324,288 @@ class SSCClient:
         """Close the connection on the way out."""
         self._client.close()
 
-    def list_packages(self, letter: str) -> list[str]:
-        """Package names with a ``.pkg`` manifest under one letter directory."""
-        url = f"{SSC_MIRROR}/{letter}/"
-        try:
-            response = self._client.get(url)
-            response.raise_for_status()
-        except httpx.HTTPError as exc:
-            logger.warning(
-                "letter listing failed", extra={"letter": letter, "err": str(exc)}
-            )
-            return []
-        return sorted(set(re.findall(r'href="([A-Za-z0-9_.\-]+)\.pkg"', response.text)))
+    def get(self, url: str) -> str | None:
+        """The body at ``url``, or None when it cannot be had."""
+        for attempt in range(3):
+            try:
+                response = self._client.get(url)
+                if response.status_code == httpx.codes.NOT_FOUND:
+                    break
+                response.raise_for_status()
+            except httpx.HTTPError as exc:
+                logger.debug(
+                    "retrying", extra={"url": url, "attempt": attempt, "err": str(exc)}
+                )
+                continue
+            return response.text
+        logger.warning("fetch failed", extra={"url": url})
+        return None
 
-    def fetch_pkg(self, letter: str, package: str) -> StataPackage | None:
-        """The `.pkg` manifest for one SSC package, or None if it is not there."""
-        url = f"{SSC_MIRROR}/{letter}/{package}.pkg"
-        try:
-            response = self._client.get(url)
-            response.raise_for_status()
-        except httpx.HTTPError as exc:
-            logger.warning(
-                "pkg fetch failed", extra={"package": package, "err": str(exc)}
-            )
-            return None
-        return parse_pkg(response.text, package)
+    def ssc_urls(self, letters: str = LETTERS) -> list[tuple[str, None, str, str]]:
+        """``(source, issue, package, url)`` for every SSC package."""
+        out = []
+        for letter in letters:
+            listing = self.get(f"{SSC_MIRROR}/{letter}/") or ""
+            names = sorted(set(re.findall(r'href="([A-Za-z0-9_.\-]+)\.pkg"', listing)))
+            out += [("ssc", None, n, f"{SSC_MIRROR}/{letter}/{n}.pkg") for n in names]
+        return out
 
-    def fetch_ado(self, letter: str, name: str) -> str | None:
-        """The source of one `.ado` file, or None if it is not there."""
-        url = f"{SSC_MIRROR}/{letter}/{name}.ado"
-        try:
-            response = self._client.get(url)
-            response.raise_for_status()
-        except httpx.HTTPError:
-            return None
-        return response.text
+    def issue_urls(self, source: str) -> list[tuple[str, str, str, str]]:
+        """``(source, issue, package, url)`` for every package in a journal archive."""
+        root = ISSUE_ARCHIVES[source]
+        out = []
+        for issue in _toc_entries(self.get(f"{root}/stata.toc") or "", "t"):
+            toc = self.get(f"{root}/{issue}/stata.toc") or ""
+            out += [
+                (source, issue, name, f"{root}/{issue}/{name}.pkg")
+                for name in _toc_entries(toc, "p")
+            ]
+        return out
 
 
-def build_index(
+def fetch_manifests(
+    client: ArchiveClient | None = None,
+    sources: Iterable[str] = ("ssc", *ISSUE_ARCHIVES),
     letters: str = LETTERS,
-    client: SSCClient | None = None,
-) -> list[dict]:
-    """Crawl the mirror and return rows for the ``stata_command_index`` table.
+) -> list[Manifest]:
+    """Every ``.pkg`` manifest the named archives serve.
 
     Args:
-        letters: Which letter directories to crawl. Narrow it for testing.
-        client: An open :class:`SSCClient`, or ``None`` to create one.
+        client: An open client, or None to create one.
+        sources: Which archives to crawl.
+        letters: Which SSC letter directories. Narrow it for testing.
 
     Returns:
-        Rows matching :data:`softverse.model.schemas.STATA_COMMAND_INDEX`.
+        The manifests that could be fetched, in archive order.
     """
-    today = datetime.now(tz=UTC).date()
-    rows: list[dict] = []
-    owned = SSCClient() if client is None else client
+    owned = ArchiveClient() if client is None else client
     try:
         with stage("stata-index", logger) as stats:
-            for letter in letters:
-                names = owned.list_packages(letter)
-                stats.incr("packages_listed", len(names))
-                for name in names:
-                    pkg = owned.fetch_pkg(letter, name)
-                    if pkg is None:
-                        stats.incr("packages_failed")
-                        continue
-                    stats.incr("packages_parsed")
-                    commands = commands_for(pkg)
-                    if not commands:
-                        stats.incr("packages_without_ado")
-                    for command, helper in commands:
-                        stats.incr("helpers" if helper else "commands")
-                        rows.append(
-                            {
-                                "command": command,
-                                "package": pkg.package,
-                                "source": pkg.source,
-                                "evidence": str(Evidence.FILENAME),
-                                "is_helper": helper,
-                                "author": pkg.author,
-                                "distribution_date": pkg.distribution_date,
-                                "first_seen_date": pkg.distribution_date,
-                                "snapshot_date": today,
-                            }
-                        )
-                logger.info(
-                    "letter done",
-                    extra={"letter": letter, "packages": len(names), "rows": len(rows)},
+            targets: list[tuple[str, str | None, str, str]] = []
+            for source in sources:
+                found = (
+                    owned.ssc_urls(letters)
+                    if source == "ssc"
+                    else owned.issue_urls(source)
                 )
+                stats.incr(f"{source}_listed", len(found))
+                targets += found
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                texts = list(pool.map(lambda t: owned.get(t[3]), targets))
+            stats.incr("manifests_failed", sum(t is None for t in texts))
+            return [
+                Manifest(source, package, url, text, issue)
+                for (source, issue, package, url), text in zip(
+                    targets, texts, strict=True
+                )
+                if text is not None
+            ]
     finally:
         if client is None:
             owned.__exit__()
-    return rows
+
+
+def fetch_net_manifests(
+    installs: Iterable[tuple[str, str]],
+    client: ArchiveClient | None = None,
+    sites: Iterable[str] = (),
+) -> tuple[list[Manifest], list[str]]:
+    """Manifests from the sites the corpus's own `net install` lines name.
+
+    Args:
+        installs: ``(package, from-URL)`` pairs, as the tally records them.
+        client: An open client, or None to create one.
+        sites: Further sites to crawl whole, one level of sub-directories
+            deep: the ones found by looking up what the index could not place.
+
+    Returns:
+        The manifests fetched, and the URLs that no longer serve one. Sites
+        die; a dead one is reported rather than dropped, because "was on a
+        personal page that is gone" is itself what the index is measuring.
+    """
+    owned = ArchiveClient(timeout=15.0) if client is None else client
+    named = {
+        (package, base.rstrip("/"))
+        for package, base in installs
+        # A macro in the URL (`.../$version/src`) is not a dead site; it is
+        # an address only the author's session could complete.
+        if "://" in base
+        and not re.search(r"[$`]", base)
+        and not any(known in base for known in _ARCHIVE_URLS)
+    }
+    try:
+        # A site the corpus installs one package from usually serves others,
+        # listed in its own `stata.toc`. Crawling the site whole is what finds
+        # the commands deposits use without an install line beside them --
+        # which is most of them, since `net install` is run once, by hand.
+        bases = {base for _, base in named}
+        for site in (s.rstrip("/") for s in sites):
+            toc = owned.get(f"{site}/stata.toc") or ""
+            bases |= {site, *(f"{site}/{d}" for d in _toc_entries(toc, "t"))}
+        listed = {
+            (package, base)
+            for base in sorted(bases)
+            for package in _toc_entries(owned.get(f"{base}/stata.toc") or "", "p")
+        }
+        targets = sorted(
+            (package, f"{base}/{package}.pkg") for package, base in named | listed
+        )
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            texts = list(pool.map(lambda t: owned.get(t[1]), targets))
+    finally:
+        if client is None:
+            owned.__exit__()
+    found, dead = [], []
+    named_urls = {f"{base}/{package}.pkg" for package, base in named}
+    for (package, url), text in zip(targets, texts, strict=True):
+        # A site that answers 200 with an HTML error page serves no manifest.
+        if text is None or not re.search(r"^[fF] ", text, re.MULTILINE):
+            # Only an address a deposit actually names is reported dead; a toc
+            # entry with no manifest behind it is the site's own loose end.
+            if url in named_urls:
+                dead.append(url)
+            continue
+        host = url.split("://", 1)[1].split("/", 1)[0].removeprefix("www.")
+        found.append(Manifest("net", package, url, text, host))
+    return found, dead
+
+
+def index_rows(
+    manifests: Iterable[Manifest], snapshot_date: date | None = None
+) -> list[dict]:
+    """Rows of the ``stata_command_index`` table implied by ``manifests``.
+
+    Args:
+        manifests: As returned by :func:`fetch_manifests`.
+        snapshot_date: The date to stamp; today by default.
+
+    Returns:
+        Rows matching :data:`softverse.model.schemas.STATA_COMMAND_INDEX`. A
+        journal package updated across issues yields one row per command, from
+        the newest issue -- the archives list newest first.
+    """
+    stamp = snapshot_date or datetime.now(tz=UTC).date()
+    rows: dict[tuple[str, str, str], dict] = {}
+    for manifest in manifests:
+        pkg = parse_pkg(manifest.text, manifest.package, manifest.source)
+        shared = {
+            "package": pkg.canonical,
+            "source": pkg.source,
+            "issue": manifest.issue,
+            "author": pkg.author,
+            "distribution_date": pkg.distribution_date,
+            "first_seen_date": pkg.distribution_date,
+            "snapshot_date": stamp,
+        }
+        commands = commands_for(pkg)
+        if not commands:
+            key = (pkg.canonical.lower(), pkg.canonical, pkg.source)
+            rows.setdefault(
+                key,
+                {
+                    "command": pkg.canonical,
+                    "evidence": str(Evidence.PACKAGE_ONLY),
+                    "is_helper": True,
+                    "is_documented": False,
+                    **shared,
+                },
+            )
+        for command, helper in commands:
+            rows.setdefault(
+                (command.lower(), pkg.canonical, pkg.source),
+                {
+                    "command": command,
+                    "evidence": str(Evidence.FILENAME),
+                    "is_helper": helper,
+                    "is_documented": command.lower() in pkg.documented,
+                    **shared,
+                },
+            )
+    return list(rows.values())
+
+
+#: The order resolution consults the archives in.
+TIERS = ("ssc", *ISSUE_ARCHIVES, "net")
+
+
+def credited(row: dict) -> bool:
+    """Whether resolution may credit ``row``'s package with its command.
+
+    Never a helper; and outside SSC, only a command the package documents.
+    """
+    return not row["is_helper"] and (row["source"] == "ssc" or row["is_documented"])
 
 
 def ambiguous_commands(rows: list[dict]) -> dict[str, list[str]]:
-    """Commands claimed by more than one package.
+    """Commands claimed by more than one package in the archive that wins them.
 
     Returned rather than resolved: forcing a single winner would bury
-    classification error that the paper has to report.
+    classification error that the paper has to report. A command on SSC and in
+    the Journal is not ambiguous -- it is one package mirrored, and SSC is
+    consulted first -- so the comparison is within the first archive to list
+    it, which is the comparison resolution makes.
     """
-    by_command: dict[str, set[str]] = {}
+    by_command: dict[str, dict[str, set[str]]] = {}
     for row in rows:
-        if not row["is_helper"]:
-            by_command.setdefault(row["command"], set()).add(row["package"])
-    return {c: sorted(p) for c, p in by_command.items() if len(p) > 1}
+        if credited(row):
+            tiers = by_command.setdefault(row["command"].lower(), {})
+            tiers.setdefault(row["source"], set()).add(row["package"])
+    out = {}
+    for command, tiers in by_command.items():
+        winner = next(tiers[t] for t in TIERS if t in tiers)
+        if len(winner) > 1:
+            out[command] = sorted(winner)
+    return out
 
 
-def write_index(rows: list[dict], directory: Path) -> Path:
-    """Validate and write the index as Parquet."""
+def write_snapshot(
+    manifests: list[Manifest], root: Path, unreachable: list[str] | None = None
+) -> Path:
+    """Write a dated, digest-stamped snapshot under ``root``.
+
+    The manifests are written before the index is derived from them, so a
+    failure deriving or validating the index cannot cost the crawl that fed it.
+
+    Args:
+        manifests: The raw manifests.
+        root: ``registries/snapshots/stata_index``.
+        unreachable: Net-site URLs the corpus names that served no manifest.
+
+    Returns:
+        The snapshot directory.
+    """
     from softverse.model.io import write_table
 
-    return write_table(rows, "stata_command_index", directory)
+    stamp = datetime.now(tz=UTC)
+    directory = root / stamp.date().isoformat()
+    directory.mkdir(parents=True, exist_ok=True)
+    with gzip.open(directory / "manifests.jsonl.gz", "wt", encoding="utf-8") as handle:
+        for manifest in manifests:
+            handle.write(json.dumps(manifest.__dict__) + "\n")
+    rows = index_rows(manifests, stamp.date())
+    index = write_table(rows, "stata_command_index", directory)
+    by_source: dict[str, int] = {}
+    for manifest in manifests:
+        by_source[manifest.source] = by_source.get(manifest.source, 0) + 1
+    (directory / "source.json").write_text(
+        json.dumps(
+            {
+                "registry": "stata_index",
+                "url": [SSC_MIRROR, *ISSUE_ARCHIVES.values()],
+                "fetched_at": stamp.isoformat(),
+                "sha256": hashlib.sha256(index.read_bytes()).hexdigest(),
+                "n_rows": len(rows),
+                "n_manifests": by_source,
+                "net_sites_unreachable": sorted(unreachable or []),
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    return directory
+
+
+def read_manifests(directory: Path) -> list[Manifest]:
+    """The raw manifests of a snapshot, to re-derive its index under new rules."""
+    with gzip.open(directory / "manifests.jsonl.gz", "rt", encoding="utf-8") as handle:
+        return [Manifest(**json.loads(line)) for line in handle]

@@ -14,6 +14,7 @@ neither is true.
 from __future__ import annotations
 
 import hashlib
+import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -114,6 +115,15 @@ def sync(client: httpx.Client, token: str, spec: Deposit) -> dict:
     return replace_files(client, token, deposit, spec.files())
 
 
+def _put(client: httpx.Client, token: str, url: str, path: Path) -> httpx.Response:
+    with path.open("rb") as handle:
+        return client.put(
+            url,
+            headers={**auth(token), "Content-Length": str(path.stat().st_size)},
+            content=handle,
+        )
+
+
 def replace_files(
     client: httpx.Client, token: str, deposit: dict, paths: list[Path]
 ) -> dict:
@@ -155,10 +165,18 @@ def replace_files(
         if path.name in unchanged:
             print(f"  kept     {path.name}")
             continue
-        with path.open("rb") as handle:
-            put = client.put(
-                f"{bucket}/{path.name}", headers=auth(token), content=handle
-            )
+        # One stream per file, and Zenodo's gateway answers 502 once a
+        # request has run about eight minutes. Retrying helps with a passing
+        # fault and not with a file too big for the link, so keep each file
+        # under what the uplink moves in that time. The length is stated so
+        # the body is not sent chunked.
+        put = _put(client, token, f"{bucket}/{path.name}", path)
+        for attempt in range(3):
+            if put.status_code < httpx.codes.INTERNAL_SERVER_ERROR:
+                break
+            print(f"  retrying {path.name} after {put.status_code}")
+            time.sleep(30 * (attempt + 1))
+            put = _put(client, token, f"{bucket}/{path.name}", path)
         put.raise_for_status()
         print(f"  uploaded {path.name:<34} {path.stat().st_size:>12,} bytes")
     return client.get(

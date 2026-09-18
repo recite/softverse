@@ -143,3 +143,24 @@ def test_both_rules_together_on_one_deposit(tmp_path, registry):
     assert _resolutions(result, "reghdfe") == {"known_current"}
     assert _resolutions(result, "esttab") == {"known_current"}
     assert _resolutions(result, "mysummary") == {"local_program"}
+
+
+def test_every_mention_has_a_key_of_its_own(tmp_path, registry):
+    """Ten `regress` calls in one do-file once took a single uid between them.
+
+    The key was the byte offset plus the name, and the Stata lexer records
+    lines, not bytes, so every offset was zero: 13.7 million rows shared 1.35
+    million keys in a table documented as having unique ones.
+    """
+    corpus = _deposit(
+        tmp_path,
+        {
+            "code/01.do": "regress y x\nregress y z\nregress y x\nesttab, se\nesttab, se\n"
+        },
+    )
+    uids = [
+        m["mention_uid"]
+        for m in build(corpus, registry, ssc_shipped=frozenset()).mentions
+    ]
+    assert len(uids) == 5
+    assert len(set(uids)) == 5

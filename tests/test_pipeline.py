@@ -5,7 +5,12 @@ v1 had no tests here at all, and its aggregation dropped 71,069 of 71,069 rows.
 
 from __future__ import annotations
 
-from softverse.build.pipeline import dataset_packages, language_presence
+from softverse.build.pipeline import (
+    BuildResult,
+    corroborate_remote_installs,
+    dataset_packages,
+    language_presence,
+)
 from softverse.model.enums import Construct, Resolution
 
 
@@ -105,3 +110,55 @@ def test_language_presence_is_claimable_even_without_package_attribution():
         ]
     )
     assert presence == {("zenodo", "matlab"): 2, ("zenodo", "r"): 1}
+
+
+# -- a deposit's own install line vouches for the name it loads -------------
+
+
+def _row(doi, name, construct, remote=None):
+    return {
+        "dataset_doi": doi,
+        "language": "r",
+        "raw_name": name,
+        "construct": str(construct),
+        "remote": remote,
+        "resolution": str(Resolution.UNKNOWN),
+        "resolved_package": None,
+        "ecosystem": None,
+    }
+
+
+def test_a_remote_install_resolves_the_load_in_the_same_deposit_only():
+    """`library(cmdstanr)` beside `install_github("stan-dev/cmdstanr")` is settled.
+
+    The same load in a deposit with no such line is not: pooled across the
+    corpus, one install of `someone/utils` would vouch for every `utils`.
+    """
+    result = BuildResult()
+    result.mentions = [
+        _row("doi:a", "cmdstanr", Construct.INSTALL, "github.com/stan-dev/cmdstanr"),
+        _row("doi:a", "cmdstanr", Construct.LIBRARY),
+        _row("doi:b", "cmdstanr", Construct.LIBRARY),
+    ]
+    corroborate_remote_installs(result)
+    install, same, other = result.mentions
+    assert (same["resolution"], same["ecosystem"]) == ("known_current", "github")
+    assert same["resolved_package"] == "cmdstanr"
+    assert install["ecosystem"] == "github"
+    assert other["resolution"] == "unknown"
+
+
+def test_a_package_the_registry_already_knows_is_left_as_it_was():
+    """A development version of a CRAN package is still a CRAN package."""
+    result = BuildResult()
+    known = _row("doi:a", "fixest", Construct.LIBRARY) | {
+        "resolution": "known_current",
+        "ecosystem": "cran",
+        "resolved_package": "fixest",
+    }
+    result.mentions = [
+        _row("doi:a", "fixest", Construct.INSTALL, "github.com/lrberge/fixest"),
+        known,
+    ]
+    corroborate_remote_installs(result)
+    assert result.mentions[1]["ecosystem"] == "cran"

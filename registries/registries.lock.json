@@ -1,7 +1,58 @@
 {
-  "cran": "aefeb12f742cad2444359418484903a1ed4216b3c9f4d39918bc46ebbc1bfdc4",
-  "cran_archive": "5e267904e40ed0606293dcfb125a67c34f4cd0dc1e788524a0227101fecdf83d",
-  "bioconductor": "3ffed30246d706ae74022f0bf9e042e41293d9bdc1a0ccecbae59ac57fd3c1ef",
-  "pypi": "751e02220c921deab8476d206e72fdd0952af53b1461e5daff0ffbd7b1871e33",
-  "julia_general": "9cf5a9b5f71da3924aaf1c9fa9b9321ec7a7531f831df8c51e17283686f906af"
+  "bioconductor": {
+    "date": "2026-08-11",
+    "sha256": "3ffed30246d706ae74022f0bf9e042e41293d9bdc1a0ccecbae59ac57fd3c1ef"
+  },
+  "cran": {
+    "date": "2026-08-11",
+    "sha256": "aefeb12f742cad2444359418484903a1ed4216b3c9f4d39918bc46ebbc1bfdc4"
+  },
+  "cran_archive": {
+    "date": "2026-08-11",
+    "sha256": "5e267904e40ed0606293dcfb125a67c34f4cd0dc1e788524a0227101fecdf83d"
+  },
+  "cran_dependencies": {
+    "date": "2026-09-17",
+    "sha256": "a7d61d884dd42c9b58a1e49539b3bd86bd743cb7aa99e4eba86170c493549ff2"
+  },
+  "cran_task_views": {
+    "date": "2026-09-17",
+    "sha256": "5f66bd8ecf1cc547e120f5b1a6a97d914c2acf7c3d358b766707f26989a55d52"
+  },
+  "downloads_cran": {
+    "date": "2026-09-17",
+    "sha256": "e008acfbd4f85bc98bb5b59379beac271b770f6c09cbd4d721be7032f8421347"
+  },
+  "downloads_pypi": {
+    "date": "2026-09-17",
+    "sha256": "922a1717f7700c51aad56f0fd0960efdbe25accffc959a307c376e24d6eb494a"
+  },
+  "downloads_ssc": {
+    "date": "2026-09-17",
+    "sha256": "268c874044f39650e65e5118d4fd4bafb9e887608df85556c29d21c3bfe53c21"
+  },
+  "julia_general": {
+    "date": "2026-08-11",
+    "sha256": "9cf5a9b5f71da3924aaf1c9fa9b9321ec7a7531f831df8c51e17283686f906af"
+  },
+  "pypi": {
+    "date": "2026-08-11",
+    "sha256": "751e02220c921deab8476d206e72fdd0952af53b1461e5daff0ffbd7b1871e33"
+  },
+  "pypi_import_map": {
+    "date": "2026-09-17",
+    "sha256": "bc02385c473b7ccfdc2c67697df423feaa394023f5f1d59693c86a5a0dcd7e50"
+  },
+  "stata_base_ado": {
+    "date": "2026-09-17",
+    "sha256": "1af4034964152f60bbfdf2aa4c768e8f5d61c1229d04272c8a7185591a80efea"
+  },
+  "stata_index": {
+    "date": "2026-09-17",
+    "sha256": "5414adfa0ad296835e309038d81cbbf4bf3afb521c33eb7f6ff70e990b89afea"
+  },
+  "stata_official": {
+    "date": "2026-09-17",
+    "sha256": "805974d631db724ed7d9b5a197107a3a1ee7cf35361f4b0e14c991343b17da61"
+  }
 }

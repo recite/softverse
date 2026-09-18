@@ -176,3 +176,26 @@ def test_invalid_json_is_reported_not_silently_empty():
     assert result.mentions == []
     assert result.report.status is ParseStatus.SYNTAX_ERROR
     assert result.report.detail
+
+
+def shell_installs(line: str) -> list[tuple[str, str | None, str | None]]:
+    result = extract_notebook(notebook([code(line + "\n")]))
+    return [
+        (m.raw_name, m.pinned_version, m.remote)
+        for m in result.mentions
+        if m.construct is Construct.SHELL_INSTALL
+    ]
+
+
+def test_pip_install_from_a_repository_names_it():
+    """A `git+https` token matched no requirement and was dropped in silence."""
+    assert shell_installs("%pip install -q git+https://github.com/psf/black@main") == [
+        ("black", "main", "github.com/psf/black")
+    ]
+
+
+def test_the_file_after_dash_r_is_not_a_package():
+    assert shell_installs("!pip install -r requirements.txt") == []
+    assert shell_installs("!pip install --index-url https://x torch") == [
+        ("torch", None, None)
+    ]

@@ -208,6 +208,9 @@ MENTIONS = pa.schema(
         # The version the code itself asks for, as written, where it asks:
         # `install_version("fixest", "0.11.1")`, `pip install pandas==1.5.3`.
         pa.field("pinned_version", pa.string()),
+        # Where an install line fetches from when it is not the default
+        # registry: `user/repo`, or the URL of a `net install ..., from()`.
+        pa.field("remote", pa.string()),
         pa.field("normalized_name", pa.string()),
         pa.field("resolved_package", pa.string()),
         pa.field("ecosystem", _dict()),
@@ -270,12 +273,17 @@ STATA_COMMAND_INDEX = pa.schema(
     [
         pa.field("command", pa.string(), nullable=False),
         pa.field("package", pa.string(), nullable=False),
-        pa.field("source", _dict(), nullable=False),  # ssc | stata_journal | builtin
+        pa.field("source", _dict(), nullable=False),  # ssc | stata_journal | stb
+        # The journal issue the package appeared in (`sj14-2`, `stb60`).
+        pa.field("issue", pa.string()),
         # An `f foo.ado` line means the package ships a file, not that it
         # exposes a command named foo. Commands confirmed by parsing
         # `program define` are flagged; filename-only inferences are not.
-        pa.field("evidence", _dict(), nullable=False),  # program_define | filename
+        pa.field("evidence", _dict(), nullable=False),  # filename | package_only | ...
         pa.field("is_helper", pa.bool_()),  # e.g. reghdfe_p, _eststo
+        # The package ships a help file of the same name: it publishes this
+        # command rather than bundling someone else's.
+        pa.field("is_documented", pa.bool_()),
         pa.field("author", pa.string()),
         pa.field("distribution_date", pa.date32()),
         pa.field("first_seen_date", pa.date32()),
@@ -325,13 +333,29 @@ ENVIRONMENT_SIGNALS = pa.schema(
 
 UNKNOWN_NAMES = pa.schema(
     [
-        pa.field("normalized_name", pa.string(), nullable=False),
+        pa.field("name", pa.string(), nullable=False),
         pa.field("language", _dict(), nullable=False),
+        pa.field("n_deposits", pa.int64(), nullable=False),
         pa.field("n_mentions", pa.int64(), nullable=False),
-        pa.field("n_datasets", pa.int64(), nullable=False),
-        pa.field("example_snippets", pa.list_(pa.string())),
+        # Deposits defining a program of this name for themselves: high means
+        # a local helper whose definition was missed, not unindexed software.
+        pa.field("n_deposits_defining", pa.int64(), nullable=False),
     ],
-    metadata={"grain": "one row per unresolved name; a diagnostic and a paper table"},
+    metadata={"grain": "one row per unresolved name in use; installs excluded"},
+)
+
+REMOTE_INSTALLS = pa.schema(
+    [
+        pa.field("name", pa.string(), nullable=False),
+        pa.field("language", _dict(), nullable=False),
+        pa.field("host", pa.string(), nullable=False),
+        # The registry lists the name anyway: a development version, not
+        # software the registry lacks.
+        pa.field("in_registry", pa.bool_(), nullable=False),
+        pa.field("n_deposits_installing", pa.int64(), nullable=False),
+        pa.field("n_deposits_loading", pa.int64(), nullable=False),
+    ],
+    metadata={"grain": "one row per (package, language, host) fetched off-registry"},
 )
 
 # --------------------------------------------------------------------------
@@ -398,6 +422,7 @@ SCHEMAS: dict[str, pa.Schema] = {
     "declared_dependencies": DECLARED_DEPENDENCIES,
     "environment_signals": ENVIRONMENT_SIGNALS,
     "unknown_names": UNKNOWN_NAMES,
+    "remote_installs": REMOTE_INSTALLS,
     "dataset_packages": DATASET_PACKAGES,
     "journal_year_packages": JOURNAL_YEAR_PACKAGES,
 }

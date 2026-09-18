@@ -151,3 +151,88 @@ def test_a_command_is_still_resolved_against_the_command_index(registry):
     """
     resolved = registry.resolve("esttab", Language.STATA)
     assert resolved.package == "estout"
+
+
+# -- Stata's other archives, and Python's other namespaces ----------------
+
+
+@pytest.fixture
+def archives(registry) -> Registry:
+    registry.stata_commands["renvarlab"] = ("renvarlab",)
+    registry.stata_journal_commands = {"xtserial": ("st0039",), "esttab": ("st0085",)}
+    registry.stb_commands = {"renvars": ("dm88",)}
+    registry.journal_packages = {"st0085": ("st0085", Ecosystem.STATA_JOURNAL)}
+    registry.pypi = registry.pypi | {"pyshp", "utils"}
+    registry.pypi_import_map = {"shapefile": "pyshp", "ghost": "not-on-pypi"}
+    return registry
+
+
+def test_the_journal_and_the_bulletin_are_archives_too(archives):
+    """`renvars` is STB-60 and `xtserial` is SJ 3-2: formal, citable, indexed.
+
+    With SSC the only index, both were reported as software in no registry.
+    """
+    journal = archives.resolve("xtserial", Language.STATA)
+    assert (journal.package, journal.ecosystem) == ("st0039", Ecosystem.STATA_JOURNAL)
+    bulletin = archives.resolve("renvars", Language.STATA)
+    assert (bulletin.package, bulletin.ecosystem) == ("dm88", Ecosystem.STB)
+
+
+def test_a_command_on_ssc_and_in_the_journal_is_credited_to_ssc(archives):
+    """Authors mirror journal software to SSC; that is one package, not two."""
+    resolved = archives.resolve("esttab", Language.STATA)
+    assert resolved.resolution is Resolution.KNOWN_CURRENT
+    assert (resolved.package, resolved.ecosystem) == ("estout", Ecosystem.SSC)
+
+
+def test_net_install_of_a_journal_update_names_the_package(archives):
+    resolved = archives.resolve(
+        "st0085_2", Language.STATA, construct=Construct.STATA_INSTALL
+    )
+    assert (resolved.package, resolved.ecosystem) == ("st0085", Ecosystem.STATA_JOURNAL)
+
+
+def test_the_deposits_own_module_beats_a_distribution_of_the_same_name(archives):
+    """With `utils.py` beside the script, `import utils` loads that file."""
+    mine = archives.resolve(
+        "utils.io", Language.PYTHON, local_modules=frozenset({"utils"})
+    )
+    assert mine.resolution is Resolution.LOCAL_RELATIVE
+    theirs = archives.resolve("utils", Language.PYTHON)
+    assert theirs.resolution is Resolution.KNOWN_CURRENT
+
+
+def test_the_stdlib_wins_over_a_local_module(archives):
+    resolved = archives.resolve(
+        "json", Language.PYTHON, local_modules=frozenset({"json"})
+    )
+    assert resolved.resolution is Resolution.BASE_OR_STDLIB
+
+
+@pytest.mark.parametrize("name", ["cPickle", "urllib2", "StringIO", "Queue", "_winreg"])
+def test_python_2_had_a_standard_library(archives, name):
+    """A corpus reaching back to 2010 imports it, and none of it is a package."""
+    assert (
+        archives.resolve(name, Language.PYTHON).resolution is Resolution.BASE_OR_STDLIB
+    )
+
+
+def test_an_import_name_maps_to_its_distribution(archives):
+    resolved = archives.resolve("shapefile", Language.PYTHON)
+    assert (resolved.package, resolved.basis) == ("pyshp", "import_map")
+
+
+def test_a_mapping_to_a_distribution_pypi_lacks_is_not_believed(archives):
+    assert archives.resolve("ghost", Language.PYTHON).resolution is Resolution.UNKNOWN
+
+
+def test_the_dynamic_placeholder_is_not_a_name(archives):
+    resolved = archives.resolve("<dynamic>", Language.PYTHON)
+    assert resolved.resolution is Resolution.DYNAMIC
+
+
+def test_an_authors_own_site_is_the_last_archive_consulted(archives):
+    archives.net_commands = {"grc1leg": ("grc1leg",), "renvars": ("elsewhere",)}
+    site = archives.resolve("grc1leg", Language.STATA)
+    assert (site.package, site.ecosystem) == ("grc1leg", Ecosystem.NET_SITE)
+    assert archives.resolve("renvars", Language.STATA).ecosystem is Ecosystem.STB

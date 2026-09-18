@@ -227,7 +227,11 @@ def chunk_output(body: str, namespace: dict) -> str:
     printed = io.StringIO()
     with redirect_stdout(printed):
         exec(compile(tree, "<chunk>", "exec"), namespace)  # noqa: S102
-        value = eval(compile(tail, "<tail>", "eval"), namespace)  # noqa: S307 if tail else None
+        value = (
+            eval(compile(tail, "<tail>", "eval"), namespace)  # noqa: S307
+            if tail is not None
+            else None
+        )
 
     out = printed.getvalue()
     if isinstance(value, str):
@@ -235,6 +239,26 @@ def chunk_output(body: str, namespace: dict) -> str:
     elif value is not None:
         out += str(value)
     return out
+
+
+def front_matter() -> dict[str, str]:
+    """The title, subtitle and author as the paper's own front matter has them.
+
+    The PDF took its title from the Makefile and this page from a literal
+    below, and the three had drifted into three different titles. Everything
+    that prints one now reads it from here.
+    """
+    front = _FRONT.search(PAPER.read_text())
+    found: dict[str, str] = {}
+    if front:
+        for key in ("title", "subtitle"):
+            m = re.search(rf'^{key}:\s*"?(.+?)"?\s*$', front.group(1), re.MULTILINE)
+            if m:
+                found[key] = m.group(1)
+        m = re.search(r"^\s*- name:\s*(.+?)\s*$", front.group(1), re.MULTILINE)
+        if m:
+            found["author"] = m.group(1)
+    return found
 
 
 def render_markdown() -> tuple[str, dict]:
@@ -295,6 +319,9 @@ def main() -> int:
     # to ours: the chunks read `../build/tally`, which is right relative to
     # this file and wrong from anywhere else, while the output path is the
     # caller's and means what they meant.
+    if len(sys.argv) > 2 and sys.argv[1] == "--meta":
+        print(front_matter()[sys.argv[2]])
+        return 0
     out_path = (
         Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "paper.html"
     ).resolve()
@@ -318,7 +345,8 @@ def main() -> int:
         "</table>", "</table></div>"
     )
 
-    title = "What Social Science Runs On"
+    meta = front_matter()
+    title = meta["title"]
     n_deposits = namespace.get("n_deposits", 0)
     n_files = namespace.get("n_files", 0)
 
@@ -328,8 +356,8 @@ def main() -> int:
 <article class="sheet">
 <header class="masthead">
   <div class="eyebrow">Working paper &middot; measurement</div>
-  <h1 class="title">What software does social science run on?</h1>
-  <div class="byline">Gaurav Sood &middot; measuring validated use in replication code</div>
+  <h1 class="title">{title}</h1>
+  <div class="byline">{meta["author"]} &middot; {meta["subtitle"]}</div>
 </header>
 {html_body}
 <footer class="colophon">

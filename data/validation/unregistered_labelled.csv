@@ -1,0 +1,78 @@
+name,language,n_deposits,n_deposits_defining,category,where_distributed,url,checked_on
+arcpy,python,28,0,commercial,ships with Esri ArcGIS,https://anaconda.org/esri/arcpy,2026-09-17
+arcgisscripting,python,7,0,commercial,ships with Esri ArcGIS Desktop,https://desktop.arcgis.com/en/arcmap/latest/analyze/creating-tools/running-a-script-in-process.htm,2026-09-17
+gslab_make,python,6,0,code host,github.com,https://github.com/gslab-econ/gslab_make,2026-09-17
+qgis,python,5,0,formal archive not indexed,conda-forge; ships with the QGIS application,https://anaconda.org/conda-forge/qgis,2026-09-17
+vdemdata,r,29,0,code host,github.com,,2026-09-17
+starpolishr,r,24,0,code host,github.com,,2026-09-17
+cmdstanr,r,23,0,code host,github.com,,2026-09-17
+simcf,r,20,0,author site,faculty.washington.edu,,2026-09-17
+gurobi,r,12,0,commercial,ships with the Gurobi Optimizer,https://www.gurobi.com/documentation/current/refman/r_api_overview.html,2026-09-17
+austin,r,11,0,code host,github.com,https://github.com/conjugateprior/austin,2026-09-17
+quanteda.dictionaries,r,9,0,code host,github.com,,2026-09-17
+cjpowr,r,7,0,code host,github.com,,2026-09-17
+commarobust,r,7,0,code host,github.com,,2026-09-17
+glmmadmb,r,7,0,formal archive not indexed,R-Forge,https://glmmadmb.r-forge.r-project.org/,2026-09-17
+quanteda.corpora,r,7,0,code host,github.com,,2026-09-17
+starbility,r,7,0,code host,github.com,https://github.com/AakaashRao/starbility,2026-09-17
+synthdid,r,7,0,code host,github.com,,2026-09-17
+dmetar,r,6,0,code host,github.com,,2026-09-17
+equivtest,r,6,0,code host,github.com,https://github.com/ekhartman/equivtest,2026-09-17
+tile,r,6,0,author site,faculty.washington.edu,https://faculty.washington.edu/cadolph/?page=60,2026-09-17
+urbnmapr,r,6,0,code host,github.com,,2026-09-17
+ggsankey,r,5,0,code host,github.com,https://github.com/davidsjoberg/ggsankey,2026-09-17
+ggthemr,r,5,0,code host,github.com,,2026-09-17
+rethinking,r,5,0,code host,github.com,https://github.com/rmcelreath/rethinking,2026-09-17
+dcdensity,stata,65,10,code host,raw.githubusercontent.com,,2026-09-17
+btscs,stata,57,0,author site,"author's page, now gone; survives as copies in deposits",http://www-personal.umich.edu/~wmacmill/stata/btscs/btscs-a-binary-time.pdf,2026-09-17
+ols_spatial_hac,stata,27,6,author site,fight-entropy.com,http://www.fight-entropy.com/2010/06/standard-error-adjustment-ols-for.html,2026-09-17
+grinter,stata,23,0,author site,myweb.uiowa.edu,,2026-09-17
+cgmreg,stata,22,3,author site,cameron.econ.ucdavis.edu,https://cameron.econ.ucdavis.edu/research/cgmreg.ado,2026-09-17
+the,stata,20,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+_regress,stata,14,0,"official, undocumented",compiled into Stata; regress.ado calls it,https://github.com/opensafely-core/stata-docker/blob/main/bin/ado/base/r/regress.ado,2026-09-17
+beep,stata,14,0,"official, undocumented",compiled into Stata,https://www.stata.com/statalist/archive/2012-09/msg01163.html,2026-09-17
+jobid,stata,13,0,not software,a variable name,,2026-09-17
+reg2hdfespatial,stata,13,5,author site,"author's page, now gone; a fork is on GitHub",https://github.com/Ramin001/reg2hdfespatial,2026-09-17
+this,stata,13,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+a,stata,12,0,not software,"a fragment of Mata, R or a display directive read as a command",,2026-09-17
+figure,stata,10,1,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+replication,stata,10,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+e,stata,9,0,not software,"a fragment of Mata, R or a display directive read as a command",,2026-09-17
+prchange,stata,9,0,author site,"SPost9, Indiana page now gone",https://www.statalist.org/forums/forum/general-stata-discussion/general/1779640-spost13-is-back,2026-09-17
+we,stata,9,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+x,stata,9,0,not software,"a fragment of Mata, R or a display directive read as a command",,2026-09-17
+ebayes,stata,8,4,author site,sacarny.com,https://sacarny.com/programs/,2026-09-17
+ffind,stata,8,3,code host,github.com,https://github.com/jacaskey/Stata-code,2026-09-17
+from,stata,8,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+that,stata,8,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+xi3,stata,8,1,author site,stats.oarc.ucla.edu,https://stats.oarc.ucla.edu/stat/stata/ado/analysis/xi3.ado,2026-09-17
+in,stata,7,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+lassoshooting,stata,7,5,author site,author's page and a replication archive,https://voices.uchicago.edu/christianhansen/code-and-data/,2026-09-17
+model,stata,7,2,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+sigstar,stata,7,2,code host,GitHub gist,https://jrpabraham.github.io/tools.html,2026-09-17
+xtfevd,stata,7,1,author site,polsci.org,https://polsci.org/pluemper/downloads.html,2026-09-17
+and,stata,6,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+bartik_weight,stata,6,6,code host,github.com,https://github.com/paulgp/bartik-weight,2026-09-17
+misschk,stata,6,0,author site,"SPost9, Indiana page now gone",https://www.statalist.org/forums/forum/general-stata-discussion/general/1779640-spost13-is-back,2026-09-17
+not,stata,6,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+of,stata,6,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+panelcombine,stata,6,5,code host,github.com,https://github.com/steveofconnell/PanelCombine,2026-09-17
+plotfds,stata,6,0,author site,myweb.uiowa.edu,https://myweb.uiowa.edu/fboehmke/methods.html,2026-09-17
+psacalc2,stata,6,0,code host,github.com,https://github.com/ArthurHowardMorris/psacalc_supports_reghdfe,2026-09-17
+pstar,stata,6,0,local program,copied between replication packages; no release point,https://github.com/PrincetonBPL/stress-domains-pub/blob/master/ado/pstar.ado,2026-09-17
+s,stata,6,0,not software,"a fragment of Mata, R or a display directive read as a command",,2026-09-17
+sartsel,stata,6,1,author site,asartori.mit.edu,https://asartori.mit.edu/research,2026-09-17
+soepdrop,stata,6,0,author site,DIW Berlin's remote server only; never distributed,https://www.diw.de/documents/dokumentenarchiv/17/diw_01.c.432048.de/diw_ssp0155_soepremote.pdf,2026-09-17
+to,stata,6,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+xxx,stata,6,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+_simp,stata,5,4,author site,gking.harvard.edu (a subroutine of CLARIFY's estsimp),https://gking.harvard.edu/clarify,2026-09-17
+appendix,stata,5,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+gsave,stata,5,0,author site,sites.google.com,https://sites.google.com/site/johannesschmieder/stata,2026-09-17
+guse,stata,5,0,author site,sites.google.com,https://sites.google.com/site/johannesschmieder/stata,2026-09-17
+hline,stata,5,0,not software,"a fragment of Mata, R or a display directive read as a command",,2026-09-17
+i,stata,5,0,not software,"a fragment of Mata, R or a display directive read as a command",,2026-09-17
+it,stata,5,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+real,stata,5,0,not software,"a fragment of Mata, R or a display directive read as a command",,2026-09-17
+soepkeep,stata,5,0,author site,DIW Berlin's remote server only; never distributed,https://www.diw.de/documents/dokumentenarchiv/17/diw_01.c.432048.de/diw_ssp0155_soepremote.pdf,2026-09-17
+there,stata,5,0,not software,uncommented prose or pasted log output in a do-file,,2026-09-17
+x_ols,stata,5,4,author site,economics.uwo.ca,https://economics.uwo.ca/people/conley_docs/code_to_download_gmm.html,2026-09-17

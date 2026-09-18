@@ -9,6 +9,7 @@ whose whole point is that it is not hand-checked.
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -253,3 +254,13 @@ def test_rather_than_is_not_a_tic():
     prose = _prose().lower()
     n = prose.count("rather than")
     assert n <= 12, f"{n} uses of 'rather than', which reads as a tic above ~12"
+
+
+def test_the_title_is_written_in_one_place():
+    """The front matter, the Makefile and the HTML page once held three titles."""
+    front = (PAPER_DIR / "paper.qmd").read_text().split("---")[1]
+    assert re.search(r'^title: "(.+)"$', front, re.MULTILINE)
+    assert re.search(r'^subtitle: "(.+)"$', front, re.MULTILINE)
+    typed = re.compile(r'-V (?:sub)?title="(?!\$)|class="title">(?!\{)')
+    for path in (PAPER_DIR.parent / "Makefile", PAPER_DIR / "render_paper.py"):
+        assert not typed.search(path.read_text()), f"{path.name} types its own title"

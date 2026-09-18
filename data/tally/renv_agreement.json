@@ -1,44 +1,44 @@
 {
  "n_deposits_compared": 6209,
- "mean_jaccard": 0.9870675468810275,
- "pooled_jaccard": 0.9837103833084317,
- "n_perfect_agreement": 5792,
- "n_ours_only": 1024,
- "n_renv_only": 208,
+ "mean_jaccard": 0.9871150983940744,
+ "pooled_jaccard": 0.9835417603045766,
+ "n_perfect_agreement": 5805,
+ "n_ours_only": 1039,
+ "n_renv_only": 206,
  "comparison": "in-analysis R files; base R and renv's implicit rmarkdown set aside",
  "by_source": {
   "dataverse": {
    "n_deposits_compared": 5796,
-   "mean_jaccard": 0.9877125497645243,
-   "pooled_jaccard": 0.9868103815061693,
-   "n_perfect_agreement": 5426,
-   "n_ours_only": 728,
-   "n_renv_only": 202
+   "mean_jaccard": 0.9879052115129452,
+   "pooled_jaccard": 0.9866568353586773,
+   "n_perfect_agreement": 5437,
+   "n_ours_only": 741,
+   "n_renv_only": 200
   },
   "zenodo": {
    "n_deposits_compared": 413,
-   "mean_jaccard": 0.9780156420075468,
-   "pooled_jaccard": 0.9410271431361062,
-   "n_perfect_agreement": 366,
-   "n_ours_only": 296,
+   "mean_jaccard": 0.9760267312343288,
+   "pooled_jaccard": 0.9406597696662112,
+   "n_perfect_agreement": 368,
+   "n_ours_only": 298,
    "n_renv_only": 6
   }
  },
  "set_aside": {
   "base_r": 1879,
   "implicit_rmarkdown": 546,
-  "ours_outside_analysis_files": 398,
+  "ours_outside_analysis_files": 396,
   "outside_analysis_files": 4454
  },
  "n_no_analysis_r": 35,
  "raw": {
   "comparison": "whole deposit directory, every name renv reports",
   "n_deposits_compared": 6244,
-  "mean_jaccard": 0.9511363158194297,
-  "pooled_jaccard": 0.9072832426009675,
-  "n_perfect_agreement": 4076,
-  "n_ours_only": 991,
-  "n_renv_only": 6656,
+  "mean_jaccard": 0.951225923531147,
+  "pooled_jaccard": 0.9083906498295669,
+  "n_perfect_agreement": 4082,
+  "n_ours_only": 951,
+  "n_renv_only": 6601,
   "top_renv_only": [
    [
     "grid",
@@ -90,7 +90,7 @@
    ],
    [
     "bookdown",
-    46
+    44
    ],
    [
     "knitr",
@@ -109,40 +109,136 @@
     30
    ],
    [
-    "lattice",
-    20
-   ],
-   [
     "Matrix",
     20
    ],
    [
-    "tibble",
-    19
+    "lattice",
+    20
+   ],
+   [
+    "hexbin",
+    18
    ]
   ]
  },
  "n_renv_read_nothing": 72,
  "renv_read_nothing_sample": [
   {
-   "dataset_doi": "doi:10.7910/DVN/H6RZA7",
-   "n_ours": 16
+   "dataset_doi": "doi:10.7910/DVN/IRUDXK",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/VW1HUF",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/2RORMS",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/84NYFE",
+   "n_ours": 8
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/MZUOWG",
+   "n_ours": 13
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/EEFXAT",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "zenodo:7064906",
+   "n_ours": 3
   },
   {
    "dataset_doi": "doi:10.7910/DVN/PG4UGE",
    "n_ours": 13
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/YXMGMU",
-   "n_ours": 12
+   "dataset_doi": "doi:10.7910/DVN/H6RZA7",
+   "n_ours": 16
   },
   {
    "dataset_doi": "doi:10.7910/DVN/5TTZRQ",
    "n_ours": 4
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/1CCXS9",
+   "dataset_doi": "doi:10.7910/DVN/YXMGMU",
+   "n_ours": 12
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OVSONU",
+   "n_ours": 17
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/KGIBK5",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/DAGL4S",
+   "n_ours": 7
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZMZDHG",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/6MRVOM",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/08RCPK",
+   "n_ours": 6
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/P5SIO1",
+   "n_ours": 1
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/L8YEDW",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/LLRLQB",
+   "n_ours": 17
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/HNA4FP",
+   "n_ours": 25
+  },
+  {
+   "dataset_doi": "zenodo:8168773",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/AWXIQE",
    "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/24497",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/B4XDZP",
+   "n_ours": 21
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/XACHFI",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SJI4IA",
+   "n_ours": 22
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/XVGPKM",
+   "n_ours": 3
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/TRIEF2",
+   "n_ours": 26
   },
   {
    "dataset_doi": "doi:10.7910/DVN/VWPPVQ",
@@ -153,8 +249,8 @@
    "n_ours": 4
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/TRIEF2",
-   "n_ours": 26
+   "dataset_doi": "doi:10.7910/DVN/1CCXS9",
+   "n_ours": 3
   },
   {
    "dataset_doi": "doi:10.7910/DVN/RLXYCJ",
@@ -165,23 +261,15 @@
    "n_ours": 5
   },
   {
+   "dataset_doi": "doi:10.7910/DVN/FAA9EA",
+   "n_ours": 5
+  },
+  {
    "dataset_doi": "doi:10.7910/DVN/ZH5YFY",
    "n_ours": 2
   },
   {
    "dataset_doi": "doi:10.7910/DVN/ZVSHZE",
-   "n_ours": 1
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/FAA9EA",
-   "n_ours": 5
-  },
-  {
-   "dataset_doi": "zenodo:7064906",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/EEFXAT",
    "n_ours": 1
   },
   {
@@ -201,102 +289,6 @@
    "n_ours": 15
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/OKZOUX",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/W8TQHB",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/ZN4TIV",
-   "n_ours": 5
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/SCXPHI",
-   "n_ours": 10
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/FEQSC7",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/OVSONU",
-   "n_ours": 17
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/DAGL4S",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/KGIBK5",
-   "n_ours": 1
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/ZMZDHG",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/84NYFE",
-   "n_ours": 8
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/IRUDXK",
-   "n_ours": 1
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/VW1HUF",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/MZUOWG",
-   "n_ours": 13
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/2RORMS",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/BE99YA",
-   "n_ours": 7
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/HNA4FP",
-   "n_ours": 25
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/AWXIQE",
-   "n_ours": 3
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/24497",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/XACHFI",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "zenodo:8168773",
-   "n_ours": 2
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/LLRLQB",
-   "n_ours": 17
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/SJI4IA",
-   "n_ours": 22
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/B4XDZP",
-   "n_ours": 21
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/XVGPKM",
-   "n_ours": 3
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/26063",
    "n_ours": 8
   },
@@ -309,24 +301,32 @@
    "n_ours": 13
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/HRLHA4",
+   "dataset_doi": "doi:10.7910/DVN/24724",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/OXBYO7",
+   "n_ours": 2
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/WKR2KV",
+   "n_ours": 27
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/DDOFPS",
    "n_ours": 14
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/OJWRWM",
-   "n_ours": 1
+   "dataset_doi": "doi:10.7910/DVN/ZCLECH",
+   "n_ours": 5
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/RYUUB9",
-   "n_ours": 9
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/BCPIDC",
-   "n_ours": 13
+   "dataset_doi": "doi:10.7910/DVN/INHODY",
+   "n_ours": 6
   }
  ],
  "n_skipped": 0,
- "n_disagreements": 417,
+ "n_disagreements": 404,
  "top_renv_only": [
   [
    "rmarkdown",
@@ -334,7 +334,7 @@
   ],
   [
    "bookdown",
-   41
+   39
   ],
   [
    "knitr",
@@ -412,105 +412,87 @@
  "top_ours_only": [
   [
    "ggplot2",
+   18
+  ],
+  [
+   "gridExtra",
    14
   ],
   [
    "dplyr",
+   14
+  ],
+  [
+   "tidyr",
    13
+  ],
+  [
+   "stargazer",
+   12
   ],
   [
    "devtools",
    12
   ],
   [
-   "gridExtra",
+   "foreign",
    11
   ],
   [
-   "stargazer",
+   "tibble",
    11
+  ],
+  [
+   "sandwich",
+   10
+  ],
+  [
+   "Rcpp",
+   10
+  ],
+  [
+   "stringr",
+   10
+  ],
+  [
+   "xtable",
+   10
   ],
   [
    "MASS",
    10
   ],
   [
-   "tidyr",
+   "purrr",
    10
   ],
   [
-   "sandwich",
-   9
-  ],
-  [
-   "foreign",
-   9
-  ],
-  [
-   "tibble",
+   "lubridate",
    9
   ],
   [
    "haven",
-   8
-  ],
-  [
-   "xtable",
-   8
-  ],
-  [
-   "Rcpp",
-   7
-  ],
-  [
-   "lubridate",
-   7
-  ],
-  [
-   "stringr",
-   7
-  ],
-  [
-   "RcppArmadillo",
-   6
-  ],
-  [
-   "lmtest",
-   6
+   9
   ],
   [
    "car",
-   6
+   9
   ],
   [
    "scales",
-   6
+   9
   ],
   [
-   "RColorBrewer",
-   6
+   "forcats",
+   8
+  ],
+  [
+   "readr",
+   8
   ]
  ],
  "renv_version": "1.1.8",
  "disagreements_sample": [
-  {
-   "dataset_doi": "doi:10.7910/DVN/SREUHV",
-   "jaccard": 0.0,
-   "ours_only": [
-    "../dyadEffect_0.1.tar.gz",
-    "ROCR",
-    "Rcpp",
-    "RcppArmadillo",
-    "RcppProgress",
-    "abind"
-   ],
-   "renv_only": [],
-   "n_ours": 6,
-   "n_renv": 0,
-   "n_shared": 0,
-   "n_union": 6,
-   "source": "dataverse"
-  },
   {
    "dataset_doi": "doi:10.7910/DVN/8E1IIM",
    "jaccard": 0.0,
@@ -550,6 +532,46 @@
    "source": "zenodo"
   },
   {
+   "dataset_doi": "doi:10.7910/DVN/SREUHV",
+   "jaccard": 0.0,
+   "ours_only": [
+    "ROCR",
+    "Rcpp",
+    "RcppArmadillo",
+    "RcppProgress",
+    "abind",
+    "dyadEffect"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 0,
+   "n_shared": 0,
+   "n_union": 6,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/FEW2JP",
+   "jaccard": 0.0,
+   "ours_only": [
+    "digest",
+    "dplyr",
+    "fs",
+    "hashids",
+    "magrittr",
+    "shiny",
+    "shinyBS",
+    "shinyWidgets",
+    "shinyjs",
+    "stringr"
+   ],
+   "renv_only": [],
+   "n_ours": 10,
+   "n_renv": 0,
+   "n_shared": 0,
+   "n_union": 10,
+   "source": "dataverse"
+  },
+  {
    "dataset_doi": "doi:10.7910/DVN/R99Y4S",
    "jaccard": 0.0,
    "ours_only": [
@@ -577,37 +599,17 @@
    "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/FEW2JP",
-   "jaccard": 0.0,
-   "ours_only": [
-    "digest",
-    "dplyr",
-    "fs",
-    "hashids",
-    "magrittr",
-    "shiny",
-    "shinyBS",
-    "shinyWidgets",
-    "shinyjs",
-    "stringr"
-   ],
-   "renv_only": [],
-   "n_ours": 10,
-   "n_renv": 0,
-   "n_shared": 0,
-   "n_union": 10,
-   "source": "dataverse"
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/VAOEHQ",
    "jaccard": 0.041666666666666664,
    "ours_only": [
     "MASS",
     "MatrixModels",
+    "SparseM",
     "car",
     "conquer",
     "cowplot",
     "doParallel",
+    "fansi",
     "foreach",
     "foreign",
     "gbm",
@@ -615,16 +617,14 @@
     "glmnet",
     "lfe",
     "matrixStats",
+    "multcomp",
     "nnet",
+    "quantreg",
     "randomForest",
     "readstata13",
     "rpart",
     "sandwich",
-    "xtable",
-    "~/SparseM_1.81.zip",
-    "~/fansi_0.5.0.zip",
-    "~/multcomp_1.4-17.zip",
-    "~/quantreg_5.85.zip"
+    "xtable"
    ],
    "renv_only": [],
    "n_ours": 24,
@@ -665,87 +665,81 @@
   },
   {
    "dataset_doi": "zenodo:11386106",
-   "jaccard": 0.0875,
+   "jaccard": 0.0945945945945946,
    "ours_only": [
-    "3-replication-package/add-ons/r/BMisc_1.4.6.zip",
-    "3-replication-package/add-ons/r/CVXR_1.0-12.zip",
-    "3-replication-package/add-ons/r/ECOSolveR_0.5.5.zip",
-    "3-replication-package/add-ons/r/Formula_1.2-5.zip",
-    "3-replication-package/add-ons/r/HonestDiD",
-    "3-replication-package/add-ons/r/R6_2.5.1.zip",
-    "3-replication-package/add-ons/r/Rcpp_1.0.12.zip",
-    "3-replication-package/add-ons/r/Rglpk_0.6-5.1.zip",
-    "3-replication-package/add-ons/r/Rmpfr_0.9-5.zip",
-    "3-replication-package/add-ons/r/TruncatedNormal_2.2.2.zip",
-    "3-replication-package/add-ons/r/abind_1.4-5.zip",
-    "3-replication-package/add-ons/r/alabama_2023.1.0.zip",
-    "3-replication-package/add-ons/r/backports_1.4.1.zip",
-    "3-replication-package/add-ons/r/bit64_4.0.5.zip",
-    "3-replication-package/add-ons/r/bit_4.0.5.zip",
-    "3-replication-package/add-ons/r/broom_1.0.6.zip",
-    "3-replication-package/add-ons/r/carData_3.0-5.zip",
-    "3-replication-package/add-ons/r/car_3.1-2.zip",
-    "3-replication-package/add-ons/r/cli_3.6.2.zip",
-    "3-replication-package/add-ons/r/colorspace_2.1-0.zip",
-    "3-replication-package/add-ons/r/data.table_1.15.4.zip",
-    "3-replication-package/add-ons/r/did_2.1.2.zip",
-    "3-replication-package/add-ons/r/dplyr_1.1.4.zip",
-    "3-replication-package/add-ons/r/dreamerr_1.4.0.zip",
-    "3-replication-package/add-ons/r/f1dataR_1.5.3.zip",
-    "3-replication-package/add-ons/r/fansi_1.0.6.zip",
-    "3-replication-package/add-ons/r/farver_2.1.2.zip",
-    "3-replication-package/add-ons/r/fixest_0.12.0.zip",
-    "3-replication-package/add-ons/r/forcats_1.0.0.zip",
-    "3-replication-package/add-ons/r/foreach_1.5.2.zip",
-    "3-replication-package/add-ons/r/generics_0.1.3.zip",
-    "3-replication-package/add-ons/r/ggplot2_3.5.1.zip",
-    "3-replication-package/add-ons/r/ggpubr_0.6.0.zip",
-    "3-replication-package/add-ons/r/ggsignif_0.6.4.zip",
-    "3-replication-package/add-ons/r/glue_1.7.0.zip",
-    "3-replication-package/add-ons/r/gmp_0.7-4.zip",
-    "3-replication-package/add-ons/r/gtable_0.3.5.zip",
-    "3-replication-package/add-ons/r/haven_2.5.4.zip",
-    "3-replication-package/add-ons/r/here_1.0.1.zip",
-    "3-replication-package/add-ons/r/hms_1.1.3.zip",
-    "3-replication-package/add-ons/r/iterators_1.0.14.zip",
-    "3-replication-package/add-ons/r/labeling_0.4.3.zip",
-    "3-replication-package/add-ons/r/latex2exp_0.9.6.zip",
-    "3-replication-package/add-ons/r/lifecycle_1.0.4.zip",
-    "3-replication-package/add-ons/r/lpSolveAPI_5.5.2.0-17.11.zip",
-    "3-replication-package/add-ons/r/magrittr_2.0.3.zip",
-    "3-replication-package/add-ons/r/matrixStats_1.3.0.zip",
-    "3-replication-package/add-ons/r/munsell_0.5.1.zip",
-    "3-replication-package/add-ons/r/mvtnorm_1.2-5.zip",
-    "3-replication-package/add-ons/r/nleqslv_3.3.5.zip",
-    "3-replication-package/add-ons/r/numDeriv_2016.8-1.1.zip",
-    "3-replication-package/add-ons/r/osqp_0.6.3.2.zip",
-    "3-replication-package/add-ons/r/pillar_1.9.0.zip",
-    "3-replication-package/add-ons/r/pkgconfig_2.0.3.zip",
-    "3-replication-package/add-ons/r/pracma_2.4.4.zip",
-    "3-replication-package/add-ons/r/purrr_1.0.2.zip",
-    "3-replication-package/add-ons/r/randtoolbox_2.0.4.zip",
-    "3-replication-package/add-ons/r/readr_2.1.5.zip",
-    "3-replication-package/add-ons/r/rlang_1.1.3.zip",
-    "3-replication-package/add-ons/r/rngWELL_0.10-9.zip",
-    "3-replication-package/add-ons/r/rprojroot_2.0.4.zip",
-    "3-replication-package/add-ons/r/rstatix_0.7.2.zip",
-    "3-replication-package/add-ons/r/sandwich_3.1-0.zip",
-    "3-replication-package/add-ons/r/scales_1.3.0.zip",
-    "3-replication-package/add-ons/r/stringmagic_1.1.2.zip",
-    "3-replication-package/add-ons/r/tibble_3.2.1.zip",
-    "3-replication-package/add-ons/r/tidyr_1.3.1.zip",
-    "3-replication-package/add-ons/r/tidyselect_1.2.1.zip",
-    "3-replication-package/add-ons/r/tzdb_0.4.0.zip",
-    "3-replication-package/add-ons/r/utf8_1.2.4.zip",
-    "3-replication-package/add-ons/r/vctrs_0.6.5.zip",
-    "3-replication-package/add-ons/r/withr_3.0.0.zip",
-    "3-replication-package/add-ons/r/zoo_1.8-12.zip"
+    "BMisc",
+    "CVXR",
+    "ECOSolveR",
+    "Formula",
+    "R6",
+    "Rcpp",
+    "Rglpk",
+    "Rmpfr",
+    "TruncatedNormal",
+    "abind",
+    "add-ons",
+    "alabama",
+    "backports",
+    "bit",
+    "bit64",
+    "broom",
+    "car",
+    "carData",
+    "cli",
+    "colorspace",
+    "data.table",
+    "dreamerr",
+    "f1dataR",
+    "fansi",
+    "farver",
+    "forcats",
+    "foreach",
+    "generics",
+    "ggpubr",
+    "ggsignif",
+    "glue",
+    "gmp",
+    "gtable",
+    "hms",
+    "iterators",
+    "labeling",
+    "latex2exp",
+    "lifecycle",
+    "lpSolveAPI",
+    "magrittr",
+    "matrixStats",
+    "munsell",
+    "mvtnorm",
+    "nleqslv",
+    "numDeriv",
+    "osqp",
+    "pillar",
+    "pkgconfig",
+    "pracma",
+    "purrr",
+    "randtoolbox",
+    "readr",
+    "rlang",
+    "rngWELL",
+    "rprojroot",
+    "rstatix",
+    "sandwich",
+    "scales",
+    "stringmagic",
+    "tibble",
+    "tidyr",
+    "tidyselect",
+    "tzdb",
+    "utf8",
+    "vctrs",
+    "withr",
+    "zoo"
    ],
    "renv_only": [],
-   "n_ours": 80,
+   "n_ours": 74,
    "n_renv": 7,
    "n_shared": 7,
-   "n_union": 80,
+   "n_union": 74,
    "source": "zenodo"
   },
   {
@@ -1083,79 +1077,47 @@
    "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/ZOOVLK",
-   "jaccard": 0.23809523809523808,
+   "dataset_doi": "doi:10.7910/DVN/W8HUKY",
+   "jaccard": 0.22727272727272727,
    "ours_only": [
-    "H:/Intranet/Intranet/software_programs/Core Software/R/BH_1.84.0-0.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/Formula_1.2-4.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/Hmisc/Hmisc_3.4-2.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/Hmisc_5.2-2.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/R6_2.4.1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/RcppEigen_0.3.4.0.2.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/Rcpp_1.0.5.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/assertthat_0.2.1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/base64enc_0.1-3.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/bigmemory.sri_0.1.8.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/bigmemory_4.6.4.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/cli_2.0.2.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/clipr_0.7.0.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/colorspace_1.4-1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/cpp11_0.2.1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/crayon_1.3.4.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/data.table_1.14.4.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/digest_0.6.25.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/dplyr_1.0.2.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/ellipsis_0.3.1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/fansi_0.4.1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/farver_2.0.3.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/fastglm_0.0.3.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/fixest_0.10.4.tar.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/forcats_0.5.0.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/generics_0.0.2.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/ggplot2_3.3.2.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/glue_1.4.2.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/glue_1.6.2.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/gtable_0.3.0.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/haven_2.3.1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/hms_0.5.3.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/htmltools_0.5.0.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/knitr/knitr.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/labeling_0.3.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/lfe_2.8-7.1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/lifecycle_0.2.0.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/magrittr_1.5.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/munsell_0.5.0.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/pillar_1.4.6.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/pkgconfig_2.0.3.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/plyr_1.8.6.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/purrr_0.3.4.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/readr_1.3.1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/reshape2_1.4.4.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/rmarkdown_2.3.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/sandwich_3.0-1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/scales_1.1.1.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/stargazer_5.2.2.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/stargazer_5.2.3.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/stringi_1.5.3.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/stringr_1.4.0.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/tibble_3.0.3.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/tidyselect_1.1.0.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/utf8_1.1.4.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/uuid_1.2-1.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/vctrs_0.3.4.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/vctrs_0.4.2.tar.gz",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/withr_2.3.0.zip\n",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/xtable_1.8-4.zip",
-    "H:/Intranet/Intranet/software_programs/Core Software/R/zoo_1.8-9.zip",
-    "H:/Zheng_10223/R Packages/rlang_0.4.7.zip",
-    "H:/Zheng_10223/gridExtra.zip",
-    "H:/Zheng_10223/viridis_0.6.5.tar.gz"
+    "RItools",
+    "SDMTools",
+    "car",
+    "extrafont",
+    "foreign",
+    "ggplot2",
+    "ggthemes",
+    "gridExtra",
+    "lubridate",
+    "multiwayvcov",
+    "reporttools",
+    "ri",
+    "rio",
+    "scales",
+    "stringr",
+    "tidyverse",
+    "xtable"
    ],
    "renv_only": [],
-   "n_ours": 84,
-   "n_renv": 20,
-   "n_shared": 20,
-   "n_union": 84,
+   "n_ours": 22,
+   "n_renv": 5,
+   "n_shared": 5,
+   "n_union": 22,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/CXA8GR",
+   "jaccard": 0.25,
+   "ours_only": [
+    "fastplm",
+    "fect",
+    "panelview"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 1,
+   "n_shared": 1,
+   "n_union": 4,
    "source": "dataverse"
   },
   {
@@ -1163,8 +1125,8 @@
    "jaccard": 0.25,
    "ours_only": [
     "amen",
-    "ergm.count",
-    "ergm_3.10.4.tar.gz"
+    "ergm",
+    "ergm.count"
    ],
    "renv_only": [],
    "n_ours": 4,
@@ -1187,21 +1149,6 @@
    "n_shared": 1,
    "n_union": 4,
    "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/CXA8GR",
-   "jaccard": 0.25,
-   "ours_only": [
-    "fastplm",
-    "fect",
-    "panelview"
-   ],
-   "renv_only": [],
-   "n_ours": 4,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 4,
-   "source": "dataverse"
   },
   {
    "dataset_doi": "doi:10.7910/DVN/T17S0X",
@@ -1242,6 +1189,102 @@
    "n_renv": 3,
    "n_shared": 3,
    "n_union": 11,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/SQWI1A",
+   "jaccard": 0.2894736842105263,
+   "ours_only": [
+    "Matrix",
+    "broom",
+    "data.table",
+    "ggeffects",
+    "ggplot2",
+    "ggpubr",
+    "gridExtra",
+    "haven",
+    "labelled",
+    "magick",
+    "pdftools",
+    "plm",
+    "quanteda.textplots",
+    "quanteda.textstats",
+    "randomForest",
+    "rdlocrand",
+    "readtext",
+    "readxl",
+    "rusmaps",
+    "scales",
+    "sf",
+    "sp",
+    "stargazer",
+    "stringr",
+    "summarytools",
+    "tidyr",
+    "tidyverse"
+   ],
+   "renv_only": [],
+   "n_ours": 38,
+   "n_renv": 11,
+   "n_shared": 11,
+   "n_union": 38,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/ZOOVLK",
+   "jaccard": 0.3076923076923077,
+   "ours_only": [
+    "BH",
+    "Formula",
+    "Intranet",
+    "R6",
+    "Rcpp",
+    "RcppEigen",
+    "Zheng_10223",
+    "assertthat",
+    "base64enc",
+    "bigmemory",
+    "bigmemory.sri",
+    "cli",
+    "clipr",
+    "colorspace",
+    "cpp11",
+    "crayon",
+    "ellipsis",
+    "fansi",
+    "farver",
+    "fixest",
+    "forcats",
+    "generics",
+    "glue",
+    "gtable",
+    "hms",
+    "htmltools",
+    "labeling",
+    "lifecycle",
+    "magrittr",
+    "munsell",
+    "pillar",
+    "pkgconfig",
+    "plyr",
+    "purrr",
+    "reshape2",
+    "rlang",
+    "rmarkdown",
+    "stringi",
+    "tidyselect",
+    "utf8",
+    "uuid",
+    "viridis",
+    "withr",
+    "xtable",
+    "zoo"
+   ],
+   "renv_only": [],
+   "n_ours": 65,
+   "n_renv": 20,
+   "n_shared": 20,
+   "n_union": 65,
    "source": "dataverse"
   },
   {
@@ -1345,21 +1388,6 @@
    "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/J4WZGT",
-   "jaccard": 0.4,
-   "ours_only": [
-    "ggplot",
-    "readstata13",
-    "readxl"
-   ],
-   "renv_only": [],
-   "n_ours": 5,
-   "n_renv": 2,
-   "n_shared": 2,
-   "n_union": 5,
-   "source": "dataverse"
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/TBW4Y4",
    "jaccard": 0.4,
    "ours_only": [
@@ -1408,6 +1436,42 @@
    "source": "dataverse"
   },
   {
+   "dataset_doi": "doi:10.7910/DVN/J4WZGT",
+   "jaccard": 0.4,
+   "ours_only": [
+    "ggplot",
+    "readstata13",
+    "readxl"
+   ],
+   "renv_only": [],
+   "n_ours": 5,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 5,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "zenodo:19949998",
+   "jaccard": 0.4,
+   "ours_only": [
+    "dplyr",
+    "forcats",
+    "ggplot2",
+    "lubridate",
+    "purrr",
+    "readr",
+    "stringr",
+    "tibble",
+    "tidyr"
+   ],
+   "renv_only": [],
+   "n_ours": 15,
+   "n_renv": 6,
+   "n_shared": 6,
+   "n_union": 15,
+   "source": "zenodo"
+  },
+  {
    "dataset_doi": "doi:10.7910/DVN/29911",
    "jaccard": 0.42857142857142855,
    "ours_only": [
@@ -1450,35 +1514,6 @@
    "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/28575",
-   "jaccard": 0.5,
-   "ours_only": [
-    "R2jags"
-   ],
-   "renv_only": [],
-   "n_ours": 2,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/ELP2GA",
-   "jaccard": 0.5,
-   "ours_only": [
-    "https://cran.r-project.org/src/contrib/dplyr_1.1.4.tar.gz",
-    "https://cran.r-project.org/src/contrib/haven_2.5.5.tar.gz",
-    "https://cran.r-project.org/src/contrib/randomizr_1.0.0.tar.gz",
-    "https://cran.r-project.org/src/contrib/readr_2.1.5.tar.gz"
-   ],
-   "renv_only": [],
-   "n_ours": 8,
-   "n_renv": 4,
-   "n_shared": 4,
-   "n_union": 8,
-   "source": "dataverse"
-  },
-  {
    "dataset_doi": "doi:10.7910/DVN/QPTLBA",
    "jaccard": 0.5,
    "ours_only": [
@@ -1505,23 +1540,10 @@
    "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/QKCICV",
+   "dataset_doi": "doi:10.7910/DVN/28575",
    "jaccard": 0.5,
    "ours_only": [
-    "packages"
-   ],
-   "renv_only": [],
-   "n_ours": 2,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/MX5NIV",
-   "jaccard": 0.5,
-   "ours_only": [
-    "https://sites.google.com/a/stonybrook.edu/mperess/research/mnlresp_0.1.0.tar.gz"
+    "R2jags"
    ],
    "renv_only": [],
    "n_ours": 2,
@@ -1544,6 +1566,66 @@
    "source": "dataverse"
   },
   {
+   "dataset_doi": "doi:10.7910/DVN/28158",
+   "jaccard": 0.5,
+   "ours_only": [
+    "apsrtable",
+    "erer",
+    "memisc",
+    "xtable"
+   ],
+   "renv_only": [],
+   "n_ours": 8,
+   "n_renv": 4,
+   "n_shared": 4,
+   "n_union": 8,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/4XQUKB",
+   "jaccard": 0.5,
+   "ours_only": [
+    "MatchIt",
+    "Matching",
+    "optmatch"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "doi:10.7910/DVN/59F366",
+   "jaccard": 0.5,
+   "ours_only": [
+    "RcppArmadillo",
+    "optmatch"
+   ],
+   "renv_only": [],
+   "n_ours": 4,
+   "n_renv": 2,
+   "n_shared": 2,
+   "n_union": 4,
+   "source": "dataverse"
+  },
+  {
+   "dataset_doi": "zenodo:8380044",
+   "jaccard": 0.5,
+   "ours_only": [
+    "Rcpp",
+    "rgdal",
+    "sf"
+   ],
+   "renv_only": [],
+   "n_ours": 6,
+   "n_renv": 3,
+   "n_shared": 3,
+   "n_union": 6,
+   "source": "zenodo"
+  },
+  {
    "dataset_doi": "doi:10.7910/DVN/PDX8M1",
    "jaccard": 0.5,
    "ours_only": [
@@ -1563,44 +1645,14 @@
    "source": "dataverse"
   },
   {
-   "dataset_doi": "zenodo:8380044",
+   "dataset_doi": "doi:10.7910/DVN/QKCICV",
    "jaccard": 0.5,
    "ours_only": [
-    "Rcpp",
-    "rgdal",
-    "sf"
+    "packages"
    ],
    "renv_only": [],
-   "n_ours": 6,
-   "n_renv": 3,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "zenodo"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/R3JGWS",
-   "jaccard": 0.5,
-   "ours_only": [
-    "https://cran.r-project.org/src/contrib/dplyr_1.1.4.tar.gz",
-    "https://cran.r-project.org/src/contrib/ggplot2_3.5.0.tar.gz",
-    "https://cran.r-project.org/src/contrib/randomizr_1.0.0.tar.gz"
-   ],
-   "renv_only": [],
-   "n_ours": 6,
-   "n_renv": 3,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "dataverse"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/IPW0M9",
-   "jaccard": 0.5,
-   "ours_only": [],
-   "renv_only": [
-    "bookdown"
-   ],
-   "n_ours": 1,
-   "n_renv": 2,
+   "n_ours": 2,
+   "n_renv": 1,
    "n_shared": 1,
    "n_union": 2,
    "source": "dataverse"
@@ -1622,42 +1674,14 @@
    "source": "dataverse"
   },
   {
-   "dataset_doi": "doi:10.7910/DVN/ZNOX0G",
+   "dataset_doi": "doi:10.7910/DVN/IPW0M9",
    "jaccard": 0.5,
-   "ours_only": [
-    "textables"
+   "ours_only": [],
+   "renv_only": [
+    "bookdown"
    ],
-   "renv_only": [],
-   "n_ours": 2,
-   "n_renv": 1,
-   "n_shared": 1,
-   "n_union": 2,
-   "source": "dataverse"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/U4NUKT",
-   "jaccard": 0.5,
-   "ours_only": [
-    "XML",
-    "plyr",
-    "tm"
-   ],
-   "renv_only": [],
-   "n_ours": 6,
-   "n_renv": 3,
-   "n_shared": 3,
-   "n_union": 6,
-   "source": "dataverse"
-  },
-  {
-   "dataset_doi": "doi:10.7910/DVN/29362",
-   "jaccard": 0.5,
-   "ours_only": [
-    "foreign"
-   ],
-   "renv_only": [],
-   "n_ours": 2,
-   "n_renv": 1,
+   "n_ours": 1,
+   "n_renv": 2,
    "n_shared": 1,
    "n_union": 2,
    "source": "dataverse"

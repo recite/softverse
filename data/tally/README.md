@@ -4,8 +4,8 @@ How often each R, Python and Stata package is loaded by the code deposited
 with published papers, at journals whose data-and-code policy the Social
 Science Data Editors record as *actively verified*.
 
-**4,447 packages · 13,245 deposits with analyzable
-code · 13,985 deposits collected · built 2026-09-15**
+**4,565 packages · 13,245 deposits with analyzable
+code · 13,985 deposits collected · built 2026-09-18**
 
 A count here is the number of deposits whose code loads the package. Adding
 one to it takes a paper published at a journal that checks its authors' code,
@@ -40,15 +40,16 @@ columns keep visible.
 
 | file | rows | contents |
 |---|---:|---|
-| `usage_by_package.csv` | 4,447 | per-package deposit and call counts, pooled and split |
-| `usage_by_package_year.csv` | 14,154 | the same by deposit year |
-| `usage_by_collection.csv` | 22,203 | the same per journal or community |
-| `usage_by_function.csv` | 21,849 | package → function, where the source names one |
-| `unknown_names.csv` | 12,359 | names called in code that resolve to no registry |
+| `usage_by_package.csv` | 4,565 | per-package deposit and call counts, pooled and split |
+| `usage_by_package_year.csv` | 14,670 | the same by deposit year |
+| `usage_by_collection.csv` | 22,838 | the same per journal or community |
+| `usage_by_function.csv` | 20,942 | package → function, where the source names one |
+| `unknown_names.csv` | 2,787 | names called in code that resolve to no registry |
+| `remote_installs.csv` | 473 | what deposits install from outside their registry, and from where |
 | `language_presence.csv` | 24 | deposits containing each language, per repository |
-| `mentions.parquet` | 14,381,788 | every mention: package, function, file, line, snippet |
+| `mentions.parquet` | 14,853,082 | every mention: package, function, file, line, snippet |
 | `files.parquet` | 447,289 | the provenance spine every mention joins to |
-| `declared_dependencies.parquet` | 33,848 | what manifests declare: shipped, locked or asked for |
+| `declared_dependencies.parquet` | 33,874 | what manifests declare: shipped, locked or asked for |
 | `environment_signals.parquet` | 19,983 | R, Python and Stata versions, and the OS, where a file says |
 | `environment_coverage.json` | | deposits stating each signal, over deposits that could |
 | `summary.json` | | corpus counts the tables are shares of |
@@ -77,12 +78,32 @@ deposits that said something over the deposits that were in a position to.
 
 ### `unknown_names.csv`
 
-Names that appear in the code and resolve to no registry, unfiltered. Some
-are false positives: `str` is a Stata type, and some are programs a deposit
-defines for itself. The list also holds real and heavily used software that
-no registry indexes, `grc1leg` being the clearest case at 1,971
-calls. Pruning the list by hand would put a judgement call inside a file
+Names that code *uses* and that resolve to no registry, unfiltered. Install
+and inquiry lines are excluded: `ssc install x` states a dependency and is not
+a call. Some rows are false positives, and some are programs a deposit defines
+for itself. Pruning the list by hand would put a judgement call inside a file
 whose value is that you can check every row of it.
+
+- `name`, `language`
+- `n_deposits`, `n_mentions`: deposits using the name, and raw uses. Rank by
+  deposits: one deposit calling something six hundred times is one user of it
+- `n_deposits_defining`: how many deposits define a Stata program of this
+  name for themselves. A name many authors independently give a helper is more
+  likely one here too, with a `program define` the lexer did not reach, than
+  it is software nobody indexed
+
+### `remote_installs.csv`
+
+What deposits fetch from somewhere other than their language's registry:
+`remotes::install_github("user/repo")`, `net install x, from(URL)`,
+`pip install git+https://...`. It is the only record a deposit leaves of where
+off-registry software lives.
+
+- `name`, `language`, `host`: the package and the host it is fetched from
+- `in_registry`: the registry lists the name anyway, so this is a development
+  version of a registered package rather than software the registry lacks
+- `n_deposits_installing`, `n_deposits_loading`: deposits with the install
+  line, and those among them that go on to use the package
 
 ## Licence
 

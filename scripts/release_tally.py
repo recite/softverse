@@ -62,6 +62,7 @@ AGGREGATES = (
     "usage_by_collection",
     "usage_by_function",
     "unknown_names",
+    "remote_installs",
     "language_presence",
 )
 
@@ -121,6 +122,7 @@ columns keep visible.
 | `usage_by_collection.csv` | {n_collection_rows:,} | the same per journal or community |
 | `usage_by_function.csv` | {n_functions:,} | package → function, where the source names one |
 | `unknown_names.csv` | {n_unknown:,} | names called in code that resolve to no registry |
+| `remote_installs.csv` | {n_remote_installs:,} | what deposits install from outside their registry, and from where |
 | `language_presence.csv` | {n_languages} | deposits containing each language, per repository |
 | `mentions.parquet` | {n_mentions:,} | every mention: package, function, file, line, snippet |
 | `files.parquet` | {n_files:,} | the provenance spine every mention joins to |
@@ -153,12 +155,32 @@ deposits that said something over the deposits that were in a position to.
 
 ### `unknown_names.csv`
 
-Names that appear in the code and resolve to no registry, unfiltered. Some
-are false positives: `str` is a Stata type, and some are programs a deposit
-defines for itself. The list also holds real and heavily used software that
-no registry indexes, `grc1leg` being the clearest case at {n_grc1leg:,}
-calls. Pruning the list by hand would put a judgement call inside a file
+Names that code *uses* and that resolve to no registry, unfiltered. Install
+and inquiry lines are excluded: `ssc install x` states a dependency and is not
+a call. Some rows are false positives, and some are programs a deposit defines
+for itself. Pruning the list by hand would put a judgement call inside a file
 whose value is that you can check every row of it.
+
+- `name`, `language`
+- `n_deposits`, `n_mentions`: deposits using the name, and raw uses. Rank by
+  deposits: one deposit calling something six hundred times is one user of it
+- `n_deposits_defining`: how many deposits define a Stata program of this
+  name for themselves. A name many authors independently give a helper is more
+  likely one here too, with a `program define` the lexer did not reach, than
+  it is software nobody indexed
+
+### `remote_installs.csv`
+
+What deposits fetch from somewhere other than their language's registry:
+`remotes::install_github("user/repo")`, `net install x, from(URL)`,
+`pip install git+https://...`. It is the only record a deposit leaves of where
+off-registry software lives.
+
+- `name`, `language`, `host`: the package and the host it is fetched from
+- `in_registry`: the registry lists the name anyway, so this is a development
+  version of a registered package rather than software the registry lacks
+- `n_deposits_installing`, `n_deposits_loading`: deposits with the install
+  line, and those among them that go on to use the package
 
 ## Licence
 
@@ -215,7 +237,8 @@ def _resource(path: Path) -> dict:
     else:
         frame = pd.read_csv(path, nrows=0)
     return {
-        "name": path.stem,
+        # Every aggregate ships twice, and resource names must be unique.
+        "name": f"{path.stem}_{path.suffix.lstrip('.')}",
         "path": path.name,
         "format": path.suffix.lstrip("."),
         "schema": {
@@ -520,7 +543,7 @@ def main() -> int:
     # cites precision, recall and Jaccard; a reader who wants to check those
     # rather than take the PDF's word needs the numbers, and they are 28 KB.
     validation = PATHS.root / "build" / "validation"
-    for name in ("r_oracle.json", "renv_agreement.json"):
+    for name in ("r_oracle.json", "renv_agreement.json", "reachability.json"):
         if (validation / name).exists():
             shutil.copyfile(validation / name, OUT / name)
 
@@ -530,8 +553,6 @@ def main() -> int:
     write_package_tables()
     write_year_denominators()
 
-    unknown = pd.read_csv(OUT / "unknown_names.csv")
-    grc1leg = unknown.loc[unknown["name"] == "grc1leg", "n_mentions"]
     (OUT / "README.md").write_text(
         DESCRIPTOR.format(
             n_packages=summary["n_packages"],
@@ -554,7 +575,7 @@ def main() -> int:
             n_signals=len(
                 pd.read_parquet(OUT / "environment_signals.parquet", columns=["signal"])
             ),
-            n_grc1leg=int(grc1leg.iloc[0]) if len(grc1leg) else 0,
+            n_remote_installs=len(pd.read_csv(OUT / "remote_installs.csv")),
             built=summary["built"],
             composition=_composition_table(summary),
         )
@@ -627,20 +648,25 @@ def report(summary: dict) -> int:
     # Fixed expectations, not spot checks: these are the numbers the paper
     # prints, so a release that disagrees with them is a release that would
     # have quietly contradicted the paper. Moved from the August 2026 release
-    # (estout 2,440 of 6,212) to the 2026 collection; the paper's computed
-    # values follow when it is re-rendered, and this pins them until then.
+    # (estout 2,440 of 6,212) to the 2026 collection, and again with extractor
+    # 2.3.0, which reads the statements a comment-continuation had been
+    # splitting (estout 3,818 to 3,835, reghdfe 1,527 to 1,535). The
+    # denominator did not move: it counts deposits, and no deposit changed.
     for key, field, expected in (
-        (("estout", "stata"), "n_deposits", "3818"),
-        (("estout", "stata"), "n_deposits_zenodo", "699"),
-        (("reghdfe", "stata"), "n_deposits", "1527"),
+        (("estout", "stata"), "n_deposits", "3835"),
+        (("estout", "stata"), "n_deposits_zenodo", "706"),
+        (("reghdfe", "stata"), "n_deposits", "1535"),
         (("estout", "stata"), "n_deposits_at_risk", "8942"),
     ):
         got = usage.get(key, {}).get(field)
         if got != expected:
             problems.append(f"{key[0]}.{field} is {got}, the paper prints {expected}")
 
-    if ("grc1leg", "stata") in usage:
-        problems.append("grc1leg resolved to a package; it is in no registry")
+    # `grc1leg` is served from a StataCorp developer's page and nowhere else.
+    # A Stata Journal package bundles a copy, so crediting it anywhere but its
+    # own site means the documented-command rule has stopped being applied.
+    if usage.get(("grc1leg", "stata"), {}).get("ecosystem") != "net_site":
+        problems.append("grc1leg should resolve to its author's site, and only there")
 
     problems.extend(_denominators_recomputed(summary))
     problems.extend(_package_deposits_agree())
@@ -680,7 +706,7 @@ def report(summary: dict) -> int:
     print(
         "\nverified against the exported files: every shipped file's digest "
         "matches the tally, "
-        "grc1leg is\nunresolved, every denominator matches a recomputation from "
+        "grc1leg resolves\nto its author's site, every denominator matches a recomputation from "
         "the Parquet, the\npooled counts reconcile with their per-source split, "
         "and every package's\ndeposit list counts to its tally"
     )
