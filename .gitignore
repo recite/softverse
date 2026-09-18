@@ -133,3 +133,6 @@ docs/data-dictionary.md
 # over the pre-commit size guard for data/tally, and the site does not read it.
 data/tally/downloads_vs_use.csv
 data/tally/downloads_vs_use.parquet
+
+# Submission correspondence stays out of the repository.
+paper/cover_letter*
