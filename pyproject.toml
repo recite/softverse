@@ -199,7 +199,8 @@ module-root = ""
 # fragments of the `capture`/`define`
 # abbreviation regexes. `pres` is a variable in a paper chunk. `unparseable`
 # is a standard spelling.
-ignore-words-list = "mata,ttest,fillin,ture,ine,pres,unparseable,nd"
+# `rsource` runs R from Stata, `rcall` is an SSC package, `AER` a CRAN one.
+ignore-words-list = "mata,ttest,fillin,ture,ine,pres,unparseable,nd,rsource,rcall,aer"
 
 [tool.preen]
 # Not documentation links. Schemeless on purpose: with a scheme the check's
@@ -216,4 +217,12 @@ link_ignore = [
   'github\.com/user/repo',
   # A download URL recorded in a deposit's renv.lock, published as data.
   'sites\.google\.com/a/stonybrook\.edu/mperess',
+  # Example `net from` URLs in the Stata lexer and its tests.
+  '//host/path',
+  'jslsoc\.sitehost\.iu\.edu/stata',
+  # API and raw-file bases the code appends a path to.
+  'cranlogs\.r-pkg\.org/downloads/total$',
+  'pypistats\.org/api/packages$',
+  'Statapackagesearch/$',
+  'zenodo\.org/api/files/bkt',
 ]
