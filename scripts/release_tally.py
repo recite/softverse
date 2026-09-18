@@ -63,6 +63,7 @@ AGGREGATES = (
     "usage_by_function",
     "unknown_names",
     "remote_installs",
+    "downloads_vs_use",
     "language_presence",
 )
 
@@ -123,6 +124,7 @@ columns keep visible.
 | `usage_by_function.csv` | {n_functions:,} | package → function, where the source names one |
 | `unknown_names.csv` | {n_unknown:,} | names called in code that resolve to no registry |
 | `remote_installs.csv` | {n_remote_installs:,} | what deposits install from outside their registry, and from where |
+| `downloads_vs_use.csv` | {n_downloads_vs_use:,} | each package's validated use beside its registry's download count |
 | `language_presence.csv` | {n_languages} | deposits containing each language, per repository |
 | `mentions.parquet` | {n_mentions:,} | every mention: package, function, file, line, snippet |
 | `files.parquet` | {n_files:,} | the provenance spine every mention joins to |
@@ -181,6 +183,25 @@ off-registry software lives.
   version of a registered package rather than software the registry lacks
 - `n_deposits_installing`, `n_deposits_loading`: deposits with the install
   line, and those among them that go on to use the package
+
+### `downloads_vs_use.csv`
+
+Validated use beside download counts, for every package that SSC, CRAN or
+PyPI has a count for *or* that the corpus uses. The download counts are not
+ours: SSC's monthly hits behind `ssc hot`, CRAN's from one mirror through
+`cranlogs`, and PyPI's for its fifteen thousand most downloaded projects from
+`hugovk/top-pypi-packages`, each pinned by date and digest. The windows
+differ, so compare ranks within one registry, not counts across them.
+
+- `package`, `language`, `ecosystem`
+- `n_deposits`: deposits using the package; 0 for a counted package this
+  corpus never uses
+- `downloads`: the registry's count; empty for a used package it has none for
+- `in_registry_counts`: the row belongs to the registry's own list of counted
+  packages, as against a count fetched because the corpus uses the package
+- `reverse_dependencies`, `in_task_view`: CRAN only. How many packages
+  install this one as a dependency, directly or through others, and whether
+  CRAN's *Econometrics* or *Causal Inference* task view lists it
 
 ## Licence
 
@@ -576,6 +597,7 @@ def main() -> int:
                 pd.read_parquet(OUT / "environment_signals.parquet", columns=["signal"])
             ),
             n_remote_installs=len(pd.read_csv(OUT / "remote_installs.csv")),
+            n_downloads_vs_use=len(pd.read_csv(OUT / "downloads_vs_use.csv")),
             built=summary["built"],
             composition=_composition_table(summary),
         )

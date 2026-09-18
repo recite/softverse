@@ -72,6 +72,7 @@ TALLY_FILES = (
     "usage_by_function",
     "unknown_names",
     "remote_installs",
+    "downloads_vs_use",
     "language_presence",
 )
 TALLY_EXTRAS = (
@@ -86,7 +87,7 @@ TALLY_EXTRAS = (
 )
 
 #: How many files the mention table is cut into for upload.
-MENTION_PARTS = 3
+MENTION_PARTS = 10
 
 #: From the corpus release: every table except `contents` and `mentions`,
 #: which is written without its snippets.
@@ -126,7 +127,9 @@ def stage_bundle(
     # once a request has run about five minutes, which on a slow uplink is
     # some sixty megabytes: measured, 60 MB went up in 301 s and 81 MB never
     # did. `mentions-*.parquet` reads back as one table, and the parts are cut
-    # by deposit so no deposit's rows straddle two files.
+    # by deposit so no deposit's rows straddle two files. Ten, because a
+    # mention's key is a random uuid that does not compress: the table is
+    # about 300 MB, and three parts of 100 MB did not all get through.
     con = duckdb.connect()
     source = corpus / "mentions.parquet"
     for part in range(MENTION_PARTS):
@@ -182,7 +185,13 @@ than listed as unresolved. The Stata lexer no longer splits a statement at a
 newline inside a comment, which had reported command options as commands.
 Install lines record where they fetch from (<code>mentions.remote</code>,
 <code>remote_installs.csv</code>), and an R package no registry lists is
-credited to its code host when the same deposit installs it from one.</p>
+credited to its code host when the same deposit installs it from one. An
+<code>egen</code> call counts as a use of the package that ships its
+function, which credits <code>egenmore</code> for the first time. Every
+mention has a key of its own. And <code>downloads_vs_use.csv</code> sets each
+package's validated use beside its registry's download count, from SSC's
+monthly hits, CRAN's <code>cranlogs</code> and PyPI's
+<code>top-pypi-packages</code>, which are existing data pinned by date.</p>
 
 <p><strong>What the counts do not show.</strong> These counts say a package
 was loaded by code in the deposit. They do not say the code ran. Authors
@@ -205,7 +214,7 @@ data descriptor with column definitions.</p>
 per deposit, with its journal, year and license), <code>files.parquet</code>
 (one row per file, with its sha256 and the packages it loads),
 <code>file_packages.parquet</code>, <code>mentions-*.parquet</code> (one table in
-three files, cut by deposit, which DuckDB and pandas read as one; one row per
+{MENTION_PARTS} files, cut by deposit, which DuckDB and pandas read as one; one row per
 reference in code, without the code snippet), <code>package_versions.parquet</code>
 (versions stated in manifests and install calls), <code>environment.parquet</code>
 (R, Python, Stata and Julia versions and operating systems a deposit states),

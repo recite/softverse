@@ -46,6 +46,7 @@ columns keep visible.
 | `usage_by_function.csv` | 20,942 | package → function, where the source names one |
 | `unknown_names.csv` | 2,787 | names called in code that resolve to no registry |
 | `remote_installs.csv` | 473 | what deposits install from outside their registry, and from where |
+| `downloads_vs_use.csv` | 43,918 | each package's validated use beside its registry's download count |
 | `language_presence.csv` | 24 | deposits containing each language, per repository |
 | `mentions.parquet` | 14,853,082 | every mention: package, function, file, line, snippet |
 | `files.parquet` | 447,289 | the provenance spine every mention joins to |
@@ -104,6 +105,25 @@ off-registry software lives.
   version of a registered package rather than software the registry lacks
 - `n_deposits_installing`, `n_deposits_loading`: deposits with the install
   line, and those among them that go on to use the package
+
+### `downloads_vs_use.csv`
+
+Validated use beside download counts, for every package that SSC, CRAN or
+PyPI has a count for *or* that the corpus uses. The download counts are not
+ours: SSC's monthly hits behind `ssc hot`, CRAN's from one mirror through
+`cranlogs`, and PyPI's for its fifteen thousand most downloaded projects from
+`hugovk/top-pypi-packages`, each pinned by date and digest. The windows
+differ, so compare ranks within one registry, not counts across them.
+
+- `package`, `language`, `ecosystem`
+- `n_deposits`: deposits using the package; 0 for a counted package this
+  corpus never uses
+- `downloads`: the registry's count; empty for a used package it has none for
+- `in_registry_counts`: the row belongs to the registry's own list of counted
+  packages, as against a count fetched because the corpus uses the package
+- `reverse_dependencies`, `in_task_view`: CRAN only. How many packages
+  install this one as a dependency, directly or through others, and whether
+  CRAN's *Econometrics* or *Causal Inference* task view lists it
 
 ## Licence
 
