@@ -7,7 +7,7 @@
    "path": "https://creativecommons.org/publicdomain/zero/1.0/"
   }
  ],
- "created": "2026-09-18T02:09:12.982766+00:00",
+ "created": "2026-09-18T03:08:52.646782+00:00",
  "resources": [
   {
    "name": "usage_by_package_csv",
@@ -218,6 +218,47 @@
      },
      {
       "name": "n_deposits_loading",
+      "type": "string"
+     }
+    ]
+   }
+  },
+  {
+   "name": "downloads_vs_use_csv",
+   "path": "downloads_vs_use.csv",
+   "format": "csv",
+   "schema": {
+    "fields": [
+     {
+      "name": "package",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "ecosystem",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits",
+      "type": "string"
+     },
+     {
+      "name": "downloads",
+      "type": "string"
+     },
+     {
+      "name": "in_registry_counts",
+      "type": "string"
+     },
+     {
+      "name": "reverse_dependencies",
+      "type": "string"
+     },
+     {
+      "name": "in_task_view",
       "type": "string"
      }
     ]
@@ -454,6 +495,47 @@
      {
       "name": "n_deposits_loading",
       "type": "integer"
+     }
+    ]
+   }
+  },
+  {
+   "name": "downloads_vs_use_parquet",
+   "path": "downloads_vs_use.parquet",
+   "format": "parquet",
+   "schema": {
+    "fields": [
+     {
+      "name": "package",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "ecosystem",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits",
+      "type": "integer"
+     },
+     {
+      "name": "downloads",
+      "type": "number"
+     },
+     {
+      "name": "in_registry_counts",
+      "type": "boolean"
+     },
+     {
+      "name": "reverse_dependencies",
+      "type": "number"
+     },
+     {
+      "name": "in_task_view",
+      "type": "string"
      }
     ]
    }
