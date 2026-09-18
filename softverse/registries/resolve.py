@@ -23,7 +23,7 @@ Two rules matter more than the rest:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 
 from softverse.logging_setup import get_logger
@@ -38,6 +38,11 @@ from softverse.registries.fetch import (
 logger = get_logger(__name__)
 
 _PEP503 = re.compile(r"[-_.]+")
+
+_JOURNAL_UPDATE = re.compile(r"_\d+$")
+
+#: What the Python extractor records for an import whose name is a variable.
+DYNAMIC_NAME = "<dynamic>"
 
 #: Stata constructs whose argument is a *package* name rather than a command:
 #: `ssc install X`, `net install X`, `which X`, Correia's `require X`.
@@ -116,6 +121,20 @@ class Registry:
     #: `egenmore` ships `egen` functions -- so looking an install line up in
     #: the command index reports a stated dependency as unidentifiable.
     ssc_packages: frozenset[str] = frozenset()
+    #: Commands the Stata Journal and the STB publish, consulted after SSC.
+    #: Journal authors routinely mirror their software to SSC, where it is
+    #: updated; a command in both is credited to SSC, the copy `ssc install`
+    #: fetches, rather than reported as ambiguous between a package and itself.
+    stata_journal_commands: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    stb_commands: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    #: Commands published on an author's own `net install` site.
+    net_commands: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    #: Journal package ids as `net install` names them (`st0085_2`), mapped to
+    #: the package and its archive.
+    journal_packages: dict[str, tuple[str, Ecosystem]] = field(default_factory=dict)
+    #: Import name -> distribution, from pipreqs. Consulted after the curated
+    #: table, which stays as the override for the entries it gets wrong.
+    pypi_import_map: dict[str, str] = field(default_factory=dict)
     lock_id: str = "unpinned"
 
     @cached_property
@@ -147,21 +166,35 @@ class Registry:
 
     # -- Python ------------------------------------------------------------
 
-    def resolve_python(self, name: str) -> Resolved:
+    def resolve_python(
+        self, name: str, local_modules: frozenset[str] = frozenset()
+    ) -> Resolved:
         """Resolve a Python *import* name to a distribution.
 
         Import names and distribution names are different namespaces, so this
-        tries, in order: stdlib, the curated alias table, an exact match, then a
-        PEP 503 normalized match. The winning route is recorded in ``basis``.
+        tries, in order: stdlib, the deposit's own modules, the curated alias
+        table, pipreqs' import map, an exact match, then a PEP 503 normalized
+        match. The winning route is recorded in ``basis``.
+
+        The deposit's own modules come before any registry because Python
+        itself looks there first: with `utils.py` beside the script, `import
+        utils` loads that file, whatever PyPI has under the same name.
         """
         top = name.split(".", 1)[0]
         if top in self._stdlib or top == "__future__":
             return Resolved(
                 Resolution.BASE_OR_STDLIB, top, Ecosystem.PYTHON_STDLIB, basis="stdlib"
             )
+        if top in local_modules or top == "__init__":
+            return Resolved(Resolution.LOCAL_RELATIVE, None, None, basis="local")
         if alias := PYPI_IMPORT_ALIASES.get(top):
             return Resolved(
                 Resolution.KNOWN_CURRENT, alias, Ecosystem.PYPI, basis="alias"
+            )
+        mapped = self.pypi_import_map.get(top)
+        if mapped and (match := self._pypi_normalized.get(normalize_pypi(mapped))):
+            return Resolved(
+                Resolution.KNOWN_CURRENT, match, Ecosystem.PYPI, basis="import_map"
             )
         if top in self.pypi:
             return Resolved(
@@ -182,7 +215,7 @@ class Registry:
 
         Order matters and encodes the bias we accept. A command defined in the
         deposit is the author's own; a command official Stata provides is not a
-        package. Only then do we consult the SSC index. A name claimed by both
+        package. Only then do we consult SSC, then the Journal, then the STB. A name claimed by both
         Stata and SSC therefore resolves to ``BUILTIN``, which *under*-counts
         user packages -- the safer direction, stated in the paper rather than
         hidden.
@@ -192,12 +225,19 @@ class Registry:
             return Resolved(Resolution.LOCAL_PROGRAM, None, None)
         if lowered in self.stata_builtins:
             return Resolved(Resolution.BUILTIN, None, Ecosystem.STATA_BUILTIN)
-        packages = self.stata_commands.get(lowered)
-        if not packages:
-            return Resolved(Resolution.UNKNOWN, None, None)
-        if len(packages) == 1:
-            return Resolved(Resolution.KNOWN_CURRENT, packages[0], Ecosystem.SSC)
-        return Resolved(Resolution.AMBIGUOUS, None, Ecosystem.SSC, candidates=packages)
+        for index, ecosystem in (
+            (self.stata_commands, Ecosystem.SSC),
+            (self.stata_journal_commands, Ecosystem.STATA_JOURNAL),
+            (self.stb_commands, Ecosystem.STB),
+            (self.net_commands, Ecosystem.NET_SITE),
+        ):
+            packages = index.get(lowered)
+            if not packages:
+                continue
+            if len(packages) == 1:
+                return Resolved(Resolution.KNOWN_CURRENT, packages[0], ecosystem)
+            return Resolved(Resolution.AMBIGUOUS, None, ecosystem, candidates=packages)
+        return Resolved(Resolution.UNKNOWN, None, None)
 
     # -- Dispatch ----------------------------------------------------------
 
@@ -207,6 +247,7 @@ class Registry:
         language: Language,
         local_programs: frozenset[str] = frozenset(),
         construct: Construct | None = None,
+        local_modules: frozenset[str] = frozenset(),
     ) -> Resolved:
         """Resolve ``name`` in ``language``.
 
@@ -226,7 +267,10 @@ class Registry:
         """
         if construct is Construct.LOCAL_RELATIVE:
             return Resolved(Resolution.LOCAL_RELATIVE, None, None)
-        if construct is Construct.DYNAMIC_UNRESOLVED:
+        if construct is Construct.DYNAMIC_UNRESOLVED or name == DYNAMIC_NAME:
+            # `importlib.import_module(variable)`: the placeholder the Python
+            # extractor records is not a name, and looking it up reported
+            # `<dynamic>` as a package no registry lists.
             return Resolved(Resolution.DYNAMIC, None, None)
         if construct in _STATA_PACKAGE_ARG and name.lower() in self.ssc_packages:
             # A provisioning line names the package directly, which is better
@@ -234,10 +278,15 @@ class Registry:
             # if it is looked up in the package namespace instead of the
             # command one.
             return Resolved(Resolution.KNOWN_CURRENT, name.lower(), Ecosystem.SSC)
+        if construct in _STATA_PACKAGE_ARG:
+            # `net install st0085_2` names the second update of `st0085`.
+            journal = self.journal_packages.get(_JOURNAL_UPDATE.sub("", name.lower()))
+            if journal:
+                return Resolved(Resolution.KNOWN_CURRENT, *journal)
         if language is Language.R:
             return self.resolve_r(name)
         if language is Language.PYTHON:
-            return self.resolve_python(name)
+            return self.resolve_python(name, local_modules)
         if language is Language.STATA:
             return self.resolve_stata(name, local_programs)
         if language is Language.JULIA:

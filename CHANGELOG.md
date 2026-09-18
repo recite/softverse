@@ -19,10 +19,20 @@ per-repository split on every row.
 
 ### Added
 
-- A Stata command-to-package index reconstructed from SSC distribution
-  manifests, 3,967 packages and 7,468 commands, released separately under CC0
-  at [10.5281/zenodo.21926100](https://doi.org/10.5281/zenodo.21926100).
-  Nothing equivalent existed, and without it Stata cannot be measured.
+- A Stata command-to-package index reconstructed from the distribution
+  manifests of SSC, the *Stata Journal*, the *Stata Technical Bulletin* and the
+  authors' sites that replication code installs from, released separately
+  under CC0 at [10.5281/zenodo.21926099](https://doi.org/10.5281/zenodo.21926099).
+  Nothing equivalent existed, and without it Stata cannot be measured. A
+  journal package is credited with a command only when it ships that command's
+  help file, because article packages bundle their dependencies.
+- Where an install fetches from (`mentions.remote`, `remote_installs.csv`):
+  `install_github("user/repo")`, `net install x, from(URL)`,
+  `pip install git+https://...`. An R package no registry lists resolves to its
+  code host when the same deposit installs it from one.
+- The registry lock pins every input to resolution, including the Stata index
+  and the list of official Stata commands, and each mention is stamped with a
+  digest over all of them rather than CRAN's alone.
 - Extraction for literate documents: knitr chunks routed per engine, and
   Jupyter cells parsed against the kernel language from the notebook metadata.
 - A published lookup interface and the released tables at
@@ -37,6 +47,21 @@ per-repository split on every row.
 Defects found and corrected during the rebuild, each of which had moved a
 published number:
 
+- Stata install lines. `ssc install reghdfe, replace` was dropped because the
+  option comma stayed attached to the name, and `if _rc ssc install ...` was
+  read as a call to `if`. Recorded installs roughly double.
+- The Stata lexer split a statement at a newline inside a `/* */` comment, the
+  oldest continuation idiom in the language, and reported `esttab`'s options
+  as commands. It also missed `# delimit ;` written with a space, read
+  brace-form Mata, embedded Python and inline R as Stata, treated a one-line
+  `mata:` statement as opening a block, cut `from(http://...)` at the `//`,
+  and reported every line after a `///` continuation one line early.
+- `unknown_names.csv` counts uses only. An install line for a package states a
+  dependency and was being ranked among software used and found in no registry.
+- Python 2's standard library, a deposit's own modules imported absolutely,
+  and the `<dynamic>` placeholder were all reported as unregistered packages.
+- `deposit_stata_index.py --new-version` updated a version draft's metadata and
+  left the previous version's files on it.
 - Notebooks with a kernel we cannot parse were handed to the Python
   extractor. `import Ipopt` is valid Python, so a Julia notebook parsed
   cleanly and put a Julia package into a corpus in which no `.jl` file is

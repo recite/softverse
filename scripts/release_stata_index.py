@@ -20,18 +20,23 @@ from datetime import UTC, datetime
 import duckdb
 
 from softverse.config import PATHS
+from softverse.registries.load import INDEX_FILE
+from softverse.registries.lock import pinned_directory, pinned_names, read_lock
 from softverse.stata.builtins import builtins
-from softverse.stata.index import ambiguous_commands
+from softverse.stata.index import TIERS, ambiguous_commands, credited
 
 OUT = PATHS.root / "build" / "release" / "stata-index"
-SOURCE = PATHS.root / "registries" / "snapshots" / "ssc" / "stata_command_index.parquet"
+
+_FRICTIONLESS = {"VARCHAR": "string", "BOOLEAN": "boolean", "DATE": "date"}
+SOURCE = pinned_directory("stata_index", read_lock(), payload=INDEX_FILE) / INDEX_FILE
 
 DESCRIPTOR = """\
 # Stata command → package index
 
 A machine-readable mapping from Stata command names to the packages that provide
-them, reconstructed from the Statistical Software Components (SSC) archive's own
-distribution manifests.
+them, reconstructed from the distribution manifests of the three archives Stata's
+`net install` reads: the Statistical Software Components (SSC) archive, the
+*Stata Journal*, and its predecessor the *Stata Technical Bulletin* (STB).
 
 **{n_mappings:,} mappings · {n_packages:,} packages · {n_commands:,} user commands · snapshot {snapshot}**
 
@@ -63,7 +68,12 @@ command→package mapping, including the many-commands-per-package case that a
 package-name list cannot express: `esttab`, `eststo`, `estadd` and `estpost` all
 belong to `estout`.
 
-## Three caveats, which change how you should use this
+The *Stata Journal* and the STB publish their software in the same format, one
+directory per issue, each with a `stata.toc` naming its packages. `renvars` is
+STB-60 `dm88`; `xtserial` is SJ 3-2 `st0039`. Neither is on SSC, and an index of
+SSC alone reports both as belonging to no archive.
+
+## Four caveats, which change how you should use this
 
 **1. A shipped file is not necessarily a command.** An `f foo.ado` line says a
 package distributes a file, not that it exposes a user command called `foo`.
@@ -81,7 +91,13 @@ trends: a package appears to vanish exactly when its command is absorbed into
 official Stata. Use `distribution_date` as a partial guard and treat
 time-inconsistent mappings as unresolved.
 
-**3. Ambiguity is preserved, not resolved.** {n_ambiguous} commands are claimed
+**3. A journal package bundles what its example needs.** SJ 14-4 `st0357`, a Cox
+calibration tool, ships a copy of `grc1leg.ado`. `is_documented` is true when
+the package also ships a help file of the same name, which a package does for
+what it publishes and not for what it borrows. **For `source` other than `ssc`,
+filter `is_documented = true`**, or `grc1leg` becomes a survival-analysis command.
+
+**4. Ambiguity is preserved, not resolved.** {n_ambiguous} commands are claimed
 by more than one package; they are listed in `ambiguous.json` rather than
 assigned to a winner. Forcing a choice would bury classification error.
 
@@ -98,10 +114,15 @@ assigned to a winner. Forcing a choice would bury classification error.
 ### Columns
 
 - `command` — the command as typed
-- `package` — the SSC package providing it
-- `source` — `ssc`
-- `evidence` — `filename` or `program_define`
+- `package` — the package providing it; a journal update (`st0085_2`) is filed
+  under the package it updates (`st0085`)
+- `source` — `ssc`, `stata_journal` or `stb`
+- `issue` — the journal issue (`sj14-2`, `stb60`); empty for SSC
+- `evidence` — `filename`, or `package_only` for a package that ships no `.ado`
+  (Mata libraries, graph schemes), listed so `ssc install moremata` names
+  something known
 - `is_helper` — internal subroutine rather than a user command
+- `is_documented` — the package ships a help file of the same name
 - `author`, `distribution_date` — from the manifest
 - `snapshot_date` — when this index was built
 
@@ -112,7 +133,9 @@ Classifying a Stata command is a three-step decision, and the order matters:
 ```python
 import duckdb, json
 idx = duckdb.connect()
-q = "SELECT package FROM 'stata_command_index.parquet' WHERE lower(command)=? AND NOT is_helper"
+q = ("SELECT DISTINCT source, package FROM 'stata_command_index.parquet' "
+     "WHERE lower(command)=? AND NOT is_helper AND (source='ssc' OR is_documented)")
+TIERS = ["ssc", "stata_journal", "stb", "net"]   # the order `classify` consults
 
 builtins = set(json.load(open("builtins.json"))["forms"])
 
@@ -122,17 +145,24 @@ def classify(command, local_programs=()):
         return "local"
     if c in builtins:                  # official Stata
         return "builtin"
-    hits = [r[0] for r in idx.execute(q, [c]).fetchall()]
-    return hits[0] if len(hits) == 1 else ("ambiguous" if hits else "unknown")
+    hits = idx.execute(q, [c]).fetchall()
+    for tier in TIERS:                 # journal authors mirror to SSC: first tier wins
+        packages = sorted(p for s, p in hits if s == tier)
+        if packages:
+            return packages[0] if len(packages) == 1 else "ambiguous"
+    return "unknown"
 
 classify("esttab")    # -> 'estout'
 classify("reghdfe")   # -> 'reghdfe'
 classify("regress")   # -> 'builtin'
+classify("renvars")   # -> 'dm88', from the Stata Technical Bulletin
 ```
 
-Every name in `builtins.json` was checked against StataCorp's public help
+The names in `builtins.json` were checked against StataCorp's public help
 server rather than curated from memory, which is the difference between "we
-believe these are official" and "we asked". Pages from the `[U]` and `[FN]`
+believe these are official" and "we asked". The server answers only for
+commands with a help page, so the list also holds every `.ado` file name in a
+Stata installation's base directory, which is where `_dots` and `tset` are. Pages from the `[U]` and `[FN]`
 manuals are excluded: they document system variables and functions such as
 `_n` and `e()`, which are not commands.
 
@@ -143,13 +173,12 @@ index has it. A missing builtin lands in `unknown`, never in a package.
 ## Licence
 
 CC0. The underlying manifests are public metadata from the SSC archive at
-Boston College.
+Boston College and from StataCorp's Stata Journal and STB software archives.
 
 ## Regenerating
 
 ```bash
-uv run python -c "from softverse.stata.index import build_index, write_index; \\
-  from pathlib import Path; write_index(build_index(), Path('out'))"
+uv run python scripts/build_stata_index.py
 ```
 
 Produced by [softverse](https://github.com/recite/softverse).
@@ -180,13 +209,17 @@ def main() -> int:
         PATHS.root / "registries" / "snapshots" / "stata_official" / "official.json"
     )
     builtin_set = builtins(verified_snapshot=official_snapshot)
+    base_ado = pinned_names("stata_base_ado", read_lock())
     (OUT / "builtins.json").write_text(
         json.dumps(
             {
                 "source": builtin_set.source,
                 "note": (
                     "Each name was checked against StataCorp's help server "
-                    "(help.cgi), not curated from memory. Still incomplete, "
+                    "(help.cgi), not curated from memory, and the file names "
+                    "in a Stata installation's base ado directory are added "
+                    "for the commands that ship without a help page. Still "
+                    "incomplete, "
                     "but resolution is inclusive, so a missing builtin costs "
                     "recall and never precision: it lands in `unknown`, never "
                     "in a package. Pages from the [U] and [FN] manuals are "
@@ -194,7 +227,11 @@ def main() -> int:
                     "such as `_n` and `e()`, which are not commands."
                 ),
                 "canonical": sorted(builtin_set.canonical),
-                "forms": sorted(builtin_set.forms),
+                # The list the tally resolved against: the names above, plus
+                # every `.ado` in Stata's base directory, which is where the
+                # commands with no help page are.
+                "forms": sorted(builtin_set.forms | base_ado),
+                "n_from_base_ado_listing": len(base_ado - builtin_set.forms),
             },
             indent=1,
         )
@@ -237,17 +274,17 @@ def main() -> int:
                         "name": "stata_command_index",
                         "path": "stata_command_index.csv",
                         "format": "csv",
+                        # Read off the table, so a new column cannot be
+                        # shipped and left out of its own description.
                         "schema": {
                             "fields": [
-                                {"name": "command", "type": "string"},
-                                {"name": "package", "type": "string"},
-                                {"name": "source", "type": "string"},
-                                {"name": "evidence", "type": "string"},
-                                {"name": "is_helper", "type": "boolean"},
-                                {"name": "author", "type": "string"},
-                                {"name": "distribution_date", "type": "date"},
-                                {"name": "first_seen_date", "type": "date"},
-                                {"name": "snapshot_date", "type": "date"},
+                                {
+                                    "name": name,
+                                    "type": _FRICTIONLESS.get(kind, "string"),
+                                }
+                                for name, kind in con.execute(
+                                    f"SELECT column_name, column_type FROM (DESCRIBE SELECT * FROM '{SOURCE}')"
+                                ).fetchall()
                             ]
                         },
                     }
@@ -261,19 +298,32 @@ def main() -> int:
     # ships is what was checked.
     check = duckdb.connect()
     exported = OUT / "stata_command_index.parquet"
-    q = f"SELECT package FROM '{exported}' WHERE lower(command)=? AND NOT is_helper"
+    rows_out = check.execute(f"SELECT * FROM '{exported}'").fetchall()
+    shipped = [dict(zip(columns, r, strict=True)) for r in rows_out]
+
+    def winners(command: str) -> list[str]:
+        hits = [r for r in shipped if r["command"].lower() == command and credited(r)]
+        for tier in TIERS:
+            if found := sorted({r["package"] for r in hits if r["source"] == tier}):
+                return found
+        return []
+
     problems = []
     for command, expected in (("esttab", "estout"), ("reghdfe", "reghdfe")):
-        got = [r[0] for r in check.execute(q, [command]).fetchall()]
-        if expected not in got:
-            problems.append(f"{command} -> {got}, expected {expected}")
+        if winners(command) != [expected]:
+            problems.append(f"{command} -> {winners(command)}, expected {expected}")
     helper = check.execute(
         f"SELECT is_helper FROM '{exported}' WHERE command='_eststo'"
     ).fetchone()
     if not (helper and helper[0]):
         problems.append("_eststo should be flagged as a helper")
-    if check.execute(q, ["regress"]).fetchall():
+    if winners("regress"):
         problems.append("regress is official Stata and should not be in the index")
+    # The two rules the journal tiers exist for, checked on what ships.
+    if winners("renvars") != ["dm88"]:
+        problems.append("renvars should resolve to STB/SJ dm88")
+    if "st0357" in winners("grc1leg"):
+        problems.append("grc1leg credited to st0357, which only bundles a copy")
 
     csv_rows = sum(1 for _ in (OUT / "stata_command_index.csv").open()) - 1
     if csv_rows != n_mappings:

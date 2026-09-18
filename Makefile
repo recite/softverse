@@ -29,9 +29,9 @@ $(PDF): $(MD) $(BIB) $(FIGS) paper/preamble.tex
 		-V geometry:margin=1.15in \
 		-V fontsize=11pt \
 		-V linkcolor=RoyalBlue \
-		-V title="What software does social science run on?" \
-		-V subtitle="Measuring validated use in replication code" \
-		-V author="Gaurav Sood"
+		-V title="$$(uv run python render_paper.py --meta title)" \
+		-V subtitle="$$(uv run python render_paper.py --meta subtitle)" \
+		-V author="$$(uv run python render_paper.py --meta author)"
 	@echo "built $(PDF)"
 
 # Regenerated from the tally every time: the chunks run, the inline values are

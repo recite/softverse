@@ -143,10 +143,14 @@ class Ecosystem(StrEnum):
     JULIA_GENERAL = "julia_general"
     SSC = "ssc"
     STATA_JOURNAL = "stata_journal"
+    STB = "stb"  # Stata Technical Bulletin, the Journal's predecessor
+    NET_SITE = "net_site"  # an author's or lab's own `net install` site
     BASE_R = "base_r"
     PYTHON_STDLIB = "python_stdlib"
     STATA_BUILTIN = "stata_builtin"
     GITHUB = "github"
+    GITLAB = "gitlab"
+    BITBUCKET = "bitbucket"
 
 
 class ParseStatus(StrEnum):

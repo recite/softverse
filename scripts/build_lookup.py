@@ -14,10 +14,10 @@ Counts come from `data/tally/`, which is the tracked copy of the
 tables the paper's own exhibits are built from, so the page and the paper
 cannot disagree, and the page can be built anywhere the repository is.
 
-`unknown_names.csv` is carried too. A search for `grc1leg` that returns
-nothing reads as "nobody uses it", when the truth is that it is used heavily
-and is in no registry, which is one of the paper's findings. The page has to
-be able to say that rather than go quiet.
+`unknown_names.csv` is carried too. A search for `btscs` that returns
+nothing reads as "nobody uses it", when the truth is that it is used and no
+archive this project indexes lists it. The page has to be able to say that
+rather than go quiet.
 """
 
 from __future__ import annotations

@@ -60,22 +60,22 @@ NUMBER_WORD = {
 }
 
 
-def load() -> tuple[dict, list[dict], list[dict]]:
+def load() -> tuple[dict, list[dict]]:
     summary = json.loads((RELEASE / "summary.json").read_text())
     with (RELEASE / "usage_by_package.csv").open(encoding="utf-8") as handle:
         usage = list(csv.DictReader(handle))
-    with (RELEASE / "unknown_names.csv").open(encoding="utf-8") as handle:
-        unknown = list(csv.DictReader(handle))
-    return summary, usage, unknown
+    return summary, usage
 
 
-def landing(summary: dict, usage: list[dict], unknown: list[dict]) -> str:
+def landing(summary: dict, usage: list[dict]) -> str:
     stata = sorted(
         (r for r in usage if r["language"] == "stata"),
         key=lambda r: -int(r["n_deposits"]),
     )
     by_language = summary["deposits_by_language"]
-    grc1leg = next((int(r["n_mentions"]) for r in unknown if r["name"] == "grc1leg"), 0)
+    grc1leg = next(
+        (int(r["n_deposits"]) for r in stata if r["package"] == "grc1leg"), 0
+    )
     n_formatters = sum(1 for r in stata[:4] if r["package"] in TABLE_MAKERS)
 
     by_source = summary["deposits_by_source"]
@@ -162,8 +162,8 @@ def generate() -> None:
             f"no released tables under {RELEASE}; run scripts/release_tally.py"
         )
 
-    summary, usage, unknown = load()
-    (DOCS / "index.md").write_text(landing(summary, usage, unknown))
+    summary, usage = load()
+    (DOCS / "index.md").write_text(landing(summary, usage))
     stage()
 
     from build_lookup import main as build_lookup

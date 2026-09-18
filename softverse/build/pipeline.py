@@ -26,6 +26,7 @@ from softverse.detect.dispatch import extract_file, language_of
 from softverse.detect.manifests import is_manifest, read_description, read_manifest
 from softverse.logging_setup import get_logger, stage
 from softverse.model.enums import (
+    Ecosystem,
     ANALYZABLE_STATUSES,
     NON_USE_CONSTRUCTS,
     Language,
@@ -345,9 +346,17 @@ def build(
         package_trees = _registered_package_trees(corpus, registry)
         stats.incr("r_package_trees", sum(len(v) for v in package_trees.values()))
 
+        # Python modules likewise. `import utils` beside a `utils.py` loads
+        # that file, and PyPI has a distribution called `utils`, so without
+        # this an author's helpers were credited to strangers' packages when
+        # the names collided and reported as unregistered software when they
+        # did not. Vendored files are excluded for the mirror-image reason:
+        # a bundled copy of `numpy/` must not turn `import numpy` local.
         local_programs_by_dataset: dict[str, set[str]] = defaultdict(set)
+        local_modules_by_dataset: dict[str, set[str]] = defaultdict(set)
         for item in corpus:
-            if item.path.suffix.lower() not in {".do", ".ado"}:
+            suffix = item.path.suffix.lower()
+            if suffix not in {".do", ".ado", ".py"}:
                 continue
             digest = hashes_by_path.get(item.path)
             if digest is None:
@@ -359,6 +368,12 @@ def build(
                 ssc_shipped=ssc_shipped,
                 shared_hashes=shared,
             ).is_vendored:
+                continue
+            if suffix == ".py":
+                is_package = item.path.name == "__init__.py"
+                local_modules_by_dataset[item.dataset_doi].add(
+                    item.path.parent.name if is_package else item.path.stem
+                )
                 continue
             try:
                 text = item.path.read_text(encoding="utf-8", errors="replace")
@@ -463,7 +478,10 @@ def build(
             deposit_locals = frozenset(
                 local_programs_by_dataset.get(item.dataset_doi, ())
             )
-            for mention in mentions:
+            deposit_modules = frozenset(
+                local_modules_by_dataset.get(item.dataset_doi, ())
+            )
+            for position, mention in enumerate(mentions):
                 # A literate document holds chunks in several languages, so the
                 # mention's own language wins over the file's when it is set.
                 # Resolving an .Rmd's Python chunk against `rmarkdown` would
@@ -474,21 +492,23 @@ def build(
                     mention_language,
                     deposit_locals,
                     construct=mention.construct,
+                    local_modules=deposit_modules,
                 )
                 if resolved.resolution is Resolution.UNKNOWN:
                     result.unknown[(mention.raw_name, str(language))] += 1
                 result.mentions.append(
                     {
-                        # The called function is part of the key. Python
-                        # records one mention per imported name, so every name
-                        # in `from pandas import read_csv, DataFrame` shares a
-                        # file, a byte offset and a package: without this the
-                        # two rows take the same uid and the table has
-                        # duplicate keys where it promises unique ones.
+                        # The mention's position in its file is the key. It was
+                        # the byte offset plus the name, which no Stata mention
+                        # has -- the lexer records lines, not bytes, so every
+                        # offset is zero -- and ten `regress` calls in one
+                        # do-file took one uid between them: 13.7 million rows,
+                        # 1.35 million keys, in a table that promises unique
+                        # ones. The extractor emits mentions in a fixed order,
+                        # so the position is stable for a given extractor.
                         "mention_uid": uuid.uuid5(
                             uuid.NAMESPACE_URL,
-                            f"{file_uid}/{mention.byte_start}/{mention.raw_name}"
-                            f"/{mention.called_function or ''}",
+                            f"{file_uid}/{position}/{mention.raw_name}",
                         ).hex,
                         "file_uid": file_uid,
                         "dataset_doi": item.dataset_doi,
@@ -500,6 +520,7 @@ def build(
                         "raw_name": mention.raw_name,
                         "called_function": mention.called_function,
                         "pinned_version": mention.pinned_version,
+                        "remote": mention.remote,
                         "normalized_name": normalize(
                             mention.raw_name, mention_language
                         ),
@@ -550,6 +571,7 @@ def build(
 
         stats.counts.update(result.counts)
 
+    corroborate_remote_installs(result)
     result.reconcile_files()
     logger.info(
         "build complete",
@@ -561,6 +583,53 @@ def build(
         },
     )
     return result
+
+
+#: Code hosts a remote install names, by the ecosystem a package found only
+#: there is credited to.
+_REMOTE_HOSTS = {
+    "github.com": Ecosystem.GITHUB,
+    "gitlab.com": Ecosystem.GITLAB,
+    "bitbucket.org": Ecosystem.BITBUCKET,
+}
+
+
+def corroborate_remote_installs(result: BuildResult) -> None:
+    """Resolve an R name no registry lists when its own deposit installs it.
+
+    `library(cmdstanr)` alone is a name CRAN does not know, which may be a
+    package or a typo. `remotes::install_github("stan-dev/cmdstanr")` in the
+    same deposit settles it: the package exists, and lives on GitHub. Without
+    this the install was seen and the package discarded -- 1,344 loads of 117
+    GitHub-installed packages across 306 deposits counted for nothing.
+
+    The evidence is kept within the deposit on purpose. Pooling it across the
+    corpus would let one deposit's `install_github("someone/utils")` vouch for
+    every other deposit's unresolved `utils`.
+    """
+    installed: dict[tuple[str, str], Ecosystem] = {}
+    for row in result.mentions:
+        host = (row["remote"] or "").split("/", 1)[0]
+        if row["language"] == str(Language.R) and host in _REMOTE_HOSTS:
+            installed[(row["dataset_doi"], row["raw_name"])] = _REMOTE_HOSTS[host]
+    for row in result.mentions:
+        ecosystem = installed.get((row["dataset_doi"], row["raw_name"]))
+        if (
+            ecosystem is None
+            or row["language"] != str(Language.R)
+            or row["resolution"] != str(Resolution.UNKNOWN)
+        ):
+            continue
+        row["resolution"] = str(Resolution.KNOWN_CURRENT)
+        row["resolved_package"] = row["raw_name"]
+        row["ecosystem"] = str(ecosystem)
+        # The counter is keyed by the *file's* language, so an R chunk in a
+        # literate document sits under another key and is left alone.
+        key = (row["raw_name"], str(Language.R))
+        if key in result.unknown:
+            result.unknown[key] -= 1
+            if result.unknown[key] <= 0:
+                del result.unknown[key]
 
 
 def dataset_packages(mentions: list[dict], *, use_only: bool = True) -> list[dict]:

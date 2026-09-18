@@ -30,4 +30,11 @@ except PackageNotFoundError:  # running from a source tree with nothing installe
 #: thing this constant exists to prevent.
 #: 2.2.0 records the version an install call asks for (`pinned_version`) and
 #: stops recording `scikit-learn=1.2.2` and `dask[complete]` as package names.
-EXTRACTOR_VERSION = "2.2.0"
+#: 2.3.0 records where an install fetches from (`remote`), reads `ssc install
+#: x, replace` and the rest of the install lines a comma or an `if` had hidden,
+#: and lexes Stata's comment continuations, spaced `# delimit` and brace-form
+#: Mata, each of which had been reporting option words as commands.
+#: 2.4.0 reads the function an `egen` call asks for, which is how `egenmore`
+#: and its kind are used and the only way they are, and gives every mention a
+#: key of its own: Stata mentions had been sharing one per command per file.
+EXTRACTOR_VERSION = "2.4.0"

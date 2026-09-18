@@ -45,6 +45,49 @@ _BUILT_R_VERSION = re.compile(r"^R\s+([0-9][0-9.-]*)")
 _REQUIRED_DESCRIPTION_FIELDS = ("Package", "Version")
 
 
+#: renv and `remotes` stamp where an installed package came from: `RemoteType`
+#: in both a lockfile entry and an installed DESCRIPTION, `Source` in a
+#: lockfile. Every entry used to be filed under CRAN, so a lockfile that pinned
+#: a package to a GitHub commit declared a CRAN package CRAN has never held.
+_REMOTE_ECOSYSTEMS = {
+    "github": Ecosystem.GITHUB,
+    "gitlab": Ecosystem.GITLAB,
+    "bitbucket": Ecosystem.BITBUCKET,
+    "bioconductor": Ecosystem.BIOCONDUCTOR,
+}
+
+_VCS_REQUIREMENT = re.compile(
+    r"^(?:-e\s+)?(?:(?P<name>[A-Za-z0-9_.\-]+)\s*@\s*)?"
+    r"(?:git|hg|svn|bzr)\+(?:https?|ssh|git)://(?:[^@/]+@)?"
+    r"(?P<host>[^/:]+)[/:](?P<path>[^@#\s]+?)(?:\.git)?"
+    r"(?:@(?P<ref>[^#\s]+))?(?:#.*?egg=(?P<egg>[A-Za-z0-9_.\-]+).*)?$"
+)
+
+
+def vcs_requirement(line: str) -> tuple[str, str | None, str] | None:
+    """A pip VCS requirement: ``(package, ref, remote)``.
+
+    `git+https://github.com/user/repo.git@v1#egg=name`, with or without `-e`,
+    and PEP 508's `name @ git+https://...`. The package is the name the line
+    gives, else the repository's.
+    """
+    match = _VCS_REQUIREMENT.match(line.strip().strip("'\""))
+    if match is None:
+        return None
+    path = match["path"].rstrip("/")
+    name = match["name"] or match["egg"] or path.rsplit("/", 1)[-1]
+    return name, match["ref"], f"{match['host']}/{path}"
+
+
+def _remote_ecosystem(
+    *stamps: object, default: Ecosystem = Ecosystem.CRAN
+) -> Ecosystem:
+    for stamp in stamps:
+        if isinstance(stamp, str) and stamp.strip().lower() in _REMOTE_ECOSYSTEMS:
+            return _REMOTE_ECOSYSTEMS[stamp.strip().lower()]
+    return default
+
+
 @dataclass(frozen=True)
 class Declaration:
     """One package a manifest names, at whatever version it names."""
@@ -94,7 +137,7 @@ def read_description(text: str) -> ManifestRead | None:
             Declaration(
                 package=str(message["Package"]).strip(),
                 version_constraint=str(message["Version"]).strip(),
-                ecosystem=Ecosystem.CRAN,
+                ecosystem=_remote_ecosystem(message.get("RemoteType")),
                 dependency_role="installed",
             )
         ],
@@ -131,7 +174,9 @@ def read_renv_lock(text: str) -> ManifestRead | None:
                 version_constraint=(
                     str(entry["Version"]) if entry.get("Version") else None
                 ),
-                ecosystem=Ecosystem.CRAN,
+                ecosystem=_remote_ecosystem(
+                    entry.get("RemoteType"), entry.get("Source")
+                ),
                 dependency_role="locked",
             )
         )
@@ -154,6 +199,20 @@ def read_requirements(text: str) -> ManifestRead | None:
     declarations = []
     for line in text.splitlines():
         line = line.split(" #")[0].strip()
+        if vcs := vcs_requirement(line):
+            # Before the directive filter: `-e git+https://...` is a package.
+            name, ref, remote = vcs
+            declarations.append(
+                Declaration(
+                    package=name,
+                    version_constraint=f"@{ref}" if ref else None,
+                    ecosystem=_remote_ecosystem(
+                        remote.split(".", 1)[0], default=Ecosystem.PYPI
+                    ),
+                    dependency_role="direct",
+                )
+            )
+            continue
         # `-r base.txt`, `-e .`, `--index-url ...`: directives, not packages.
         if not line or line.startswith(("#", "-")):
             continue

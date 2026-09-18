@@ -154,7 +154,10 @@ def test_statements_carry_line_numbers():
 
 def test_strip_comments_preserves_line_count():
     source = "* one\n/* two\n   three */\nregress y x\n"
-    assert strip_comments(source).count("\n") == source.count("\n")
+    cleaned = strip_comments(source)
+    # A newline inside a comment continues the statement, so it survives as a
+    # splice marker: still one per physical line, which is what is promised.
+    assert cleaned.count("\n") + cleaned.count("\x00") == source.count("\n")
 
 
 def test_real_world_snippet():
@@ -330,3 +333,87 @@ def test_the_real_prefixes_still_peel():
         "statsby, by(id): regress y x",
     ):
         assert "regress" in commands(source) or "mean" in commands(source), source
+
+
+# -- continuation, delimiters and Mata: what made option words into commands --
+
+
+def located(source: str) -> list[tuple[str, int]]:
+    return [(s.command, s.line) for s in lex(source) if s.command and not s.in_mata]
+
+
+def test_a_comment_spanning_a_newline_continues_the_statement():
+    """`/*` ... `*/` across a line break is Stata's oldest continuation idiom.
+
+    Splitting there reported esttab's options as commands: `nonotes` in 16
+    deposits, `nomtitles` in 12, `legend` in 12.
+    """
+    source = "esttab m1 /*\n*/ using t.tex, /*\n*/ nonotes\nregress y x\n"
+    assert located(source) == [("esttab", 1), ("regress", 4)]
+
+
+def test_a_triple_slash_continuation_keeps_later_line_numbers_right():
+    """It was replaced by a space, so every later line was reported one early."""
+    assert located("regress y x ///\n  , robust\nxtreg y x\n") == [
+        ("regress", 1),
+        ("xtreg", 3),
+    ]
+
+
+def test_delimit_with_a_space_after_the_hash_is_recognised():
+    """`# delimit ;` went unseen, and `using "t.tex"` led 77 deposits' lines."""
+    source = (
+        "# delimit ;\nesttab m1\nusing t.tex,\nreplace;\n#delimit cr\nreghdfe y x\n"
+    )
+    assert located(source) == [("esttab", 2), ("reghdfe", 6)]
+
+
+def test_double_slash_inside_a_url_is_not_a_comment():
+    """Stata requires a blank before `//`; `http://` has none."""
+    statement = lex("net install x, from(http://host/path) replace\n")[0]
+    assert statement.text.endswith("from(http://host/path) replace")
+
+
+def test_brace_form_mata_is_skipped_whole():
+    """`mata {` closes on its brace, not on `end`.
+
+    Read as Stata, the Mata in `ols_spatial_hac.ado` reported `lat1`,
+    `time_var` and `dist_cutoff` as commands in every deposit shipping a copy.
+    """
+    source = "mata{\nlat1 = 3\nif (x) {\n y = 2\n}\n}\nivreg2 y x\n"
+    assert located(source) == [("ivreg2", 7)]
+
+
+def test_a_one_line_mata_statement_opens_no_block():
+    """It hid every Stata command from there to the next `end`."""
+    source = 'mata: st_matrix("b", b)\nreghdfe y x\n'
+    assert ("reghdfe", 2) in located(source)
+
+
+def test_a_mata_block_still_hides_its_body():
+    assert located("mata:\nx = 1\nend\nreghdfe y x\n") == [("mata", 1), ("reghdfe", 4)]
+
+
+def test_an_embedded_python_block_is_not_stata():
+    """`from sfi import Data` made `from` a command in 22 deposits."""
+    source = "python:\nfrom sfi import Data\nx = 1\nend\nreghdfe y x\n"
+    assert located(source) == [("python", 1), ("reghdfe", 5)]
+
+
+def test_the_brace_closing_a_latex_group_does_not_end_the_statement():
+    """`\\textit{Notes:} The ...` closed after a colon and split there."""
+    source = (
+        "local footnote \\item \\textit{Notes:} The dependent variable\nregress y x\n"
+    )
+    assert located(source) == [("local", 1), ("regress", 2)]
+
+
+def test_a_block_brace_after_a_latex_group_still_closes_its_block():
+    source = "if x {\nlocal n \\textbf{a} b\n}\nregress y x\n"
+    assert [c for c, _ in located(source)] == ["if", "local", "regress"]
+
+
+def test_an_inline_r_block_is_not_stata():
+    """`rsource, terminator(END_OF_R)` runs what follows as R, to that token."""
+    source = "rsource, terminator(END_OF_R)\nx <- cbind(a, b)\nlibrary(MASS)\nEND_OF_R\nregress y x\n"
+    assert located(source) == [("rsource", 1), ("regress", 5)]

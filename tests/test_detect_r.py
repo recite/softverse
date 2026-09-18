@@ -357,3 +357,76 @@ def test_against_renvs_own_expectations():
     # `base::` and `xfun::` are real namespace mentions in this source, and
     # resolution -- not extraction -- is what later marks `base` as base R.
     assert static - set("abcdefghijklm") == {"base", "xfun"}
+
+
+# -- where an install fetches from ----------------------------------------
+
+
+def installs(source: str) -> list[tuple[str, str | None, str | None]]:
+    return [
+        (m.raw_name, m.pinned_version, m.remote)
+        for m in extract(source).mentions
+        if m.construct is Construct.INSTALL
+    ]
+
+
+def test_a_remote_install_records_the_repository():
+    """The only trace a deposit leaves of where off-CRAN software lives."""
+    assert installs('remotes::install_github("lrberge/fixest@v0.10.4")') == [
+        ("fixest", "v0.10.4", "github.com/lrberge/fixest")
+    ]
+    assert installs('install_gitlab("u/r")') == [("r", None, "gitlab.com/u/r")]
+    assert installs('install.packages("brms")') == [("brms", None, None)]
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ('pak::pak("user/repo")', [("repo", None, "github.com/user/repo")]),
+        ('pak::pkg_install("gitlab::u/r")', [("r", None, "gitlab.com/u/r")]),
+        ('renv::install("u/r")', [("r", None, "github.com/u/r")]),
+        ('renv::install("bioc::limma")', [("limma", None, None)]),
+        ('BiocManager::install("limma")', [("limma", None, None)]),
+        (
+            'githubinstall("AnomalyDetection")',
+            [("AnomalyDetection", None, "github.com")],
+        ),
+    ],
+)
+def test_installers_that_recorded_only_their_own_namespace(source, expected):
+    """`pak::pak("u/r")` recorded a use of `pak` and lost the repository."""
+    assert installs(source) == expected
+
+
+def test_a_bare_install_is_devtools_building_the_working_directory():
+    assert installs("install()") == []
+
+
+def test_a_vector_of_packages_installs_each():
+    assert installs('install.packages(c("a", "b"), dependencies = TRUE)') == [
+        ("a", None, None),
+        ("b", None, None),
+    ]
+
+
+def test_a_built_package_file_names_its_package_and_version():
+    """`~/fansi_0.5.0.zip` was being recorded whole, as a package name."""
+    assert installs('install.packages("~/fansi_0.5.0.zip", repos = NULL)') == [
+        ("fansi", "0.5.0", None)
+    ]
+    url = "https://cran.r-project.org/src/contrib/Archive/Zelig/Zelig_5.1.6.1.tar.gz"
+    assert installs(f'remotes::install_url("{url}")') == [("Zelig", "5.1.6.1", url)]
+
+
+def test_a_local_source_directory_names_nothing():
+    assert installs('remotes::install_local("../mypkg")') == []
+
+
+def test_p_load_gh_loads_the_repository_not_the_path():
+    """`trinker/pacman` was recorded, whole, as a package that was *used*."""
+    loaded = [
+        (m.raw_name, m.construct, m.remote)
+        for m in extract('pacman::p_load_gh("trinker/pacman")').mentions
+        if m.construct is Construct.P_LOAD
+    ]
+    assert loaded == [("pacman", Construct.P_LOAD, "github.com/trinker/pacman")]

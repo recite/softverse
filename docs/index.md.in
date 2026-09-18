@@ -26,14 +26,16 @@ exhibits, and those are the tools least likely to be cited.
 Stata is the most used of the three languages and the least studied. It
 appears in __N_STATA__ deposits against __N_R__ for R. Work on research
 software covers R and Python because CRAN and PyPI will tell you which
-project a library name belongs to, and Stata has no equivalent registry. This
-project reconstructed one from the Statistical Software Components archive
-and released it.
+project a library name belongs to, and Stata has no equivalent registry. Its
+software is scattered rather than informal: the Statistical Software
+Components archive, the *Stata Journal*, the *Stata Technical Bulletin* and
+authors' own sites all serve the manifests `net install` reads, and nobody had
+indexed them by command. This project did, and released the index.
 
-Some heavily used software belongs to no registry at all. `grc1leg` is called
-__N_GRC1LEG__ times in this corpus, StataCorp distributes it from their own
-website, and no archive lists it, so a credit system that works by registry
-lookup cannot reach whoever wrote it.
+`grc1leg` shows what that buys. It is used in __N_GRC1LEG__ deposits, which
+makes it one of the most used Stata packages in this corpus, and it is served
+from a StataCorp developer's page and listed in no archive. An index of SSC
+alone reports it as belonging to nothing.
 
 ## Where to go
 

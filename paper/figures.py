@@ -2,8 +2,12 @@
 
     uv run python paper/figures.py
 
-Writes PDFs to `paper/figures/`. Two exhibits, each carrying an argument the
+Writes PDFs to `paper/figures/`. Three exhibits, each carrying an argument the
 prose currently has to make in words:
+
+`downloads.pdf` sets validated use against each registry's download count.
+The claim is that the two part company, and where: a scatter shows the cloud
+and names the packages furthest from it in each direction.
 
 `languages.pdf` shows the disciplinary split. Economics deposits are Stata,
 political science deposits are mixed, and the methods journal inverts to R.
@@ -15,7 +19,7 @@ bars than as a paragraph of ratios.
 sorted by deposit share and split by what they do, and the tools that format
 output sit at the top. The claim is the ordering, so the figure is the claim.
 
-Deliberately plain: no gridlines competing with the bars, no colour carrying
+Deliberately plain: no gridlines competing with the bars, no color carrying
 information that the labels do not, and a greyscale-safe palette, because a
 reviewer prints things.
 """
@@ -29,6 +33,7 @@ import matplotlib as mpl
 
 mpl.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import pandas as pd
 
 HERE = Path(__file__).parent
@@ -169,13 +174,117 @@ def credit(usage: pd.DataFrame) -> Path:
     return path
 
 
+#: Panels, in the order agreement falls: by how much of a registry's traffic
+#: is one package installing another.
+PANELS = (("ssc", "Stata (SSC)"), ("cran", "R (CRAN)"), ("pypi", "Python (PyPI)"))
+
+
+def downloads(versus: pd.DataFrame, floor: int = 5, n_labels: int = 3) -> Path:
+    """Validated use against downloads, one panel per registry.
+
+    Each point is a package the corpus uses in at least ``floor`` deposits. Both
+    axes are logarithmic, because both counts span five orders of magnitude and
+    a linear axis would show three packages and a smear. The labeled points are
+    the ones furthest from agreement in each direction, chosen by rank
+    difference and not by eye.
+    """
+    fig, axes = plt.subplots(1, 3, figsize=(7.2, 3.1), sharey=True)
+    for ax, (ecosystem, title) in zip(axes, PANELS, strict=True):
+        d = versus[
+            versus["ecosystem"].eq(ecosystem)
+            & versus["downloads"].gt(0)
+            & versus["n_deposits"].ge(floor)
+        ].copy()
+        d["gap"] = d["downloads"].rank(ascending=False) - d["n_deposits"].rank(
+            ascending=False
+        )
+        ax.scatter(d["downloads"], d["n_deposits"], s=5, color=LIGHT, linewidths=0)
+        groups = (d.nlargest(n_labels, "gap"), d.nsmallest(n_labels, "gap"))
+        for group, align in zip(groups, ("right", "left"), strict=True):
+            ax.scatter(group["downloads"], group["n_deposits"], s=11, color=HIGHLIGHT)
+            # The overstated packages all sit on the floor of the plot, so
+            # their labels are stacked upward with a leader, not overprinted.
+            # Stacked in the order of the points themselves, so no leader
+            # crosses another.
+            key = "n_deposits" if align == "right" else "downloads"
+            ordered = group.sort_values(key, ascending=align == "right")
+            for step, row in enumerate(ordered.itertuples()):
+                ax.annotate(
+                    row.package,
+                    (row.downloads, row.n_deposits),
+                    xytext=(-8 if align == "right" else 6, 4 + 11 * step),
+                    textcoords="offset points",
+                    ha=align,
+                    fontsize=7.5,
+                    color=INK,
+                    arrowprops={"arrowstyle": "-", "color": LIGHT, "lw": 0.5},
+                )
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.margins(x=0.16)
+        ax.set_title(title, fontsize=10, color=INK, loc="left")
+        ax.set_xlabel("downloads", fontsize=9, color=INK)
+        _style(ax)
+    axes[0].set_ylabel("deposits using the package", fontsize=9, color=INK)
+    fig.tight_layout()
+    path = OUT / "downloads.pdf"
+    fig.savefig(path)
+    plt.close(fig)
+    return path
+
+
+def reach(versus_path: Path) -> Path:
+    """Share of a registry's packages the corpus ever uses, by download decile.
+
+    The other direction of the comparison. Downloads order the packages a
+    field uses only loosely, but they say a good deal about whether it uses a
+    package at all, and nearly all of that is in the top tenth.
+    """
+    from softverse.build.downloads import agreement, read
+
+    found = agreement(read(versus_path))
+    fig, ax = plt.subplots(figsize=(4.6, 3.0))
+    styles = {"ssc": ("-", HIGHLIGHT), "cran": ("--", FILL), "pypi": (":", FILL)}
+    for ecosystem, title in PANELS:
+        shares = found[ecosystem]["registry"]["deciles"]
+        linestyle, color = styles[ecosystem]
+        ax.plot(range(1, 11), shares, linestyle=linestyle, color=color, lw=1.4)
+        ax.annotate(
+            title,
+            (10, shares[-1]),
+            xytext=(4, 0),
+            textcoords="offset points",
+            va="center",
+            fontsize=8,
+            color=INK,
+        )
+    ax.set_xticks(range(1, 11))
+    ax.set_xlim(1, 12.6)
+    ax.set_ylim(0, 1)
+    ax.yaxis.set_major_formatter(mpl.ticker.PercentFormatter(1.0, decimals=0))
+    ax.set_xlabel("download decile within the registry, lowest to highest", fontsize=9)
+    ax.set_ylabel("share used in any deposit", fontsize=9, color=INK)
+    _style(ax)
+    fig.tight_layout()
+    path = OUT / "reach.pdf"
+    fig.savefig(path)
+    plt.close(fig)
+    return path
+
+
 def main() -> int:
     os.chdir(HERE)
     OUT.mkdir(exist_ok=True)
     files = pd.read_parquet(TALLY / "files.parquet")
     usage = pd.read_csv(TALLY / "usage_by_package.csv")
 
-    for path in (languages(files), credit(usage)):
+    versus = pd.read_csv(TALLY / "downloads_vs_use.csv")
+    for path in (
+        languages(files),
+        credit(usage),
+        downloads(versus),
+        reach(TALLY / "downloads_vs_use.csv"),
+    ):
         print(f"wrote {path.relative_to(HERE)}")
     return 0
 

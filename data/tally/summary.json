@@ -1,14 +1,14 @@
 {
- "built": "2026-09-15",
+ "built": "2026-09-18",
  "sources": [
   "dataverse",
   "zenodo"
  ],
  "n_deposits": 13985,
  "n_deposits_analyzable": 13245,
- "n_files_analyzable": 146483,
- "n_packages": 4447,
- "n_unresolved_names": 12359,
+ "n_files_analyzable": 146482,
+ "n_packages": 4565,
+ "n_unresolved_names": 2787,
  "n_collections": 75,
  "deposits_by_source": {
   "zenodo": 1543,
@@ -59,6 +59,6 @@
    "zenodo": 1646
   },
   "n_files": 447289,
-  "n_mentions": 14381788
+  "n_mentions": 14853082
  }
 }

@@ -61,6 +61,11 @@ class Mention:
     #: `pip install pandas==1.5.3`, a git ref from `install_github("u/r@v1")`.
     #: None almost everywhere, because almost no code says.
     pinned_version: str | None = None
+    #: Where a provisioning line fetches from, when it says and it is not the
+    #: language's default registry: `hadley/emo` from `install_github`, the
+    #: URL from `net install x, from(URL)` or `pip install git+URL`. It is the
+    #: only evidence in a deposit of *where* off-registry software lives.
+    remote: str | None = None
 
 
 @dataclass

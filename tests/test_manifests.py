@@ -178,3 +178,41 @@ def test_a_julia_notebook_is_not_a_python_version():
 def test_a_notebook_with_no_recorded_version_says_nothing():
     assert read_manifest("x.ipynb", json.dumps({"metadata": {}})) is None
     assert read_manifest("x.ipynb", "not json") is None
+
+
+# -- where a declared package comes from -----------------------------------
+
+
+def test_a_lockfile_entry_pinned_to_github_is_not_a_cran_declaration():
+    """Every entry was filed under CRAN, including ones CRAN has never held."""
+    lock = {
+        "Packages": {
+            "fixest": {"Package": "fixest", "Version": "0.12", "Source": "Repository"},
+            "cmdstanr": {
+                "Package": "cmdstanr",
+                "Version": "0.7",
+                "Source": "GitHub",
+                "RemoteType": "github",
+                "RemoteUsername": "stan-dev",
+            },
+            "limma": {"Package": "limma", "Version": "3.5", "Source": "Bioconductor"},
+        }
+    }
+    read = read_renv_lock(json.dumps(lock))
+    assert {d.package: str(d.ecosystem) for d in read.declarations} == {
+        "fixest": "cran",
+        "cmdstanr": "github",
+        "limma": "bioconductor",
+    }
+
+
+def test_a_vcs_requirement_is_a_requirement():
+    """`-e git+https://...` starts with a dash, so it was skipped as a flag."""
+    text = (
+        "pandas>=2\n-e git+https://github.com/u/repo.git@abc#egg=thing\n-r base.txt\n"
+    )
+    found = {
+        d.package: (str(d.ecosystem), d.version_constraint)
+        for d in read_requirements(text).declarations
+    }
+    assert found == {"pandas": ("pypi", ">=2"), "thing": ("github", "@abc")}

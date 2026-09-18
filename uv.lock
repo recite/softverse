@@ -2860,6 +2860,7 @@ dependencies = [
     { name = "remotezip" },
     { name = "requests" },
     { name = "stamina" },
+    { name = "stdlib-list" },
     { name = "tree-sitter" },
     { name = "tree-sitter-language-pack" },
     { name = "urllib3" },
@@ -2912,6 +2913,7 @@ requires-dist = [
     { name = "remotezip", specifier = ">=0.12.6" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "stamina", specifier = ">=26.1.0" },
+    { name = "stdlib-list", specifier = ">=0.12.0" },
     { name = "tree-sitter", specifier = ">=0.25.0" },
     { name = "tree-sitter-language-pack", specifier = ">=1.14.0" },
     { name = "urllib3", specifier = ">=2.7.0" },
@@ -3074,6 +3076,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/80/bd/b2f71ae14368a066f103d182f25bbc6c3bf4aa695889f3ed3cba026d6f36/stamina-26.1.0.tar.gz", hash = "sha256:0214d05fdf5102c518194a4aac7520ce53cf660550ae3b940701aad88cf50c17", size = 568171, upload-time = "2026-04-13T17:44:31.012Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1d/f0/1ff90a1d1dd02de23feafdf9dffaecef3958348be5c192df56670ccb4f86/stamina-26.1.0-py3-none-any.whl", hash = "sha256:62e06829bec87c06d4cafde520b32a6097d1017c378a9eb63253c5bf5ebbbb88", size = 18508, upload-time = "2026-04-13T17:44:29.545Z" },
+]
+
+[[package]]
+name = "stdlib-list"
+version = "0.12.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8c/25/f1540879c8815387980e56f973e54605bd924612399ace31487f7444171c/stdlib_list-0.12.0.tar.gz", hash = "sha256:517824f27ee89e591d8ae7c1dd9ff34f672eae50ee886ea31bb8816d77535675", size = 60923, upload-time = "2025-10-24T19:21:22.849Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/3d/2970b27a11ae17fb2d353e7a179763a2fe6f37d6d2a9f4d40104a2f132e9/stdlib_list-0.12.0-py3-none-any.whl", hash = "sha256:df2d11e97f53812a1756fb5510393a11e3b389ebd9239dc831c7f349957f62f2", size = 87615, upload-time = "2025-10-24T19:21:20.619Z" },
 ]
 
 [[package]]

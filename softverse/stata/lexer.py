@@ -116,6 +116,27 @@ _COLON_PREFIXES = frozenset(
 
 _IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
+#: A newline that continues the statement rather than ending it. It stands in
+#: for the physical newline so the line count survives: replacing it with a
+#: space, as `///` once did, made every later line number in the file one too
+#: small per continuation, and the recorded snippet was of the wrong line.
+_SPLICE = "\x00"
+
+#: Commands that, alone on a line, open a block in another language closed by
+#: `end`. Stata 16 embeds Python the way it has always embedded Mata, and
+#: `from sfi import Data` read as Stata made `from` a command in 22 deposits.
+#: `rsource, terminator(END_OF_R)` runs the lines that follow as R, up to the
+#: token it names. Read as Stata they made `x` and `end_of_r` commands.
+_R_TERMINATOR = re.compile(r"terminator\(\s*(\w+)\s*\)", re.IGNORECASE)
+
+_FOREIGN_OPENERS = frozenset({"mata", "mata:", "python", "python:"})
+
+#: `#delimit`, in any of the spellings Stata accepts: abbreviated to `#d`, and
+#: with space after the hash. `# delimit ;` was not recognised, so everything
+#: after it was split at newlines and the second line of each statement --
+#: `using "table.tex", replace` -- was read as a command.
+_DELIMIT = re.compile(r"#[ \t]*d(?:e(?:l(?:i(?:m(?:it?)?)?)?)?)?(?=[ \t;\r\n]|$)")
+
 #: Legal spellings of `program`. Matching any command merely *starting* with
 #: `pr` also caught `predict`, `probit` and `preserve`, so `predict yhat`
 #: declared a local program called `yhat`. StataCorp's help server resolves
@@ -180,8 +201,12 @@ def strip_comments(source: str) -> str:
                 depth -= 1
                 i += 2
                 continue
-            # Keep newlines so line numbers survive a multi-line comment.
-            out.append("\n" if ch == "\n" else " ")
+            # A newline inside a comment does not end the statement -- `/*`
+            # at the end of one line and `*/` at the start of the next is the
+            # oldest continuation idiom in Stata. Emitting a real newline split
+            # `esttab ... /*` from `*/ nonotes ...` and reported esttab's
+            # options (`nonotes`, `nomtitles`, `legend`) as commands.
+            out.append(_SPLICE if ch == "\n" else " ")
             i += 1
             continue
 
@@ -221,13 +246,16 @@ def strip_comments(source: str) -> str:
             depth = 1
             i += 2
             continue
-        if ch == "/" and nxt == "/":
+        # `//` opens a comment only at the start of a line or after a blank,
+        # which is Stata's own rule. Without it `from(http://host/path)` lost
+        # everything after `http:`, and with it the closing parenthesis.
+        if ch == "/" and nxt == "/" and (i == 0 or source[i - 1].isspace()):
             # `///` splices the next physical line onto this one.
             if source[i : i + 3] == "///":
                 j = source.find("\n", i)
                 if j == -1:
                     break
-                out.append(" ")
+                out.append(_SPLICE)
                 i = j + 1
                 continue
             j = source.find("\n", i)
@@ -297,24 +325,35 @@ def _split_statements(cleaned: str) -> list[tuple[int, int, str]]:
     #: Parenthesis depth, so a brace inside an option list is not a delimiter.
     paren = 0
 
-    def flush(end_line: int) -> None:
-        nonlocal buffer, start_line
+    #: Word-internal braces open in the statement being buffered.
+    word_braces = 0
+
+    def flush() -> None:
+        nonlocal buffer, started, word_braces
         text = "".join(buffer).strip()
         if text:
             statements.append((start_line, 0, text))
         buffer = []
-        start_line = end_line
+        started = False
+        word_braces = 0
 
+    #: Whether the statement being buffered has reached its first character.
+    #: A statement is reported at the line it starts on, which under
+    #: `#delimit ;` is not the line the previous one ended on.
+    started = False
     i = 0
     n = len(cleaned)
     while i < n:
         ch = cleaned[i]
         nxt = cleaned[i + 1] if i + 1 < n else ""
+        if not started and not ch.isspace() and ch != _SPLICE:
+            started = True
+            start_line = line
 
         if in_string or in_compound:
-            if ch == "\n":
+            if ch in {"\n", _SPLICE}:
                 line += 1
-            buffer.append(ch)
+            buffer.append(" " if ch == _SPLICE else ch)
             if in_compound:
                 if ch == "`" and nxt == '"':
                     in_compound += 1
@@ -343,22 +382,22 @@ def _split_statements(cleaned: str) -> list[tuple[int, int, str]]:
             i += 1
             continue
 
-        if ch == "\n":
+        if ch in {"\n", _SPLICE}:
             line += 1
-            if semicolon_mode:
+            if semicolon_mode or ch == _SPLICE:
                 buffer.append(" ")
             else:
-                flush(line)
+                flush()
             i += 1
             continue
 
         # A #delimit directive is itself terminated by the *current* delimiter.
-        if cleaned.startswith("#delimit", i) or cleaned.startswith("#d ", i):
+        if ch == "#" and not "".join(buffer).strip() and _DELIMIT.match(cleaned, i):
             end = cleaned.find("\n", i)
             end = n if end == -1 else end
             directive = cleaned[i:end]
             semicolon_mode = ";" in directive
-            flush(line)
+            flush()
             i = end
             continue
 
@@ -381,25 +420,47 @@ def _split_statements(cleaned: str) -> list[tuple[int, int, str]]:
             paren = max(0, paren - 1)
 
         if ch == ";" and semicolon_mode and paren == 0:
-            flush(line)
+            flush()
             i += 1
+            continue
+
+        # `mata {` ... `}` is Mata's brace-delimited block form, closed by its
+        # brace rather than by `end`. Its body is another language, so it is
+        # skipped whole: read as Stata, the 200 lines of Mata in
+        # `ols_spatial_hac.ado` reported `lat1`, `time_var` and `dist_cutoff`
+        # as commands in every deposit that ships a copy.
+        if ch == "{" and "".join(buffer).strip().lower() in _FOREIGN_OPENERS:
+            depth = 1
+            i += 1
+            while i < n and depth:
+                depth += {"{": 1, "}": -1}.get(cleaned[i], 0)
+                line += cleaned[i] in {"\n", _SPLICE}
+                i += 1
+            buffer = []
+            started = False
             continue
 
         # Braces delimit blocks only at the top level. Inside an option list
         # they are data, not syntax.
-        if (
-            ch in "{}"
-            and paren == 0
-            and not _brace_is_word_internal(cleaned, i, buffer)
-        ):
-            flush(line)
-            i += 1
-            continue
+        if ch in "{}" and paren == 0:
+            if ch == "{" and _brace_is_word_internal(cleaned, i, buffer):
+                word_braces += 1
+            elif ch == "}" and word_braces:
+                # The brace that closes a word-internal one is word-internal
+                # too. `\textit{Notes:} The dependent variable ...` opens after
+                # a letter and closes after a colon, and judging the closer by
+                # what precedes it split the line there, so a footnote's prose
+                # led a statement and `The` was reported as a command.
+                word_braces -= 1
+            elif not _brace_is_word_internal(cleaned, i, buffer):
+                flush()
+                i += 1
+                continue
 
         buffer.append(ch)
         i += 1
 
-    flush(line)
+    flush()
     return statements
 
 
@@ -446,6 +507,8 @@ def lex(source: str) -> list[Statement]:
     """Tokenize Stata source into statements with their command words."""
     statements: list[Statement] = []
     in_mata = False
+    #: The token that ends an inline R block, while inside one.
+    terminator: str | None = None
 
     for line, col, text in _split_statements(strip_comments(source)):
         tokens = text.split()
@@ -459,12 +522,23 @@ def lex(source: str) -> list[Statement]:
         raw = _clean_token(rest[0])
         head = raw.lower()
 
-        # `mata:` opens a block in a different language; `end` closes it.
-        if head in {"mata", "mata:"}:
+        # `mata:` alone on its line opens a block in a different language and
+        # `end` closes it. `mata: st_matrix("b", b)` is one Mata statement and
+        # opens nothing: treating it as a block hid every Stata command from
+        # there to the next `end`, which is usually the end of the program.
+        opens_mata = head in _FOREIGN_OPENERS and len(rest) == 1
+        if terminator is not None:
+            # Inside `rsource, terminator(END_OF_R)`: R, until that token.
+            if text.strip() == terminator:
+                terminator = None
+            continue
+        if opens_mata:
             in_mata = True
         elif in_mata and head == "end":
             in_mata = False
             continue
+        elif head == "rsource" and (closing := _R_TERMINATOR.search(text)):
+            terminator = closing.group(1)
 
         is_macro = bool(_MACRO.search(raw))
         command = raw if _IDENT.match(raw) else None
@@ -477,7 +551,7 @@ def lex(source: str) -> list[Statement]:
                 text=" ".join(rest),
                 prefixes=prefixes,
                 is_macro_command=is_macro,
-                in_mata=in_mata and head not in {"mata", "mata:"},
+                in_mata=in_mata and head not in _FOREIGN_OPENERS,
             )
         )
     return statements

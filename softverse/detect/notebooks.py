@@ -28,6 +28,7 @@ import re
 from dataclasses import replace
 
 from softverse.detect import python_, r, stata
+from softverse.detect.manifests import vcs_requirement
 from softverse.detect.types import ExtractResult, Mention, ParseReport
 from softverse.model.enums import Construct, Language, ParseStatus
 
@@ -40,16 +41,30 @@ _RNW_CLOSE = re.compile(r"^\s*@\s*$")
 #: Inline `r expr` spans, which really do load packages in practice.
 _INLINE_R = re.compile(r"`r\s+([^`]+)`")
 #: %pip install x / !pip install x / %conda install x
-_MAGIC_INSTALL = re.compile(
-    r"^\s*[%!]\s*(?:pip|conda|mamba)\s+install\s+(?:-\S+\s+)*(.+)$"
-)
+_MAGIC_INSTALL = re.compile(r"^\s*[%!]\s*(?:pip|conda|mamba)\s+install\s+(.+)$")
 
 #: `pandas==1.5.3`, `numpy>=1.24`, `scikit-learn=1.2.2` (conda), `dask[complete]`.
 _REQUIREMENT = re.compile(r"^([A-Za-z0-9_.\-]+)(?:\[[^\]]*\])?((?:[=<>!~]=?|===).+)?$")
 
 
-def _requirement(token: str) -> tuple[str | None, str | None]:
-    """Split an install token into its package name and version specifier.
+#: `pip install` flags that take a value, which is not a package: the file
+#: after `-r` was being recorded as a package named `requirements.txt`.
+_VALUE_FLAGS = frozenset(
+    {"-r", "--requirement", "-c", "--constraint", "-i", "--index-url", "-f"}
+    | {
+        "--extra-index-url",
+        "--find-links",
+        "-t",
+        "--target",
+        "--prefix",
+        "-n",
+        "--name",
+    }
+)
+
+
+def _requirement(token: str) -> tuple[str | None, str | None, str | None]:
+    """Split an install token into package, version specifier and remote.
 
     Only the first specifier's operator stays attached (`==1.5.3`), so pip's
     exact pin and conda's single `=` remain distinguishable from a range.
@@ -58,13 +73,28 @@ def _requirement(token: str) -> tuple[str | None, str | None]:
         token: One whitespace-separated argument to `pip`/`conda install`.
 
     Returns:
-        ``(name, specifier)``; the name is None when the token is not a
-        requirement at all, such as a path or URL.
+        ``(name, specifier, remote)``; the name is None when the token is not
+        a requirement at all, such as a path. The remote is set for a VCS
+        requirement (`git+https://github.com/user/repo`), whose specifier is
+        the git ref.
     """
+    if vcs := vcs_requirement(token):
+        return vcs
     match = _REQUIREMENT.match(token.strip("'\""))
     if match is None:
-        return None, None
-    return match.group(1), match.group(2)
+        return None, None, None
+    return match.group(1), match.group(2), None
+
+
+def _install_tokens(arguments: str) -> list[str]:
+    """The arguments of a `pip install` line that could name a package."""
+    out, skip = [], False
+    for token in arguments.split():
+        if skip or token.startswith("-"):
+            skip = token in _VALUE_FLAGS
+            continue
+        out.append(token)
+    return out
 
 
 #: Kernels we can read. A kernel that is not in here is not parsed, because
@@ -263,6 +293,7 @@ def extract_notebook(source: str) -> ExtractResult:
                     Mention(
                         raw_name=name,
                         pinned_version=pin,
+                        remote=remote,
                         construct=Construct.SHELL_INSTALL,
                         line=index,
                         col=0,
@@ -272,10 +303,8 @@ def extract_notebook(source: str) -> ExtractResult:
                         cell_index=index,
                         language=language,
                     )
-                    for name, pin in (
-                        _requirement(token)
-                        for token in install.group(1).split()
-                        if token and not token.startswith("-")
+                    for name, pin, remote in map(
+                        _requirement, _install_tokens(install.group(1))
                     )
                     if name
                 )

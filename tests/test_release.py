@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+from softverse.stata.index import TIERS
+
 RELEASE = Path("build/release/stata-index")
 pytestmark = pytest.mark.skipif(
     not (RELEASE / "stata_command_index.parquet").exists(),
@@ -27,11 +29,16 @@ def index():
 
 
 def packages_for(index, command: str) -> list[str]:
+    """What the descriptor's worked example does: the first archive wins."""
     q = (
-        f"SELECT package FROM '{RELEASE / 'stata_command_index.parquet'}' "
-        "WHERE lower(command)=? AND NOT is_helper"
+        f"SELECT DISTINCT source, package FROM '{RELEASE / 'stata_command_index.parquet'}' "
+        "WHERE lower(command)=? AND NOT is_helper AND (source='ssc' OR is_documented)"
     )
-    return [r[0] for r in index.execute(q, [command]).fetchall()]
+    hits = index.execute(q, [command]).fetchall()
+    for tier in TIERS:
+        if found := sorted(p for s, p in hits if s == tier):
+            return found
+    return []
 
 
 def test_the_readme_worked_example_actually_works(index):

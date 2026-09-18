@@ -1,0 +1,526 @@
+{
+ "definition": "a master runs another file and is run by none; reachable is the closure from the masters; the headline covers deposits with a master and no edge we could not follow",
+ "n_deposits_considered": 13180,
+ "n_deposits_with_master": 2661,
+ "n_deposits_complete": 1965,
+ "complete": {
+  "n_deposits": 1965,
+  "n_files": 32958,
+  "n_reachable": 22640,
+  "share_reachable": 0.6869348868256568,
+  "median_share_reachable": 0.8571428571428571
+ },
+ "with_holes_too": {
+  "n_deposits": 2661,
+  "n_files": 69430,
+  "n_reachable": 40419,
+  "share_reachable": 0.5821546881751404,
+  "median_share_reachable": 0.7692307692307693
+ },
+ "n_edges": 50515,
+ "n_macro_edges": 9835,
+ "n_unfollowed_edges": 2951,
+ "usage": {
+  "r": {
+   "top": [
+    {
+     "package": "dplyr",
+     "rank": 1,
+     "n_deposits": 684,
+     "n_deposits_reachable_only": 534,
+     "retained": 0.7807017543859649,
+     "rank_reachable_only": 1
+    },
+    {
+     "package": "ggplot2",
+     "rank": 2,
+     "n_deposits": 641,
+     "n_deposits_reachable_only": 470,
+     "retained": 0.733229329173167,
+     "rank_reachable_only": 2
+    },
+    {
+     "package": "tidyverse",
+     "rank": 3,
+     "n_deposits": 486,
+     "n_deposits_reachable_only": 391,
+     "retained": 0.8045267489711934,
+     "rank_reachable_only": 3
+    },
+    {
+     "package": "xtable",
+     "rank": 4,
+     "n_deposits": 380,
+     "n_deposits_reachable_only": 301,
+     "retained": 0.7921052631578948,
+     "rank_reachable_only": 4
+    },
+    {
+     "package": "stargazer",
+     "rank": 5,
+     "n_deposits": 363,
+     "n_deposits_reachable_only": 291,
+     "retained": 0.8016528925619835,
+     "rank_reachable_only": 5
+    },
+    {
+     "package": "foreign",
+     "rank": 6,
+     "n_deposits": 334,
+     "n_deposits_reachable_only": 246,
+     "retained": 0.7365269461077845,
+     "rank_reachable_only": 6
+    },
+    {
+     "package": "stringr",
+     "rank": 7,
+     "n_deposits": 306,
+     "n_deposits_reachable_only": 217,
+     "retained": 0.7091503267973857,
+     "rank_reachable_only": 7
+    },
+    {
+     "package": "haven",
+     "rank": 8,
+     "n_deposits": 287,
+     "n_deposits_reachable_only": 196,
+     "retained": 0.6829268292682927,
+     "rank_reachable_only": 9
+    },
+    {
+     "package": "scales",
+     "rank": 9,
+     "n_deposits": 287,
+     "n_deposits_reachable_only": 201,
+     "retained": 0.7003484320557491,
+     "rank_reachable_only": 8
+    },
+    {
+     "package": "data.table",
+     "rank": 10,
+     "n_deposits": 245,
+     "n_deposits_reachable_only": 191,
+     "retained": 0.7795918367346939,
+     "rank_reachable_only": 11
+    },
+    {
+     "package": "tidyr",
+     "rank": 11,
+     "n_deposits": 236,
+     "n_deposits_reachable_only": 171,
+     "retained": 0.7245762711864406,
+     "rank_reachable_only": 14
+    },
+    {
+     "package": "gridExtra",
+     "rank": 12,
+     "n_deposits": 227,
+     "n_deposits_reachable_only": 156,
+     "retained": 0.6872246696035242,
+     "rank_reachable_only": 16
+    },
+    {
+     "package": "sandwich",
+     "rank": 13,
+     "n_deposits": 223,
+     "n_deposits_reachable_only": 193,
+     "retained": 0.8654708520179372,
+     "rank_reachable_only": 10
+    },
+    {
+     "package": "plyr",
+     "rank": 14,
+     "n_deposits": 223,
+     "n_deposits_reachable_only": 170,
+     "retained": 0.7623318385650224,
+     "rank_reachable_only": 15
+    },
+    {
+     "package": "lmtest",
+     "rank": 15,
+     "n_deposits": 219,
+     "n_deposits_reachable_only": 185,
+     "retained": 0.8447488584474886,
+     "rank_reachable_only": 12
+    },
+    {
+     "package": "MASS",
+     "rank": 16,
+     "n_deposits": 213,
+     "n_deposits_reachable_only": 184,
+     "retained": 0.863849765258216,
+     "rank_reachable_only": 13
+    },
+    {
+     "package": "readxl",
+     "rank": 17,
+     "n_deposits": 199,
+     "n_deposits_reachable_only": 128,
+     "retained": 0.6432160804020101,
+     "rank_reachable_only": 20
+    },
+    {
+     "package": "lubridate",
+     "rank": 18,
+     "n_deposits": 193,
+     "n_deposits_reachable_only": 139,
+     "retained": 0.7202072538860104,
+     "rank_reachable_only": 18
+    },
+    {
+     "package": "reshape2",
+     "rank": 19,
+     "n_deposits": 188,
+     "n_deposits_reachable_only": 145,
+     "retained": 0.7712765957446809,
+     "rank_reachable_only": 17
+    },
+    {
+     "package": "broom",
+     "rank": 20,
+     "n_deposits": 173,
+     "n_deposits_reachable_only": 138,
+     "retained": 0.7976878612716763,
+     "rank_reachable_only": 19
+    }
+   ],
+   "max_rank_move": 4,
+   "min_retained": 0.6432160804020101,
+   "median_retained": 0.7668042171548517
+  },
+  "stata": {
+   "top": [
+    {
+     "package": "estout",
+     "rank": 1,
+     "n_deposits": 512,
+     "n_deposits_reachable_only": 405,
+     "retained": 0.791015625,
+     "rank_reachable_only": 1
+    },
+    {
+     "package": "reghdfe",
+     "rank": 2,
+     "n_deposits": 247,
+     "n_deposits_reachable_only": 198,
+     "retained": 0.8016194331983806,
+     "rank_reachable_only": 2
+    },
+    {
+     "package": "outreg2",
+     "rank": 3,
+     "n_deposits": 185,
+     "n_deposits_reachable_only": 139,
+     "retained": 0.7513513513513513,
+     "rank_reachable_only": 3
+    },
+    {
+     "package": "coefplot",
+     "rank": 4,
+     "n_deposits": 159,
+     "n_deposits_reachable_only": 134,
+     "retained": 0.8427672955974843,
+     "rank_reachable_only": 4
+    },
+    {
+     "package": "ivreg2",
+     "rank": 5,
+     "n_deposits": 96,
+     "n_deposits_reachable_only": 68,
+     "retained": 0.7083333333333334,
+     "rank_reachable_only": 5
+    },
+    {
+     "package": "binscatter",
+     "rank": 6,
+     "n_deposits": 64,
+     "n_deposits_reachable_only": 51,
+     "retained": 0.796875,
+     "rank_reachable_only": 6
+    },
+    {
+     "package": "grc1leg",
+     "rank": 7,
+     "n_deposits": 60,
+     "n_deposits_reachable_only": 50,
+     "retained": 0.8333333333333334,
+     "rank_reachable_only": 8
+    },
+    {
+     "package": "ftools",
+     "rank": 8,
+     "n_deposits": 59,
+     "n_deposits_reachable_only": 46,
+     "retained": 0.7796610169491526,
+     "rank_reachable_only": 9
+    },
+    {
+     "package": "ivreghdfe",
+     "rank": 9,
+     "n_deposits": 57,
+     "n_deposits_reachable_only": 51,
+     "retained": 0.8947368421052632,
+     "rank_reachable_only": 7
+    },
+    {
+     "package": "unique",
+     "rank": 10,
+     "n_deposits": 54,
+     "n_deposits_reachable_only": 41,
+     "retained": 0.7592592592592593,
+     "rank_reachable_only": 10
+    },
+    {
+     "package": "gtools",
+     "rank": 11,
+     "n_deposits": 51,
+     "n_deposits_reachable_only": 39,
+     "retained": 0.7647058823529411,
+     "rank_reachable_only": 12
+    },
+    {
+     "package": "spmap",
+     "rank": 12,
+     "n_deposits": 50,
+     "n_deposits_reachable_only": 40,
+     "retained": 0.8,
+     "rank_reachable_only": 11
+    },
+    {
+     "package": "parmest",
+     "rank": 13,
+     "n_deposits": 46,
+     "n_deposits_reachable_only": 33,
+     "retained": 0.717391304347826,
+     "rank_reachable_only": 14
+    },
+    {
+     "package": "winsor2",
+     "rank": 14,
+     "n_deposits": 43,
+     "n_deposits_reachable_only": 35,
+     "retained": 0.813953488372093,
+     "rank_reachable_only": 13
+    },
+    {
+     "package": "outreg",
+     "rank": 15,
+     "n_deposits": 37,
+     "n_deposits_reachable_only": 29,
+     "retained": 0.7837837837837838,
+     "rank_reachable_only": 17
+    },
+    {
+     "package": "rdrobust",
+     "rank": 16,
+     "n_deposits": 36,
+     "n_deposits_reachable_only": 31,
+     "retained": 0.8611111111111112,
+     "rank_reachable_only": 16
+    },
+    {
+     "package": "carryforward",
+     "rank": 17,
+     "n_deposits": 36,
+     "n_deposits_reachable_only": 25,
+     "retained": 0.6944444444444444,
+     "rank_reachable_only": 20
+    },
+    {
+     "package": "grstyle",
+     "rank": 18,
+     "n_deposits": 35,
+     "n_deposits_reachable_only": 29,
+     "retained": 0.8285714285714286,
+     "rank_reachable_only": 18
+    },
+    {
+     "package": "winsor",
+     "rank": 19,
+     "n_deposits": 35,
+     "n_deposits_reachable_only": 32,
+     "retained": 0.9142857142857143,
+     "rank_reachable_only": 15
+    },
+    {
+     "package": "labutil",
+     "rank": 20,
+     "n_deposits": 34,
+     "n_deposits_reachable_only": 28,
+     "retained": 0.8235294117647058,
+     "rank_reachable_only": 19
+    }
+   ],
+   "max_rank_move": 4,
+   "min_retained": 0.6944444444444444,
+   "median_retained": 0.7984375
+  },
+  "python": {
+   "top": [
+    {
+     "package": "pandas",
+     "rank": 1,
+     "n_deposits": 231,
+     "n_deposits_reachable_only": 163,
+     "retained": 0.7056277056277056,
+     "rank_reachable_only": 2
+    },
+    {
+     "package": "numpy",
+     "rank": 2,
+     "n_deposits": 222,
+     "n_deposits_reachable_only": 179,
+     "retained": 0.8063063063063063,
+     "rank_reachable_only": 1
+    },
+    {
+     "package": "matplotlib",
+     "rank": 3,
+     "n_deposits": 147,
+     "n_deposits_reachable_only": 110,
+     "retained": 0.7482993197278912,
+     "rank_reachable_only": 4
+    },
+    {
+     "package": "scipy",
+     "rank": 4,
+     "n_deposits": 142,
+     "n_deposits_reachable_only": 121,
+     "retained": 0.852112676056338,
+     "rank_reachable_only": 3
+    },
+    {
+     "package": "scikit-learn",
+     "rank": 5,
+     "n_deposits": 101,
+     "n_deposits_reachable_only": 76,
+     "retained": 0.7524752475247525,
+     "rank_reachable_only": 5
+    },
+    {
+     "package": "statsmodels",
+     "rank": 6,
+     "n_deposits": 66,
+     "n_deposits_reachable_only": 51,
+     "retained": 0.7727272727272727,
+     "rank_reachable_only": 6
+    },
+    {
+     "package": "seaborn",
+     "rank": 7,
+     "n_deposits": 56,
+     "n_deposits_reachable_only": 42,
+     "retained": 0.75,
+     "rank_reachable_only": 7
+    },
+    {
+     "package": "tqdm",
+     "rank": 8,
+     "n_deposits": 52,
+     "n_deposits_reachable_only": 39,
+     "retained": 0.75,
+     "rank_reachable_only": 8
+    },
+    {
+     "package": "torch",
+     "rank": 9,
+     "n_deposits": 29,
+     "n_deposits_reachable_only": 20,
+     "retained": 0.6896551724137931,
+     "rank_reachable_only": 10
+    },
+    {
+     "package": "nltk",
+     "rank": 10,
+     "n_deposits": 28,
+     "n_deposits_reachable_only": 17,
+     "retained": 0.6071428571428571,
+     "rank_reachable_only": 11
+    },
+    {
+     "package": "numba",
+     "rank": 11,
+     "n_deposits": 21,
+     "n_deposits_reachable_only": 21,
+     "retained": 1.0,
+     "rank_reachable_only": 9
+    },
+    {
+     "package": "requests",
+     "rank": 12,
+     "n_deposits": 20,
+     "n_deposits_reachable_only": 8,
+     "retained": 0.4,
+     "rank_reachable_only": 15
+    },
+    {
+     "package": "gensim",
+     "rank": 13,
+     "n_deposits": 20,
+     "n_deposits_reachable_only": 11,
+     "retained": 0.55,
+     "rank_reachable_only": 13
+    },
+    {
+     "package": "tensorflow",
+     "rank": 14,
+     "n_deposits": 14,
+     "n_deposits_reachable_only": 6,
+     "retained": 0.42857142857142855,
+     "rank_reachable_only": 18
+    },
+    {
+     "package": "PyYAML",
+     "rank": 15,
+     "n_deposits": 14,
+     "n_deposits_reachable_only": 12,
+     "retained": 0.8571428571428571,
+     "rank_reachable_only": 12
+    },
+    {
+     "package": "joblib",
+     "rank": 16,
+     "n_deposits": 14,
+     "n_deposits_reachable_only": 10,
+     "retained": 0.7142857142857143,
+     "rank_reachable_only": 14
+    },
+    {
+     "package": "transformers",
+     "rank": 17,
+     "n_deposits": 13,
+     "n_deposits_reachable_only": 6,
+     "retained": 0.46153846153846156,
+     "rank_reachable_only": 19
+    },
+    {
+     "package": "geopandas",
+     "rank": 18,
+     "n_deposits": 12,
+     "n_deposits_reachable_only": 6,
+     "retained": 0.5,
+     "rank_reachable_only": 20
+    },
+    {
+     "package": "ipython",
+     "rank": 19,
+     "n_deposits": 12,
+     "n_deposits_reachable_only": 7,
+     "retained": 0.5833333333333334,
+     "rank_reachable_only": 17
+    },
+    {
+     "package": "spacy",
+     "rank": 20,
+     "n_deposits": 12,
+     "n_deposits_reachable_only": 8,
+     "retained": 0.6666666666666666,
+     "rank_reachable_only": 16
+    }
+   ],
+   "max_rank_move": 4,
+   "min_retained": 0.4,
+   "median_retained": 0.7099567099567099
+  }
+ }
+}

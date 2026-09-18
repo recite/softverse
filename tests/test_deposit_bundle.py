@@ -6,7 +6,6 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-import pyarrow.parquet as pq
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import deposit_tally
@@ -24,9 +23,15 @@ def test_the_bundle_carries_no_code(tmp_path):
     pd.DataFrame({"x": [1]}).to_parquet(tally / "mentions.parquet")
     for name in deposit_tally.CORPUS_FILES:
         pd.DataFrame({"x": [1]}).to_parquet(corpus / name)
-    pd.DataFrame({"mention_uid": ["m"], "snippet": ["library(fixest)"]}).to_parquet(
-        corpus / "mentions.parquet"
-    )
+    pd.DataFrame(
+        {
+            "mention_uid": ["m", "n"],
+            "dataset_doi": ["doi:a", "doi:b"],
+            "file_uid": ["f", "g"],
+            "line": [1, 2],
+            "snippet": ["library(fixest)", "library(dplyr)"],
+        }
+    ).to_parquet(corpus / "mentions.parquet")
     pd.DataFrame({"sha256": ["s"], "content": ["code"]}).to_parquet(
         corpus / "contents" / "contents-00000.parquet"
     )
@@ -35,10 +40,14 @@ def test_the_bundle_carries_no_code(tmp_path):
     names = {p.name for p in files}
 
     assert not any("contents" in n for n in names)
-    assert "mentions.parquet" in names
-    assert (
-        "snippet" not in pq.read_schema(tmp_path / "bundle" / "mentions.parquet").names
-    )
+    # Cut into parts small enough to upload, which read back as one table
+    # holding every row once and no snippet.
+    parts = sorted(n for n in names if n.startswith("mentions-"))
+    assert len(parts) == deposit_tally.MENTION_PARTS
+    assert "mentions.parquet" not in names
+    whole = pd.concat(pd.read_parquet(tmp_path / "bundle" / n) for n in parts)
+    assert sorted(whole["mention_uid"]) == ["m", "n"]
+    assert "snippet" not in whole.columns
     assert {
         "usage_by_package.csv",
         "summary.json",

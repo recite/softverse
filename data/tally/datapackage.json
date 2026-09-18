@@ -7,10 +7,10 @@
    "path": "https://creativecommons.org/publicdomain/zero/1.0/"
   }
  ],
- "created": "2026-09-15T18:23:12.902808+00:00",
+ "created": "2026-09-18T02:09:12.982766+00:00",
  "resources": [
   {
-   "name": "usage_by_package",
+   "name": "usage_by_package_csv",
    "path": "usage_by_package.csv",
    "format": "csv",
    "schema": {
@@ -75,7 +75,7 @@
    }
   },
   {
-   "name": "usage_by_package_year",
+   "name": "usage_by_package_year_csv",
    "path": "usage_by_package_year.csv",
    "format": "csv",
    "schema": {
@@ -100,7 +100,7 @@
    }
   },
   {
-   "name": "usage_by_collection",
+   "name": "usage_by_collection_csv",
    "path": "usage_by_collection.csv",
    "format": "csv",
    "schema": {
@@ -129,7 +129,7 @@
    }
   },
   {
-   "name": "usage_by_function",
+   "name": "usage_by_function_csv",
    "path": "usage_by_function.csv",
    "format": "csv",
    "schema": {
@@ -162,7 +162,7 @@
    }
   },
   {
-   "name": "unknown_names",
+   "name": "unknown_names_csv",
    "path": "unknown_names.csv",
    "format": "csv",
    "schema": {
@@ -176,14 +176,55 @@
       "type": "string"
      },
      {
+      "name": "n_deposits",
+      "type": "string"
+     },
+     {
       "name": "n_mentions",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits_defining",
       "type": "string"
      }
     ]
    }
   },
   {
-   "name": "language_presence",
+   "name": "remote_installs_csv",
+   "path": "remote_installs.csv",
+   "format": "csv",
+   "schema": {
+    "fields": [
+     {
+      "name": "name",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "host",
+      "type": "string"
+     },
+     {
+      "name": "in_registry",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits_installing",
+      "type": "string"
+     },
+     {
+      "name": "n_deposits_loading",
+      "type": "string"
+     }
+    ]
+   }
+  },
+  {
+   "name": "language_presence_csv",
    "path": "language_presence.csv",
    "format": "csv",
    "schema": {
@@ -204,7 +245,7 @@
    }
   },
   {
-   "name": "usage_by_package",
+   "name": "usage_by_package_parquet",
    "path": "usage_by_package.parquet",
    "format": "parquet",
    "schema": {
@@ -269,7 +310,7 @@
    }
   },
   {
-   "name": "usage_by_package_year",
+   "name": "usage_by_package_year_parquet",
    "path": "usage_by_package_year.parquet",
    "format": "parquet",
    "schema": {
@@ -294,7 +335,7 @@
    }
   },
   {
-   "name": "usage_by_collection",
+   "name": "usage_by_collection_parquet",
    "path": "usage_by_collection.parquet",
    "format": "parquet",
    "schema": {
@@ -323,7 +364,7 @@
    }
   },
   {
-   "name": "usage_by_function",
+   "name": "usage_by_function_parquet",
    "path": "usage_by_function.parquet",
    "format": "parquet",
    "schema": {
@@ -356,7 +397,7 @@
    }
   },
   {
-   "name": "unknown_names",
+   "name": "unknown_names_parquet",
    "path": "unknown_names.parquet",
    "format": "parquet",
    "schema": {
@@ -370,14 +411,55 @@
       "type": "string"
      },
      {
+      "name": "n_deposits",
+      "type": "integer"
+     },
+     {
       "name": "n_mentions",
+      "type": "integer"
+     },
+     {
+      "name": "n_deposits_defining",
       "type": "integer"
      }
     ]
    }
   },
   {
-   "name": "language_presence",
+   "name": "remote_installs_parquet",
+   "path": "remote_installs.parquet",
+   "format": "parquet",
+   "schema": {
+    "fields": [
+     {
+      "name": "name",
+      "type": "string"
+     },
+     {
+      "name": "language",
+      "type": "string"
+     },
+     {
+      "name": "host",
+      "type": "string"
+     },
+     {
+      "name": "in_registry",
+      "type": "boolean"
+     },
+     {
+      "name": "n_deposits_installing",
+      "type": "integer"
+     },
+     {
+      "name": "n_deposits_loading",
+      "type": "integer"
+     }
+    ]
+   }
+  },
+  {
+   "name": "language_presence_parquet",
    "path": "language_presence.parquet",
    "format": "parquet",
    "schema": {
@@ -398,7 +480,7 @@
    }
   },
   {
-   "name": "mentions",
+   "name": "mentions_parquet",
    "path": "mentions.parquet",
    "format": "parquet",
    "schema": {
@@ -445,6 +527,10 @@
      },
      {
       "name": "pinned_version",
+      "type": "string"
+     },
+     {
+      "name": "remote",
       "type": "string"
      },
      {
@@ -519,7 +605,7 @@
    }
   },
   {
-   "name": "files",
+   "name": "files_parquet",
    "path": "files.parquet",
    "format": "parquet",
    "schema": {
@@ -652,7 +738,7 @@
    }
   },
   {
-   "name": "declared_dependencies",
+   "name": "declared_dependencies_parquet",
    "path": "declared_dependencies.parquet",
    "format": "parquet",
    "schema": {
@@ -689,7 +775,7 @@
    }
   },
   {
-   "name": "environment_signals",
+   "name": "environment_signals_parquet",
    "path": "environment_signals.parquet",
    "format": "parquet",
    "schema": {
