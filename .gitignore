@@ -128,3 +128,8 @@ docs/data-dictionary.md
 # a third party's security posture and carry a personal email address. Kept
 # out of the docs source tree so they cannot be rendered by accident.
 /notes/
+
+# Shipped in the Zenodo and Hugging Face releases, not in git: at 1.8 MB it is
+# over the pre-commit size guard for data/tally, and the site does not read it.
+data/tally/downloads_vs_use.csv
+data/tally/downloads_vs_use.parquet

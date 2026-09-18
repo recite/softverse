@@ -116,11 +116,18 @@ def sync(client: httpx.Client, token: str, spec: Deposit) -> dict:
 
 
 def _put(client: httpx.Client, token: str, url: str, path: Path) -> httpx.Response:
-    with path.open("rb") as handle:
-        return client.put(
-            url,
-            headers={**auth(token), "Content-Length": str(path.stat().st_size)},
-            content=handle,
+    try:
+        with path.open("rb") as handle:
+            return client.put(
+                url,
+                headers={**auth(token), "Content-Length": str(path.stat().st_size)},
+                content=handle,
+            )
+    except httpx.TransportError as exc:
+        # A dropped connection or a read timeout is the same failure as a 502
+        # from the gateway, and gets the same retry.
+        return httpx.Response(
+            httpx.codes.BAD_GATEWAY, text=str(exc), request=httpx.Request("PUT", url)
         )
 
 
