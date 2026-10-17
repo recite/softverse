@@ -15,7 +15,7 @@ official. These cost no precision -- inclusive resolution means an unmatched
 name is never attributed to a package -- but they inflate the "resolves to no
 registry" rate, which the paper reports as a coverage statistic. An unknown
 share that is mostly `ds` and `summarize` means something very different from
-one that is mostly unrecognised third-party packages.
+one that is mostly unrecognized third-party packages.
 
 Answers are cached in `registries/snapshots/stata_official/official.json`, so
 re-running is cheap and does not re-crawl a vendor's documentation server.

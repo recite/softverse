@@ -14,7 +14,7 @@ text I actually read.
 
 ---
 
-## Paper 1 — Softcite dataset (the closest topical analogue; only partially readable)
+## Paper 1 — Softcite dataset (the closest topical analog; only partially readable)
 
 - **Title:** Softcite dataset: A dataset of software mentions in biomedical and economic research publications
 - **Authors:** Caifan Du, Johanna Cohoon, Patrice Lopez, James Howison
@@ -44,7 +44,7 @@ text I actually read.
   | Results: Analysis of Software Mentions (= findings) | 4,241 | 22.3% |
   | Discussion (incl. *Limitations of the study* 536) | 3,794 | 19.9% |
   | Conclusion (incl. *Software and Data* 284) | 874 | 4.6% |
-- **First two paragraphs:** ¶1 is four sentences of stakes with zero citations — "Science across all disciplines has become increasingly data-driven… transparency about software used as part of the scientific process is crucial to ensure reproducibility". ¶2 raises the altitude to why anyone should care at scale ("from a macro-perspective, understanding software usage, varying citation habits and their evolution over time… can shape the understanding of the evolution of scientific disciplines") and only then names prior datasets. The **contribution is not in ¶1–2**; it lands in ¶7 as a labelled bulleted list ("In summary, our contributions include: *A large-scale analysis of software usage* across 3,215,386 scholarly publications…"), followed by ¶9, a literal roadmap paragraph ("The remaining paper is organized as follows…").
+- **First two paragraphs:** ¶1 is four sentences of stakes with zero citations — "Science across all disciplines has become increasingly data-driven… transparency about software used as part of the scientific process is crucial to ensure reproducibility". ¶2 raises the altitude to why anyone should care at scale ("from a macro-perspective, understanding software usage, varying citation habits and their evolution over time… can shape the understanding of the evolution of scientific disciplines") and only then names prior datasets. The **contribution is not in ¶1–2**; it lands in ¶7 as a labeled bulleted list ("In summary, our contributions include: *A large-scale analysis of software usage* across 3,215,386 scholarly publications…"), followed by ¶9, a literal roadmap paragraph ("The remaining paper is organized as follows…").
 - **Related work:** its own section, 10.5% of the body, placed after the Introduction; split into "Requirements for large scale software citation analyses" (770) and "Previous analyses of software in scholarly publication" (1,221) — i.e. one subsection derives *criteria the paper must meet*, the other reviews *what others found*.
 - **Validation vs findings:** validation is quarantined into its own Results section and is **2.5× smaller** than the findings section (1,670 vs 4,241). Method-building takes the Methods section; how well it worked takes 9% of the paper; what it bought takes 22%.
 - **Limitations:** a named subsection inside the Discussion, 536 words, and unusually candid about error propagation: "the given evaluation for software and mention type classification does take error propagation into account, but the results for RE and entity disambiguation do not. Therefore, the F = 0.94 performance for RE might overestimate the true performance as it relies on results of F = 0.885 entity recognition." It also names the sampling frame bias first ("the selection of PMC as primary data source implies a bias towards Medicine").
@@ -56,7 +56,7 @@ text I actually read.
 
 - **Title:** Is OpenAlex suitable for research quality evaluation and which citation indicator is best?
 - **Year / venue / DOI:** 2025, JASIST, 10.1002/asi.70020; accepted manuscript read at https://arxiv.org/abs/2502.18427 (29 double-spaced pages, 8,738 words to the reference list)
-- **Abstract:** 219 words, **quasi-structured with inline labels** — "This article compares (1)… and (2)… **Methods (1&2):** the indicators calculated from 28.6 million articles were compared through 8,704 correlations… **Results:** (1) OpenAlex provides better citation counts than Scopus…". Numbers in the abstract; the counterintuitive finding is stated bluntly ("Counterintuitively, raw citation counts are at least as good as nearly all field normalised indicators").
+- **Abstract:** 219 words, **quasi-structured with inline labels** — "This article compares (1)… and (2)… **Methods (1&2):** the indicators calculated from 28.6 million articles were compared through 8,704 correlations… **Results:** (1) OpenAlex provides better citation counts than Scopus…". Numbers in the abstract; the counterintuitive finding is stated bluntly ("Counterintuitively, raw citation counts are at least as good as nearly all field normalized indicators").
 - **Section structure with measured lengths:**
   | Section | Words | Share |
   |---|---|---|
@@ -135,7 +135,7 @@ Baseline for the implications below: our draft currently spends **~1,500 words o
 
 8. **Write a dedicated software-and-data release paragraph with versions and DOIs.**
    Schindler's Conclusion contains a *Software and Data* subsection naming every dependency with version ("Python 3.9.5… PyTorch 1.9.0… R 4.1.1"), the analysis repo, and the Zenodo DOI; Softcite's contribution *is* the Zenodo/GitHub release plus its provenance description, which the abstract advertises as "an extended discussion of its creation process".
-   *For us:* one named subsection near the end, with repo URL, archived DOI, licence, and versions. If the dataset is part of the contribution, say so in the title/abstract the way Softcite does ("Softcite dataset: A dataset of…") — that is also the only legitimate way to make validation-heavy proportions acceptable.
+   *For us:* one named subsection near the end, with repo URL, archived DOI, license, and versions. If the dataset is part of the contribution, say so in the title/abstract the way Softcite does ("Softcite dataset: A dataset of…") — that is also the only legitimate way to make validation-heavy proportions acceptable.
 
 9. **Choose the genre deliberately: full research article or brief communication.**
    Liu & Wang's brief communication runs 4,919 words, 900 of them methods, 27 references, and ends with a *Suggestions* section aimed at named stakeholders. A full research article (Schindler 19,034; Wu ~13,000; Thelwall 8,738) carries a Related Work section and 40+ references.

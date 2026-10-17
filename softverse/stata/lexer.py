@@ -132,7 +132,7 @@ _R_TERMINATOR = re.compile(r"terminator\(\s*(\w+)\s*\)", re.IGNORECASE)
 _FOREIGN_OPENERS = frozenset({"mata", "mata:", "python", "python:"})
 
 #: `#delimit`, in any of the spellings Stata accepts: abbreviated to `#d`, and
-#: with space after the hash. `# delimit ;` was not recognised, so everything
+#: with space after the hash. `# delimit ;` was not recognized, so everything
 #: after it was split at newlines and the second line of each statement --
 #: `using "table.tex", replace` -- was read as a command.
 _DELIMIT = re.compile(r"#[ \t]*d(?:e(?:l(?:i(?:m(?:it?)?)?)?)?)?(?=[ \t;\r\n]|$)")
@@ -303,7 +303,7 @@ def _brace_is_word_internal(cleaned: str, i: int, buffer: list[str]) -> bool:
 
 
 def _split_statements(cleaned: str) -> list[tuple[int, int, str]]:
-    """Split cleaned source into ``(line, col, text)``, honouring ``#delimit``.
+    """Split cleaned source into ``(line, col, text)``, honoring ``#delimit``.
 
     Under ``#delimit ;`` a statement ends at a semicolon and newlines are mere
     whitespace; under ``#delimit cr`` (the default) a statement ends at a
@@ -597,7 +597,7 @@ def declared_version(source: str) -> str | None:
     (`version 14: regress y x`), so `_strip_prefixes` peels it and then skips
     tokens up to and including the colon; with no colon to find it consumes
     the line, `rest` comes back empty, and `lex()` drops the statement before
-    it exists. Both behaviours are correct for their own case, and 1,761
+    it exists. Both behaviors are correct for their own case, and 1,761
     do-files in this corpus fall between them.
 
     The prefix use is deliberately *not* a declaration. `version 14: regress`

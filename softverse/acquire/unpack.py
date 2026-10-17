@@ -52,7 +52,7 @@ MAX_NESTING = 3
 #: Needing to raise the number twice was the tell that the quantity was wrong.
 #:
 #: What remains bounds bytes *written*, which is the resource actually at risk,
-#: and it is now spent incrementally rather than totalled at the end: the check
+#: and it is now spent incrementally rather than totaled at the end: the check
 #: fires on the member that would exceed it, so the limit constrains the disk
 #: and not just the report.
 MAX_EXTRACTED_BYTES = 10 * 1024**3

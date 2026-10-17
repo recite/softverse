@@ -1,6 +1,6 @@
 """Code from an archive too big to download, without downloading it.
 
-Served from a local HTTP server that honours byte ranges the way Harvard's S3
+Served from a local HTTP server that honors byte ranges the way Harvard's S3
 storage does, so the test measures what a range read actually transfers rather
 than trusting that it is small.
 """

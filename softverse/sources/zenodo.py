@@ -226,7 +226,7 @@ def _license_id(value: object) -> str | None:
 
 
 class UnknownCommunityError(Exception):
-    """A community slug Zenodo does not recognise."""
+    """A community slug Zenodo does not recognize."""
 
 
 class ZenodoUnavailableError(Exception):
@@ -433,7 +433,7 @@ def collect_record(
 
     target = files_root / record.record_id
     now = datetime.now(tz=UTC)
-    # Recognised from the deposit's whole file list, not just the candidates:
+    # Recognized from the deposit's whole file list, not just the candidates:
     # a `.z01` segment is not itself a candidate, so the tail `.zip` is the
     # only piece we would otherwise see -- and it is the piece that looks fine.
     spanned = spanned_segments(f.key for f in record.files)

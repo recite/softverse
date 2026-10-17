@@ -137,7 +137,7 @@ def main() -> int:
     # Coverage gap, reported rather than hidden.
     skipped = ledger.skipped_archives()
     gb = sum(s["size_bytes"] for s in skipped) / 1e9
-    print(f"\nskipped archives (over cap): {len(skipped)} totalling {gb:.2f} GB")
+    print(f"\nskipped archives (over cap): {len(skipped)} totaling {gb:.2f} GB")
     for s in sorted(skipped, key=lambda s: -s["size_bytes"])[:5]:
         print(
             f"    {s['size_bytes'] / 1e6:>8.0f} MB  {s['dataset_doi']}  {s['filename']}"

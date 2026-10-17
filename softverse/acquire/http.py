@@ -97,7 +97,7 @@ class RateLimiter:
 
         This distinction matters and is easy to get wrong. ``Rate(20, SECOND)``
         permits a *burst* of twenty requests in the first millisecond and then
-        silence -- the average is right, the behaviour is not. Against a host
+        silence -- the average is right, the behavior is not. Against a host
         that has already served us an AWS WAF challenge, twenty simultaneous
         requests is exactly the pattern that triggered it. Expressing the same
         average as one request per 50 ms forces even spacing.
@@ -313,7 +313,7 @@ class PoliteClient:
         restart. The part file is kept on failure, which is the whole point:
         the next run resumes instead of re-downloading.
 
-        Two server behaviours have to be handled, because getting either wrong
+        Two server behaviors have to be handled, because getting either wrong
         corrupts the file silently rather than loudly:
 
         - A server that ignores ``Range`` answers **200** with the whole body
@@ -415,7 +415,7 @@ class PoliteClient:
         Backing off only after a 429 means the 429 already happened. A server
         that publishes `remaining` is telling us how much room is left, so the
         polite move is to ease off at 20% remaining rather than sprint into the
-        wall and apologise.
+        wall and apologize.
         """
         headers = read_rate_headers(response)
         if headers is None:

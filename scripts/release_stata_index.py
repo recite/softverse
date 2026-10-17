@@ -170,7 +170,7 @@ The list is still incomplete, and that costs *recall*, never *precision*,
 because resolution is inclusive: a command counts as a package only if the
 index has it. A missing builtin lands in `unknown`, never in a package.
 
-## Licence
+## License
 
 CC0. The underlying manifests are public metadata from the SSC archive at
 Boston College and from StataCorp's Stata Journal and STB software archives.

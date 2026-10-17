@@ -103,7 +103,7 @@ ZENODO_RECORD = {
         {
             "key": "big.zip",
             # Expressed relative to the cap rather than as a literal, so this
-            # tests the behaviour instead of whatever the cap happened to be
+            # tests the behavior instead of whatever the cap happened to be
             # when it was written. The previous literal (900 MB) silently
             # stopped testing anything when the cap rose to 2 GB.
             "size": zenodo.ARCHIVE_CAP_BYTES + 1,

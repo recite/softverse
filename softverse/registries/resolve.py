@@ -5,14 +5,14 @@ Resolution never silently drops a name. Every mention leaves here with a
 name we cannot place is a diagnostic (usually an extractor bug) and sometimes a
 finding (a GitHub-only or institutional package). v1 emitted a bare string and
 left the reader to guess, which is how ``os``, ``grid``, ``std`` and
-``lmtest, quietly = TRUE`` all ended up in one column labelled "package".
+``lmtest, quietly = TRUE`` all ended up in one column labeled "package".
 
 Two rules matter more than the rest:
 
 - **R matching is case-sensitive.** ``grDevices`` is base R and ``MASS`` is
   recommended, but v1 lowercased the candidate and compared it against a
   mixed-case set, so ``grDevices``, ``Matrix`` and ``KernSmooth`` were all
-  labelled third-party while ``MASS`` matched only because someone had typed
+  labeled third-party while ``MASS`` matched only because someone had typed
   ``"mass"`` in the set by hand.
 - **Registry membership is coverage, not proof.** A local module can share a
   name with a real distribution. :data:`Resolution.KNOWN_CURRENT` means "this

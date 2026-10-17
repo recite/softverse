@@ -55,7 +55,7 @@ def test_namespace_operators():
 
 
 def test_triple_colon_is_recorded_separately():
-    """Reaching into a package's internals is a different behaviour."""
+    """Reaching into a package's internals is a different behavior."""
     assert constructs("pkg:::hidden()")["pkg"] is Construct.NAMESPACE_INTERNAL
 
 

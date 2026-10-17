@@ -408,7 +408,7 @@ def load_official(path: Path) -> BuiltinSet:
     Expects JSON: ``{"stata_version": "18.0", "commands": ["regress", ...]}``,
     produced by listing ``*.ado`` under ``c(sysdir_base)``. Takes precedence
     over :func:`curated` when present, because it is a fact about Stata rather
-    than a judgement about it.
+    than a judgment about it.
     """
     payload = json.loads(Path(path).read_text())
     commands = {c.lower() for c in payload["commands"]}
@@ -430,7 +430,7 @@ def load_verified(path: Path) -> BuiltinSet:
 
     Written by :mod:`softverse.stata.official`. This is the same question
     ``load_official`` answers from a Stata installation, asked of a public
-    server instead, so it needs no licence -- and unlike the curated list it is
+    server instead, so it needs no license -- and unlike the curated list it is
     a measurement rather than a recollection.
 
     Exact names only: the help server confirms that ``summarize`` exists but

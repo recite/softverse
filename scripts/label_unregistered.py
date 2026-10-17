@@ -1,4 +1,4 @@
-"""List the names code uses that no archive accounts for, for labelling by hand.
+"""List the names code uses that no archive accounts for, for labeling by hand.
 
     uv run python scripts/label_unregistered.py
 
@@ -10,7 +10,7 @@ rebuilding the tally adds and drops rows without discarding the work. Rows
 that fall out of the list are dropped; rows new to it arrive unlabelled.
 
 The threshold is stated rather than hidden: below it the list is singletons,
-which are typos, macro fragments and one deposit's own helpers, and labelling
+which are typos, macro fragments and one deposit's own helpers, and labeling
 two thousand of them would move no number the paper reports.
 
 One category is filled in mechanically: a name the corpus installs from a

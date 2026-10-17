@@ -194,6 +194,7 @@ exclude = '\.venv|tests|docs'
 module-root = ""
 
 [tool.codespell]
+builtin = "clear,rare,en-GB_to_en-US"
 # Stata, not typos: Mata is Stata's matrix language and `ttest`, `fillin` are
 # its commands; `ND` is the NoDerivatives license term; `ture` and `ine` are
 # fragments of the `capture`/`define`

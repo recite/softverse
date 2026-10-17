@@ -212,7 +212,7 @@ def main() -> int:
 
     if failed:
         # Reported, never absorbed -- and named for what was seen rather than
-        # diagnosed. An empty response here was once labelled a WAF challenge
+        # diagnosed. An empty response here was once labeled a WAF challenge
         # and turned out to be our own 25-second timeout.
         print(f"\n{len(failed)} collections returned nothing:")
         print("  " + ", ".join(failed[:20]))

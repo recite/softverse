@@ -214,7 +214,7 @@ def _walk_ast(tree: ast.Module, lines: list[str]) -> list[Mention]:
                 # R's `dplyr::select` is: the source naming the package at the
                 # call site rather than only at the load. Calls on objects,
                 # `df.head()` and `self.fit()`, have no root in the alias map
-                # and produce nothing, which is the behaviour that keeps this
+                # and produce nothing, which is the behavior that keeps this
                 # from becoming a list of every method in the file.
                 mentions.append(
                     Mention(

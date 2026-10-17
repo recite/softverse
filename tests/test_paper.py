@@ -159,7 +159,7 @@ def test_the_paper_opens_on_a_finding_not_a_topic():
 
 
 def _sentences(text: str) -> list[str]:
-    """Prose split into sentences, with markup and whitespace normalised."""
+    """Prose split into sentences, with markup and whitespace normalized."""
     import re
 
     text = re.sub(r"```\{=latex\}.*?```", " ", text, flags=re.DOTALL)

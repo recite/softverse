@@ -339,7 +339,7 @@ def test_a_from_pointing_at_an_archive_already_crawled_is_not_a_net_site():
 
 
 def test_a_named_site_is_crawled_whole_from_its_own_toc():
-    """The corpus names one package; the site's toc lists its neighbours."""
+    """The corpus names one package; the site's toc lists its neighbors."""
     base = "http://www.stata.com/users/vwiggins"
     site = _Site(
         {

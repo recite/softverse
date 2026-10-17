@@ -5,7 +5,7 @@ stages for all 13,775 datasets without touching the blocked endpoints, and
 yields a real census to replace a 60-dataset extrapolation.
 
 Deliberately slow: Harvard has already challenged this client once, and /oai
-being exempt is not a licence to hammer it.
+being exempt is not a license to hammer it.
 """
 
 from __future__ import annotations

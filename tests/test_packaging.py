@@ -55,7 +55,7 @@ def test_project_urls_are_declared_where_the_standard_looks():
 
 def test_the_licence_is_declared_and_present():
     assert PROJECT.get("license") == "MIT"
-    assert (ROOT / "LICENSE").exists(), "MIT is declared with no licence text"
+    assert (ROOT / "LICENSE").exists(), "MIT is declared with no license text"
 
 
 def test_no_dependency_is_declared_without_being_imported():

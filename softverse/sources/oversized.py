@@ -9,7 +9,7 @@ A zip does not have to be downloaded to be read. Its central directory -- the
 member list, with each member's offset -- sits at the end of the file, and
 Harvard's S3 storage answers byte-range requests, so ``remotezip`` reads the
 directory and then only the members we keep. Measured on a 91 GB package:
-52,883 members, 9 scripts totalling 129 KB, 9.4 MB transferred, most of that
+52,883 members, 9 scripts totaling 129 KB, 9.4 MB transferred, most of that
 the directory itself.
 
 Zenodo answers range requests on its file content URLs too, so the same

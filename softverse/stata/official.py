@@ -5,9 +5,9 @@ the authoritative source is a Stata installation::
 
     . local base : dir "`c(sysdir_base)'" files "*.ado"
 
-which requires a licence we do not have, so the list stayed hand-written and its
+which requires a license we do not have, so the list stayed hand-written and its
 incompleteness stayed a stated limitation. StataCorp's public help server closes
-that gap without a licence: ``help.cgi?<name>`` serves the real help page for an
+that gap without a license: ``help.cgi?<name>`` serves the real help page for an
 official command and a short "not found" stub for anything else.
 
 The discriminator is the stub's text, not the status code and not the response

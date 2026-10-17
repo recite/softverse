@@ -177,10 +177,10 @@ def python_stdlib() -> frozenset[str]:
     """Top-level standard-library module names, across every Python since 2.6.
 
     A static fact, not a question put to the analyst's machine: v1 asked
-    ``importlib.util.find_spec`` and so labelled ``os``, ``sys`` and ``json``
+    ``importlib.util.find_spec`` and so labeled ``os``, ``sys`` and ``json``
     third-party wherever they happened not to resolve.
 
-    The list is `stdlib-list`'s, maintained under the PyPI organisation. It
+    The list is `stdlib-list`'s, maintained under the PyPI organization. It
     replaced ``sys.stdlib_module_names`` plus a hand-kept list of 3.8-3.13
     removals, which knew nothing of Python 2: ``cPickle``, ``urllib2``,
     ``StringIO`` and ``Queue`` were reported as packages no registry lists, in

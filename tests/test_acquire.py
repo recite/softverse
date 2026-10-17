@@ -30,7 +30,7 @@ def test_limiter_spaces_requests_rather_than_bursting():
     """Asserts *spacing*, not the average -- the average passes either way.
 
     pyrate-limiter's Rate(20, SECOND) allows twenty requests in the first
-    millisecond and then silence. The average is correct and the behaviour is
+    millisecond and then silence. The average is correct and the behavior is
     exactly the burst that earns a WAF challenge. The limiter must therefore be
     built as one request per interval.
     """
@@ -354,7 +354,7 @@ def test_a_spanned_set_names_every_segment_including_the_last():
 
 
 def test_empty_202_is_treated_as_throttling_not_success(monkeypatch):
-    """Measured Harvard Dataverse behaviour, not spec.
+    """Measured Harvard Dataverse behavior, not spec.
 
     When it decides a client is going too fast it answers 202 Accepted with an
     empty text/html body -- no 429, no Retry-After. A client treating 2xx as

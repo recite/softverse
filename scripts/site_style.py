@@ -1,7 +1,7 @@
 """The one stylesheet the lookup and package pages share.
 
 Plain on purpose, after Kieran Healy's site rather than a dashboard: one serif
-face, black text, one link colour, hairline rules, and nothing drawn around
+face, black text, one link color, hairline rules, and nothing drawn around
 the numbers but space. Valkyrie, the face that site uses, is licensed, so the
 stack starts with Charter, which ships with macOS and Windows' Sitka is close
 to; nothing is fetched from a font server.

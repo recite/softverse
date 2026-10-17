@@ -160,7 +160,7 @@ deposits that said something over the deposits that were in a position to.
 Names that code *uses* and that resolve to no registry, unfiltered. Install
 and inquiry lines are excluded: `ssc install x` states a dependency and is not
 a call. Some rows are false positives, and some are programs a deposit defines
-for itself. Pruning the list by hand would put a judgement call inside a file
+for itself. Pruning the list by hand would put a judgment call inside a file
 whose value is that you can check every row of it.
 
 - `name`, `language`
@@ -203,7 +203,7 @@ differ, so compare ranks within one registry, not counts across them.
   install this one as a dependency, directly or through others, and whether
   CRAN's *Econometrics* or *Causal Inference* task view lists it
 
-## Licence
+## License
 
 CC0.
 
@@ -560,7 +560,7 @@ def main() -> int:
         TALLY / "environment_coverage.json", OUT / "environment_coverage.json"
     )
 
-    # The validation artefacts ship with the tables they vouch for. The paper
+    # The validation artifacts ship with the tables they vouch for. The paper
     # cites precision, recall and Jaccard; a reader who wants to check those
     # rather than take the PDF's word needs the numbers, and they are 28 KB.
     validation = PATHS.root / "build" / "validation"

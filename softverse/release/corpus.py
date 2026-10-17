@@ -496,7 +496,7 @@ Most-used packages:
 File text (`contents`) and code snippets (`mentions.snippet`) are published only
 for deposits whose license allows redistribution. Everything derived -- which
 packages a file loads, at which version -- is published for every deposit.
-Custom terms of use and unrecognised identifiers are treated as not
+Custom terms of use and unrecognized identifiers are treated as not
 redistributable. Each deposit's own license is in `deposits.license_id`; NC and
 ND licenses are included and flagged there.
 

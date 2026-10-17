@@ -1,5 +1,5 @@
 # Sites that serve Stata packages in `net install` format and that no deposit
-# installs from by URL, found while labelling the names the index could not
+# installs from by URL, found while labeling the names the index could not
 # place (data/validation/unregistered_labelled.csv). Each is crawled whole from
 # its own stata.toc, one level of sub-directories deep. One per line.
 https://spost.su.domains
