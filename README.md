@@ -113,8 +113,12 @@ from softverse.model.enums import Language
 registry, _shipped = load_registry()
 registry.resolve("esttab", Language.STATA).package  # 'estout'
 registry.resolve("regress", Language.STATA).resolution  # builtin, so no package
-registry.resolve("renvars", Language.STATA).ecosystem  # stb: Stata Technical Bulletin 60
-registry.resolve("grc1leg", Language.STATA).ecosystem  # net_site: a StataCorp developer's page
+registry.resolve(
+    "renvars", Language.STATA
+).ecosystem  # stb: Stata Technical Bulletin 60
+registry.resolve(
+    "grc1leg", Language.STATA
+).ecosystem  # net_site: a StataCorp developer's page
 ```
 
 `esttab` resolving to `estout` is the case a package-name list cannot handle,
