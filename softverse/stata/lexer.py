@@ -166,6 +166,35 @@ class Statement:
         return self.text.split()[1:] if self.text else []
 
 
+def _quote_end(text: str, i: int) -> int:
+    """Index just past the string or compound quote opening at ``i``.
+
+    A plain ``"`` string ends at the next ``"``. A compound ``` `"..."' ```
+    quote nests, so it ends where its own ``"'`` brings the depth back to zero.
+    An unterminated quote runs to the end of ``text``.
+    """
+    n = len(text)
+    if not text.startswith('`"', i):
+        end = text.find('"', i + 1)
+        return n if end == -1 else end + 1
+    depth = 1
+    i += 2
+    while i < n and depth:
+        if text.startswith('`"', i):
+            depth += 1
+            i += 2
+        elif text.startswith("\"'", i):
+            depth -= 1
+            i += 2
+        else:
+            i += 1
+    return i
+
+
+def _opens_quote(ch: str, nxt: str) -> bool:
+    return ch == '"' or (ch == "`" and nxt == '"')
+
+
 def strip_comments(source: str) -> str:
     """Remove Stata comments and join continuations, preserving line count.
 
@@ -184,8 +213,6 @@ def strip_comments(source: str) -> str:
     out: list[str] = []
     i, n = 0, len(source)
     depth = 0  # /* */ nesting
-    in_string = False
-    in_compound = 0  # `"..."' nesting
     at_statement_start = True
 
     while i < n:
@@ -210,35 +237,10 @@ def strip_comments(source: str) -> str:
             i += 1
             continue
 
-        if in_string or in_compound:
-            out.append(ch)
-            if in_compound:
-                if ch == "`" and nxt == '"':
-                    in_compound += 1
-                    out.append(nxt)
-                    i += 2
-                    continue
-                if ch == '"' and nxt == "'":
-                    in_compound -= 1
-                    out.append(nxt)
-                    i += 2
-                    continue
-            elif ch == '"':
-                in_string = False
-            i += 1
-            continue
-
-        if ch == "`" and nxt == '"':
-            in_compound = 1
-            out.append(ch)
-            out.append(nxt)
-            i += 2
-            at_statement_start = False
-            continue
-        if ch == '"':
-            in_string = True
-            out.append(ch)
-            i += 1
+        if _opens_quote(ch, nxt):
+            end = _quote_end(source, i)
+            out.append(source[i:end])
+            i = end
             at_statement_start = False
             continue
 
@@ -314,14 +316,6 @@ def _split_statements(cleaned: str) -> list[tuple[int, int, str]]:
     buffer: list[str] = []
     start_line = 1
     line = 1
-    # String state must be tracked here as well as in strip_comments, which
-    # deliberately preserves string contents. Without it, the braces inside a
-    # LaTeX option -- esttab's prehead("\begin{tabular}{l*{4}{c}}") -- split one
-    # statement into several, and the fragments' leading tokens ("c", "tabular")
-    # were reported as commands. Measured on the corpus, that alone attributed
-    # 144 deposits to `fastcd`, a package whose only command is named `c`.
-    in_string = False
-    in_compound = 0
     #: Parenthesis depth, so a brace inside an option list is not a delimiter.
     paren = 0
 
@@ -350,36 +344,18 @@ def _split_statements(cleaned: str) -> list[tuple[int, int, str]]:
             started = True
             start_line = line
 
-        if in_string or in_compound:
-            if ch in {"\n", _SPLICE}:
-                line += 1
-            buffer.append(" " if ch == _SPLICE else ch)
-            if in_compound:
-                if ch == "`" and nxt == '"':
-                    in_compound += 1
-                    buffer.append(nxt)
-                    i += 2
-                    continue
-                if ch == '"' and nxt == "'":
-                    in_compound -= 1
-                    buffer.append(nxt)
-                    i += 2
-                    continue
-            elif ch == '"':
-                in_string = False
-            i += 1
-            continue
-
-        if ch == "`" and nxt == '"':
-            in_compound = 1
-            buffer.append(ch)
-            buffer.append(nxt)
-            i += 2
-            continue
-        if ch == '"':
-            in_string = True
-            buffer.append(ch)
-            i += 1
+        # Strings must be skipped here as well as in strip_comments, which
+        # deliberately preserves string contents. Without it, the braces inside a
+        # LaTeX option -- esttab's prehead("\begin{tabular}{l*{4}{c}}") -- split one
+        # statement into several, and the fragments' leading tokens ("c", "tabular")
+        # were reported as commands. Measured on the corpus, that alone attributed
+        # 144 deposits to `fastcd`, a package whose only command is named `c`.
+        if _opens_quote(ch, nxt):
+            end = _quote_end(cleaned, i)
+            quoted = cleaned[i:end]
+            line += quoted.count("\n") + quoted.count(_SPLICE)
+            buffer.append(quoted.replace(_SPLICE, " "))
+            i = end
             continue
 
         if ch in {"\n", _SPLICE}:

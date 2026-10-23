@@ -50,6 +50,7 @@ from pyrate_limiter import Duration, Limiter, Rate
 from softverse.logging_setup import get_logger
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from pathlib import Path
 
 logger = get_logger(__name__)
@@ -226,6 +227,15 @@ class PoliteClient:
         """Close the underlying connection pool."""
         self._client.close()
 
+    def _retry_context(self) -> Iterable[stamina.Attempt]:
+        return stamina.retry_context(
+            on=(httpx.HTTPError, ThrottledError),
+            attempts=self.max_retries + 1,
+            wait_initial=2.0,
+            wait_max=120.0,
+            wait_jitter=5.0,
+        )
+
     def get(self, url: str, expect_content: bool = True, **kwargs) -> FetchOutcome:
         """GET with rate limiting, retries, and challenge detection.
 
@@ -235,13 +245,7 @@ class PoliteClient:
         last = FetchOutcome(ok=False, error="no attempt made")
 
         try:
-            for attempt in stamina.retry_context(
-                on=(httpx.HTTPError, ThrottledError),
-                attempts=self.max_retries + 1,
-                wait_initial=2.0,
-                wait_max=120.0,
-                wait_jitter=5.0,
-            ):
+            for attempt in self._retry_context():
                 with attempt:
                     self.limiter.acquire()
                     response = self._client.get(url, **kwargs)
@@ -332,13 +336,7 @@ class PoliteClient:
         last = FetchOutcome(ok=False, error="no attempt made")
 
         try:
-            for attempt in stamina.retry_context(
-                on=(httpx.HTTPError, ThrottledError),
-                attempts=self.max_retries + 1,
-                wait_initial=2.0,
-                wait_max=120.0,
-                wait_jitter=5.0,
-            ):
+            for attempt in self._retry_context():
                 with attempt:
                     self.limiter.acquire()
                     have = part.stat().st_size if part.exists() else 0

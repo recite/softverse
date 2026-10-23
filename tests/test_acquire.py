@@ -11,9 +11,16 @@ import json
 import threading
 import time
 
+import httpx
 import pytest
+import stamina
 
-from softverse.acquire.http import RETRY_STATUSES, PoliteClient, RateLimiter
+from softverse.acquire.http import (
+    RETRY_STATUSES,
+    PoliteClient,
+    RateLimiter,
+    ThrottledError,
+)
 from softverse.acquire.state import DatasetRecord, Ledger, atomic_write_bytes
 from softverse.model.enums import CollectionState
 from softverse.sources.dataverse import (
@@ -511,3 +518,37 @@ def test_a_deferred_deposit_is_not_a_failed_one():
     assert record.reconciles()
     assert record.n_failed == 0
     assert record.needs_retry, "a deferral must still be retried"
+
+
+def test_get_and_download_share_one_retry_policy(monkeypatch, tmp_path):
+    """Both fetch paths retry on the same errors with the same backoff."""
+    policies = []
+    real_retry_context = stamina.retry_context
+
+    def recording_retry_context(**kwargs):
+        policies.append(kwargs)
+        return real_retry_context(**kwargs)
+
+    monkeypatch.setattr(stamina, "retry_context", recording_retry_context)
+    monkeypatch.setattr(time, "sleep", lambda *_: None)
+    calls = {"n": 0}
+
+    def handler(request):
+        calls["n"] += 1
+        return httpx.Response(503)
+
+    client = PoliteClient(limiter=RateLimiter(rate_per_s=1000), max_retries=2)
+    client._client = httpx.Client(transport=httpx.MockTransport(handler))
+    assert not client.get("http://x/").ok
+    assert not client.download("http://x/a.zip", tmp_path / "a.zip").ok
+    client.close()
+
+    expected = {
+        "on": (httpx.HTTPError, ThrottledError),
+        "attempts": 3,
+        "wait_initial": 2.0,
+        "wait_max": 120.0,
+        "wait_jitter": 5.0,
+    }
+    assert policies == [expected, expected]
+    assert calls["n"] == 6
