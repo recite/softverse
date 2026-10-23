@@ -11,7 +11,12 @@ from __future__ import annotations
 
 import pytest
 
-from softverse.stata.lexer import lex, local_programs, strip_comments
+from softverse.stata.lexer import (
+    _split_statements,
+    lex,
+    local_programs,
+    strip_comments,
+)
 
 
 def commands(source: str) -> list[str]:
@@ -417,3 +422,90 @@ def test_an_inline_r_block_is_not_stata():
     """`rsource, terminator(END_OF_R)` runs what follows as R, to that token."""
     source = "rsource, terminator(END_OF_R)\nx <- cbind(a, b)\nlibrary(MASS)\nEND_OF_R\nregress y x\n"
     assert located(source) == [("rsource", 1), ("regress", 5)]
+
+
+# -- quoted spans ----------------------------------------------------------
+#
+# Both passes skip over strings: strip_comments so that `//` and `/*` inside
+# one are kept, _split_statements so that braces, semicolons and newlines
+# inside one do not end the statement. The cases pin both outputs at once.
+
+
+@pytest.mark.parametrize(
+    ("source", "cleaned", "statements"),
+    [
+        pytest.param(
+            'di `"a "b" // c /* d"\' e\nreg y x',
+            'di `"a "b" // c /* d"\' e\nreg y x',
+            [("di", 1, 'di `"a "b" // c /* d"\' e'), ("reg", 2, "reg y x")],
+            id="compound-quote-hides-comment-markers",
+        ),
+        pytest.param(
+            'di `"outer `"inner"\' still // here"\' // gone\nreg y x',
+            'di `"outer `"inner"\' still // here"\' \nreg y x',
+            [
+                ("di", 1, 'di `"outer `"inner"\' still // here"\''),
+                ("reg", 2, "reg y x"),
+            ],
+            id="nested-compound-quotes",
+        ),
+        pytest.param(
+            '#delimit ;\ndi `"{x}; y"\'; reg y x;',
+            '#delimit ;\ndi `"{x}; y"\'; reg y x;',
+            [("di", 2, 'di `"{x}; y"\''), ("reg", 2, "reg y x")],
+            id="compound-quote-hides-braces-and-semicolons",
+        ),
+        pytest.param(
+            'di "a\nb"\nreg y x',
+            'di "a\nb"\nreg y x',
+            [("di", 1, 'di "a b"'), ("reg", 3, "reg y x")],
+            id="newline-inside-string-is-counted",
+        ),
+        pytest.param(
+            'di `"a\nb"\'\nreg y x',
+            'di `"a\nb"\'\nreg y x',
+            [("di", 1, 'di `"a b"\''), ("reg", 3, "reg y x")],
+            id="newline-inside-compound-quote-is-counted",
+        ),
+        pytest.param(
+            'di "abc // not a comment\ngen x = 1',
+            'di "abc // not a comment\ngen x = 1',
+            [("di", 1, 'di "abc // not a comment gen x = 1')],
+            id="unterminated-string-runs-to-end",
+        ),
+        pytest.param(
+            'di `"abc `"in"\' // kept\ngen x = 1',
+            'di `"abc `"in"\' // kept\ngen x = 1',
+            [("di", 1, 'di `"abc `"in"\' // kept gen x = 1')],
+            id="unterminated-compound-quote-runs-to-end",
+        ),
+        pytest.param(
+            'di "x"\' * y\nreg y x',
+            'di "x"\' * y\nreg y x',
+            [("di", 1, 'di "x"\' * y'), ("reg", 2, "reg y x")],
+            id="plain-string-ends-at-first-double-quote",
+        ),
+        pytest.param(
+            'di "a `" b" // c\nreg y x',
+            'di "a `" b" // c\nreg y x',
+            [("di", 1, 'di "a `" b" // c reg y x')],
+            id="backtick-inside-plain-string-opens-nothing",
+        ),
+        pytest.param(
+            '"x" * 2\n* comment\nreg y x',
+            '"x" * 2\n\nreg y x',
+            [(None, 1, '"x" * 2'), ("reg", 3, "reg y x")],
+            id="string-ends-statement-start",
+        ),
+    ],
+)
+def test_quoted_spans(source, cleaned, statements):
+    assert strip_comments(source) == cleaned
+    assert [(s.command, s.line, s.text) for s in lex(source)] == statements
+
+
+def test_a_splice_inside_a_string_is_counted_and_blanked():
+    assert _split_statements('di "a\x00b"\nreg y x') == [
+        (1, 0, 'di "a b"'),
+        (3, 0, "reg y x"),
+    ]
