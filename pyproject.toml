@@ -28,7 +28,7 @@ dependencies = [
     "pandas>=3.0.6",
     "httpx>=0.28.0",
     "tree-sitter>=0.25.0",
-    "tree-sitter-language-pack>=1.22.0",
+    "tree-sitter-language-pack>=1.22.1",
     "charset-normalizer>=3.5.2",
     "python-dotenv>=1.2.4",
     "stamina>=26.1.0",
@@ -68,8 +68,8 @@ Data = "https://recite.github.io/softverse/data/"
 # has to resolve from here.
 [dependency-groups]
 dev = [
-    "ruff>=0.17.0",
-    "pre-commit>=4.6.2",
+    "ruff>=0.17.1",
+    "pre-commit>=4.7.0",
     "twine>=7.0.0",
     # The paper's figures, not the package's.
     "matplotlib>=3.11.2",
