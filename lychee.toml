@@ -1,0 +1,23 @@
+# Patterns are written without a scheme: preen's links check scans this file
+# too, and a pattern with one would be extracted and checked as a link.
+exclude = [
+  # Placeholder hosts and paths in tests, served by a mock transport.
+  '//x/',
+  'dataverse\.harvard\.edu/api/x',
+  'zenodo\.org/f/',
+  'zenodo\.org/api/files/x/',
+  # API bases, alive but 404 to a bare GET.
+  'zenodo\.org/api$',
+  # A docstring's example of the `user/repo` form install_github takes.
+  'github\.com/user/repo',
+  # A download URL recorded in a deposit's renv.lock, published as data.
+  'sites\.google\.com/a/stonybrook\.edu/mperess',
+  # Example `net from` URLs in the Stata lexer and its tests.
+  '//host/path',
+  'jslsoc\.sitehost\.iu\.edu/stata',
+  # API and raw-file bases the code appends a path to.
+  'cranlogs\.r-pkg\.org/downloads/total$',
+  'pypistats\.org/api/packages$',
+  'Statapackagesearch/$',
+  'zenodo\.org/api/files/bkt',
+]
