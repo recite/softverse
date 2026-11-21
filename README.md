@@ -5,6 +5,8 @@
 [![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://recite.github.io/softverse/)
 [![PePy Downloads](https://static.pepy.tech/badge/softverse)](https://www.pepy.tech/projects/softverse)
 
+Validated software use [![Validated software use DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21943908.svg)](https://doi.org/10.5281/zenodo.21943908) · Stata command index [![Stata command index DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21926099.svg)](https://doi.org/10.5281/zenodo.21926099)
+
 Which libraries does social science research actually run on? Softverse answers
 that by statically analyzing the code inside replication packages deposited to
 journal collections, across **R, Python and Stata**.
