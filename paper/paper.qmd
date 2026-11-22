@@ -5,7 +5,7 @@ author:
   # TODO before submission: affiliation and ORCID. Left blank deliberately
   # and not filled in with a plausible guess.
   - name: Gaurav Sood
-    email: gsood07@gmail.com
+
     affiliation: ""
     orcid: ""
 date: today
