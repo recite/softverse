@@ -5,7 +5,7 @@ build-backend = "uv_build"
 [project]
 name = "softverse"
 description = "Measure which software social science replication code loads"
-authors = [{name = "Gaurav Sood", email = "gsood07@gmail.com"}]
+authors = [{name = "Gaurav Sood"}]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
