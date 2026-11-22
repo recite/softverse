@@ -154,7 +154,9 @@ def validate(entries: list[Entry]) -> list[Result]:
     with httpx.Client(
         timeout=30.0,
         follow_redirects=True,
-        headers={"User-Agent": "softverse (research; https://github.com/recite/softverse)"},
+        headers={
+            "User-Agent": "softverse (research; https://github.com/recite/softverse)"
+        },
     ) as client:
         for entry in entries:
             if not entry.doi:
