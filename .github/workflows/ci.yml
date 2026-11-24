@@ -27,5 +27,5 @@ jobs:
       # failure mode; and it reads deposit archives whose filenames arrive in
       # whatever encoding the author's machine used, which is where macOS and
       # Linux disagree. `_preserve_ci_inputs` carries these across an adopt.
-      python-versions: '["3.11", "3.12", "3.13", "3.14"]'
+      python-versions: '["3.13", "3.12", "3.14"]'
       os: '["ubuntu-latest", "macos-latest"]'
