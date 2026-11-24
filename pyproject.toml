@@ -27,10 +27,10 @@ dependencies = [
     "pandas>=3.1.1",
     "httpx>=0.28.0",
     "tree-sitter>=0.26.1",
-    "tree-sitter-language-pack>=1.25.0",
+    "tree-sitter-language-pack>=1.25.2",
     "charset-normalizer>=3.5.2",
     "python-dotenv>=1.2.4",
-    "stamina>=26.1.0",
+    "stamina>=26.2.0",
     "pyrate-limiter>=4.5.1",
     "py7zr>=1.1.4",
     "rarfile>=4.5",
@@ -67,7 +67,7 @@ Data = "https://recite.github.io/softverse/data/"
 # has to resolve from here.
 [dependency-groups]
 dev = [
-    "ruff>=0.17.4",
+    "ruff>=0.17.5",
     "pre-commit>=4.7.0",
     "twine>=7.0.0",
     # The paper's figures, not the package's.
@@ -77,14 +77,14 @@ dev = [
     "pyright>=1.1.414",
     "pydoclint>=0.12.0",
     "huggingface-hub>=2.4.0",
-    "datasets>=5.1.0",
+    "datasets>=5.2.0",
 ]
 test = [
     "pytest>=9.2.0",
     "pytest-cov>=7.1.0",
 ]
 docs = [
-    "sphinx>=9.0.4",
+    "sphinx>=9.2.0",
     "furo",
     "myst-parser",
     "sphinx-copybutton",
